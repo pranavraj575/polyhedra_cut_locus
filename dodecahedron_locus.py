@@ -1,16 +1,16 @@
 from shapes import *
-from shape_creation import Icosahedron
+from shape_creation import Dodecahedron
 from display_utils import *
 
 """
-ICOSAHEDRON IS AT LEAST 5!!
+
 """
 if __name__ == "__main__":
 
 
-    cube = Icosahedron()
+    cube = Dodecahedron()
 
-    fn = 1
+    fn = 0
     """
     two dimensions of freedom for (p,q)
     """
@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     cube.add_point_to_face((p, {'color':'black','s':40}), fn)
 
-    radii = [1.4 + np.sqrt(i)/1.4 for i in range(110)]
+    radii = [1.4 + np.sqrt(i)/2 for i in range(80)]
     i=0
     color_dic={r:color for (r, color) in zip(radii, rb_gradient(len(radii)))}
     for r, color in zip(radii, rb_gradient(len(radii))):

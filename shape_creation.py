@@ -190,23 +190,60 @@ class Icosahedron(Shape):
 
 class Dodecahedron(Shape):
     # makes dodecahedron
-    # 0-2 on the top (1 to the right of 0)
-    # 10-12 on bottom
+    # 0 on the top
+    # 1-5 surrounding 0 (upside down, 2 to the right of 1)
+    # 11 on the bottom (upside down)
+    # 6-10 surrounding 11 (7 to right of 6)
+    # middle faces zig zag
+    #  1 2 3 4  5
+    # 6 7 8 9 10
 
     def __init__(self):
         super().__init__()
         for i in range(12):
             self.add_face()
         tau=2*np.pi
-        for i in range(3):
-            curr = self.faces[i]
-            neigh = self.faces[(i + 1)%3]
-            curr.add_boundary_paired(neigh, rowtation(tau/4-tau/5), 1, -coltation(tau/4-tau/5), rotation_T(tau/2-tau/5), coltation(tau/2+tau/5))
+        top=self.faces[0]
 
-        for i in range(3):
-            curr = self.faces[10+i]
-            neigh = self.faces[10+(i + 1)%3]
-        raise NotImplementedError
+        for i in range(5):
+            curr = self.faces[1+i]
+            theta=-tau/4+i*tau/5
+            top.add_boundary_paired(curr,rowtation(theta),1,-coltation(theta),rotation_T(-i*tau/5),coltation(tau/4))
+        for i in range(5):
+            curr = self.faces[1+i]
+            neigh = self.faces[1+(i + 1)%5]
+            curr.add_boundary_paired(neigh, rowtation(tau/4-tau/5), 1, -coltation(tau/4-tau/5), rotation_T(tau/2+tau*2/5), coltation(tau/4+tau/5))
+
+        bottom=self.faces[11]
+
+        for i in range(5):
+            curr = self.faces[6+i]
+            theta=tau/4-i*tau/5
+            bottom.add_boundary_paired(curr,rowtation(theta),1,-coltation(theta),rotation_T(i*tau/5),coltation(-tau/4))
+        for i in range(5):
+            curr = self.faces[6+i]
+            neigh = self.faces[6+(i + 1)%5]
+            curr.add_boundary_paired(neigh, rowtation(-tau/4+tau/5), 1, -coltation(-tau/4+tau/5), rotation_T(tau/2-tau*2/5), coltation(-tau/4-tau/5))
+
+        for i in range(5):
+            floor = self.faces[6+i]
+            ceil = self.faces[1+i]
+            next_floor=self.faces[6+(i+1)%5]
+            floor.add_boundary_paired(ceil, rowtation(-tau/4+2*tau/5), 1, -coltation(-tau/4+2*tau/5), np.identity(2), coltation(tau/4+tau*2/5))
+            ceil.add_boundary_paired(next_floor,rowtation(tau/4-2*tau/5), 1,-coltation(tau/4-2*tau/5),np.identity(2),coltation(-tau/4-2*tau/5))
+
+    def faces_to_plot_n_m(self):
+        def face_map(i, j):
+            if i == 0 and j==2:
+                return self.faces[0]
+            if i == 1:
+                return self.faces[j+1]
+            if i == 2:
+                return self.faces[j+6]
+            if i == 3 and j==0:
+                return self.faces[11]
+            return None
+        return face_map, 4, 5
 
 class NTorus(Shape):
     # makes n-torus
@@ -234,7 +271,8 @@ class Torus(NTorus):
 
 if __name__=="__main__":
     from display_utils import *
-    cube = Tetrahedron()
+    cube = Dodecahedron()
+    cube.plot_faces()
 
     face:Face=cube.faces[0]
     fn = 0

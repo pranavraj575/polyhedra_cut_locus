@@ -16,7 +16,7 @@ if __name__ == "__main__":
     two dimensions of freedom for (p,q)
     """
     p = np.array([[0.], [0.]])
-    p = np.array([[0.], [0.1]])
+    #p = np.array([[0.], [0.1]])
     #p=.1*coltation(-np.pi/6)
     #p = np.array([[0.], [0.2]])
     #p = np.array([[0.], [0.2]])+.075*coltation(-np.pi/6)
@@ -28,16 +28,17 @@ if __name__ == "__main__":
     thus, we can embed these as 4-hypercubes, and we need at least 5 sets
     """
 
-    cube.add_point_to_face((p, {'color':'red','s':20}), fn)
+    cube.add_point_to_face((p, {'color':'black','s':40}), fn)
 
     radii = [1.4 + np.sqrt(i)/3 for i in range(140)]
     i=0
+    color_dic={r:color for (r, color) in zip(radii, rb_gradient(len(radii)))}
     for r, color in zip(radii, rb_gradient(len(radii))):
         i+=1
         A = Arc(p, 0, np.pi*2, r)
         plot=False
         cube.add_arc_end_to_face(A, fn, arc_info={"color":color, 'plot':plot})
-    cube.add_all_cut_locus_points(point_info={'color':'black','s':10})
+    cube.add_all_cut_locus_points(point_info={'color':'black','s':2},conditional_point_info=lambda r:{'color':color_dic[r]})
 
     cube.plot_faces()
     quit()

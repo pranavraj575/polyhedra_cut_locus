@@ -604,7 +604,7 @@ class Shape:
                     for ((p1, p2), f) in path:
                         (x, y) = tuple(p1.flatten())
                         (xp, yp) = tuple(p2.flatten())
-                        ploot(i, j).plot([x, xp], [y, yp], label=f.name)
+                        ploot(i, j).plot([x, xp], [y, yp], label=f.name,alpha=.5)
                         # ploot(i, j).annotate(str(f.name),((x+ xp)/2,(y+yp)/2))
 
                     for (p, point_info) in self.points[face.name]:
