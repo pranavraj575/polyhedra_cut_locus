@@ -577,11 +577,11 @@ class Shape:
         if plot:
             to_plot.plot(X, Y, color=color)
 
-    def plot_faces(self):
+    def plot_faces(self,save_image=None,show=False,figsize=None):
 
         face_map, n, m = self.faces_to_plot_n_m()
 
-        fig, axs = plt.subplots(n, m)
+        fig, axs = plt.subplots(n, m,figsize=figsize)
         def ploot(i,j):
             if m>1 and n>1:
                 return axs[i, j]
@@ -626,4 +626,9 @@ class Shape:
                     for (A, arc_info) in self.arcs[face.name]:
                         self.draw_arc(ploot(i, j), A, arc_info=arc_info)
                     ploot(i, j).legend()
-        plt.show()
+
+        if save_image is not None:
+            plt.savefig(save_image)
+        if show:
+            plt.show()
+        plt.close()
