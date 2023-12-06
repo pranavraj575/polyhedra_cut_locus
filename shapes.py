@@ -1,6 +1,5 @@
 import numpy as np, itertools
 from matplotlib import pyplot as plt
-from collections import defaultdict
 
 TOL = .0001
 
@@ -37,13 +36,17 @@ def flatten(L):
 
 class Arc:
     # defines an arc in 2d
-    def __init__(self, p, low, high, r, tolerance=TOL):
+    def __init__(self, p, low, high, r,distance=None, tolerance=TOL):
+        # distance is distance from original point, can be different if we 'diffract'
         assert p.shape == (2, 1)
         assert low <= high
 
         self.tol = tolerance
         self.p = p
         self.r = r
+        if distance is None:
+            distance=self.r
+        self.dist=distance
         diff = high - low
         self.low = low%(2*np.pi)
         self.high = self.low + diff
@@ -99,7 +102,8 @@ class Arc:
         theta = self.angle_of(q)
         if self.low > theta:
             theta = theta + 2*np.pi
-        return (Arc(self.p, self.low, theta, self.r, self.tol), Arc(self.p, theta, self.high, self.r, self.tol))
+        return (Arc(self.p, self.low, theta, self.r, distance=self.dist,tolerance=self.tol),
+                Arc(self.p, theta, self.high, self.r, distance=self.dist,tolerance=self.tol))
 
     def _break_arc(self, a, b):
         # breaks arc into pieces based on line segment a-b
@@ -122,7 +126,7 @@ class Arc:
             out = []
             for i in range(len(split_angles) - 1):
                 th, ph = split_angles[i:i + 2]
-                out.append(Arc(self.p, th, ph, self.r, self.tol))
+                out.append(Arc(self.p, th, ph, self.r, distance=self.dist,tolerance=self.tol))
             return out
         else:
             return [self]
@@ -195,7 +199,7 @@ class Arc:
         return [pt for pt in points if self.within_arc(pt) and A.within_arc(pt)]
 
     def __str__(self):
-        return "ARC:{p:" + str(tuple(self.p.flatten())) + "; r:" + str(self.r) + "; range:" + str((self.low, self.high)) + "}"
+        return "ARC:{p:" + str(tuple(self.p.flatten())) + "; r:" + str(self.r) + "; dist:" + str(self.dist) + "; range:" + str((self.low, self.high)) + "}"
 
 
 class Face:
@@ -341,7 +345,7 @@ class Face:
     def shift_arc_with_bound(self, A, bound):
         diff = A.high - A.low
         angle = self.shift_angle_with_bound(A.low, bound)
-        return Arc(self.shift_point_with_bound(A.p, bound), angle, angle + diff, A.r, A.tol)
+        return Arc(self.shift_point_with_bound(A.p, bound), angle, angle + diff, A.r, distance=A.dist,tolerance=A.tol)
 
     def _create_bound_arrays(self):
         self.bound_M = np.array([m[0] for (m, _, _, _) in self.bounds])
@@ -518,17 +522,17 @@ class Shape:
         arcs = self.arcs[fn]
         intersections = []
         for (A,_), (B,_) in itertools.combinations(arcs, 2):
-            if A.r==B.r:
-                # equality is fine since we never update r
+            if A.dist==B.dist:
+                # equality is fine since we should never update dist
                 ps = A.intersects_with(B)
                 if ps:
-                    intersections += [(p,A.r) for p in ps]
+                    intersections += [(p,A.dist) for p in ps]
 
         return [(p,r) for (p,r) in intersections if self.is_best_seen(p,r,fn)]
     def is_best_seen(self,p,r,fn):
         # returns if the distnace r to p is the best seen out of arcs assigned to fn
         for (A,_) in self.arcs[fn]:
-            if A.within_arc(p) and A.r<r:
+            if A.within_arc(p) and A.dist<r:
                 # if we find an arc containing p that is smaller than r
                 return False
         # otherwise, this is the best

@@ -3,7 +3,7 @@ from shape_creation import Dodecahedron
 from display_utils import *
 import os
 """
-
+DODECAHEDRON IS AT LEAST 5!!
 """
 if __name__ == "__main__":
 
@@ -16,10 +16,10 @@ if __name__ == "__main__":
     """
     p = np.array([[0.], [0.]])
     p = np.array([[0.], [0.2]])
-    p=.1*coltation(-np.pi/6)
-    p = np.array([[0.], [0.2]])
-    p = np.array([[0.], [0.2]])+.125*coltation(-np.pi/6)
-    p = np.array([[0.], [0.2]])-.125*coltation(-np.pi/6)
+    p = .2*coltation(np.pi/2-np.pi*2/5)
+    #p = .2*coltation(np.pi/2-np.pi*2/5)+.075*coltation(np.pi/2)
+    #p = .2*coltation(np.pi/2-np.pi*2/5)+.075*coltation(np.pi/2)
+
 
     """
     now for each of these, we have two dimensions of freedom for q (vertex)
