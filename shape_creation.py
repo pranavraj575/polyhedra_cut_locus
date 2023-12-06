@@ -245,6 +245,61 @@ class Dodecahedron(Shape):
             return None
         return face_map, 4, 5
 
+class Antiprism(Shape):
+    # makes uniform antiprism with n-gon (2n+2 faces)
+    # 0 on the top
+    # 1 on the bottom
+    # 2 to n+1 are upside down triangles surrounding 0 (3 to right of 2)
+    # n+2 to 2n+1 are triangles surrounding 1 (n+3 to right of n+2)
+    # middle faces zig zag
+    # (n+1)      2       3 ...
+    #      (n+2)   (n+3)   ...
+    # 2 is at bottom of 0
+    # n+2 is at top of 1
+
+    def __init__(self,n):
+        super().__init__()
+        assert n>=3
+        self.n_gon=n
+        for i in range(2*n+2):
+            self.add_face()
+        dtheta=2*np.pi/n
+        top=self.faces[0]
+        bottom=self.faces[1]
+        r=np.sqrt(3)/np.tan(np.pi/n)
+
+        for i in range(n):
+            curr=self.faces[i+2]
+            theta=-np.pi/2+i*dtheta
+            top.add_boundary_paired(curr,rowtation(theta),r,-r*coltation(theta),rotation_T(-i*dtheta),coltation(np.pi/2))
+
+        for i in range(n):
+            curr=self.faces[n+i+2]
+            theta=np.pi/2-i*dtheta
+            bottom.add_boundary_paired(curr,rowtation(theta),r,-r*coltation(theta),rotation_T(i*dtheta),coltation(-np.pi/2))
+
+        for i in range(n):
+            floor=self.faces[i+2+n]
+            ceil=self.faces[i+2]
+            next_floor=self.faces[(i+1)%n+2+n]
+            floor.add_boundary_paired(ceil,rowtation(np.pi/6),1,-coltation(np.pi/6),np.identity(2),coltation(-np.pi*5/6))
+            ceil.add_boundary_paired(next_floor,rowtation(-np.pi/6),1,-coltation(-np.pi/6),np.identity(2),coltation(np.pi*5/6))
+
+
+    def faces_to_plot_n_m(self):
+        center=self.n_gon//2
+        def face_map(i, j):
+            if i==0 and j==center:
+                return self.faces[0]
+            if i==3 and j==center:
+                return self.faces[1]
+            if i==1:
+                return self.faces[2+(j+center)%self.n_gon]
+            if i==2:
+                return self.faces[self.n_gon+2+(j+center)%self.n_gon]
+            return None
+        return face_map, 4,self.n_gon
+
 class NTorus(Shape):
     # makes n-torus
     def __init__(self,n):
@@ -258,32 +313,32 @@ class NTorus(Shape):
             face.add_boundary_paired(face,ei.T,1,-ei,np.identity(n),-ei)
 
 
-    def faces_to_plot_n_m(self):
-        def face_map(i, j):
-            return self.faces[0]
-        return face_map, 1,1
-
 
 class Torus(NTorus):
     # makes torus
     def __init__(self):
         super().__init__(2)
 
+    def faces_to_plot_n_m(self):
+        def face_map(i, j):
+            return self.faces[0]
+        return face_map, 1,1
+
 if __name__=="__main__":
     from display_utils import *
-    cube = Dodecahedron()
+    cube = Antiprism(7)
     cube.plot_faces()
 
     face:Face=cube.faces[0]
     fn = 0
-    p = np.array([[0.5], [0.8]])
+    p = np.array([[-1.0], [0.0]])
 
     cube.add_point_to_face((p, {'color':'red','s':20}), fn)
 
-    radii = [1 + i/20 for i in range(90)]
+    radii = [1 + i/11 for i in range(115)]
     for r, color in zip(radii, rb_gradient(len(radii))):
         A = Arc(p, 0, np.pi*2, r)
         cube.add_arc_end_to_face(A, fn, arc_info={"color":color, 'plot':False})
-    cube.add_all_cut_locus_points(point_info={'color':'black','s':10})
+    cube.add_all_cut_locus_points(point_info={'color':'black','s':2})
 
-    cube.plot_faces()
+    cube.plot_faces(show=True,legend=lambda i,j:i==1 or i==2)

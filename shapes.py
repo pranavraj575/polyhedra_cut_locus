@@ -36,7 +36,7 @@ def flatten(L):
 
 class Arc:
     # defines an arc in 2d
-    def __init__(self, p, low, high, r,distance=None, tolerance=TOL):
+    def __init__(self, p, low, high, r, distance=None, tolerance=TOL):
         # distance is distance from original point, can be different if we 'diffract'
         assert p.shape == (2, 1)
         assert low <= high
@@ -45,8 +45,8 @@ class Arc:
         self.p = p
         self.r = r
         if distance is None:
-            distance=self.r
-        self.dist=distance
+            distance = self.r
+        self.dist = distance
         diff = high - low
         self.low = low%(2*np.pi)
         self.high = self.low + diff
@@ -102,8 +102,8 @@ class Arc:
         theta = self.angle_of(q)
         if self.low > theta:
             theta = theta + 2*np.pi
-        return (Arc(self.p, self.low, theta, self.r, distance=self.dist,tolerance=self.tol),
-                Arc(self.p, theta, self.high, self.r, distance=self.dist,tolerance=self.tol))
+        return (Arc(self.p, self.low, theta, self.r, distance=self.dist, tolerance=self.tol),
+                Arc(self.p, theta, self.high, self.r, distance=self.dist, tolerance=self.tol))
 
     def _break_arc(self, a, b):
         # breaks arc into pieces based on line segment a-b
@@ -126,7 +126,7 @@ class Arc:
             out = []
             for i in range(len(split_angles) - 1):
                 th, ph = split_angles[i:i + 2]
-                out.append(Arc(self.p, th, ph, self.r, distance=self.dist,tolerance=self.tol))
+                out.append(Arc(self.p, th, ph, self.r, distance=self.dist, tolerance=self.tol))
             return out
         else:
             return [self]
@@ -171,18 +171,18 @@ class Arc:
         points = []
         p = self.p
         r0 = self.r
-        x0,y0=tuple(p.flatten())
+        x0, y0 = tuple(p.flatten())
         q = A.p
         r1 = A.r
-        x1,y1=tuple(q.flatten())
+        x1, y1 = tuple(q.flatten())
         d = np.linalg.norm(p - q)
-        if d<=self.tol: # starting from same point
+        if d <= self.tol:  # starting from same point
             return []
-        if d<=abs(r0-r1): # one circle is within the other
+        if d <= abs(r0 - r1):  # one circle is within the other
             return []
-        if d>r0+r1: # non intersecting
+        if d > r0 + r1:  # non intersecting
             return []
-        if abs(r0+r1-d) < self.tol:  # if we are exactly here, just take the midpoint
+        if abs(r0 + r1 - d) < self.tol:  # if we are exactly here, just take the midpoint
             points.append((p + q)/2)
         else:
             a = (r0**2 - r1**2 + d**2)/(2*d)
@@ -195,7 +195,7 @@ class Arc:
             x4 = x2 - h*(y1 - y0)/d
             y4 = y2 + h*(x1 - x0)/d
 
-            points= [np.array([[x3], [y3]]), np.array([[x4],[y4]])]
+            points = [np.array([[x3], [y3]]), np.array([[x4], [y4]])]
         return [pt for pt in points if self.within_arc(pt) and A.within_arc(pt)]
 
     def __str__(self):
@@ -345,7 +345,7 @@ class Face:
     def shift_arc_with_bound(self, A, bound):
         diff = A.high - A.low
         angle = self.shift_angle_with_bound(A.low, bound)
-        return Arc(self.shift_point_with_bound(A.p, bound), angle, angle + diff, A.r, distance=A.dist,tolerance=A.tol)
+        return Arc(self.shift_point_with_bound(A.p, bound), angle, angle + diff, A.r, distance=A.dist, tolerance=A.tol)
 
     def _create_bound_arrays(self):
         self.bound_M = np.array([m[0] for (m, _, _, _) in self.bounds])
@@ -508,35 +508,49 @@ class Shape:
         for (B, F) in arcs:
             self.arcs[F.name].append((B, arc_info))
 
-    def add_all_cut_locus_points(self, point_info=None,conditional_point_info=None):
+    def add_all_cut_locus_points(self, point_info=None, conditional_point_info=None):
         # adds cut locus points to all faces
         # works best if there are a ton of arcs of all different lengths
         for fn in self.faces:
-            for (p,r) in self.get_cut_locus_points(fn):
-                new_point_info={k:point_info[k] for k in point_info}
+            for (p, r) in self.get_cut_locus_points(fn):
+                new_point_info = {k:point_info[k] for k in point_info}
                 if conditional_point_info is not None:
                     new_point_info.update(conditional_point_info(r))
-                self.add_point_to_face((p,new_point_info),fn)
+                self.add_point_to_face((p, new_point_info), fn)
+
+    def get_cut_locus_arcs(self, fn):
+        arcs = self.arcs[fn]
+        out = []
+        for (A, _), (B, _) in itertools.combinations(arcs, 2):
+            if A.dist == B.dist:
+                # equality is fine since we should never update dist
+                ps = A.intersects_with(B)
+                if ps:
+                    out += [(p, A.dist, A, B) for p in ps]
+
+        return [(A, B) for (p, r, A, B) in out if self.is_best_seen(p, r, fn)]
 
     def get_cut_locus_points(self, fn):
         arcs = self.arcs[fn]
         intersections = []
-        for (A,_), (B,_) in itertools.combinations(arcs, 2):
-            if A.dist==B.dist:
+        for (A, _), (B, _) in itertools.combinations(arcs, 2):
+            if A.dist == B.dist:
                 # equality is fine since we should never update dist
                 ps = A.intersects_with(B)
                 if ps:
-                    intersections += [(p,A.dist) for p in ps]
+                    intersections += [(p, A.dist) for p in ps]
 
-        return [(p,r) for (p,r) in intersections if self.is_best_seen(p,r,fn)]
-    def is_best_seen(self,p,r,fn):
+        return [(p, r) for (p, r) in intersections if self.is_best_seen(p, r, fn)]
+
+    def is_best_seen(self, p, r, fn):
         # returns if the distnace r to p is the best seen out of arcs assigned to fn
-        for (A,_) in self.arcs[fn]:
-            if A.within_arc(p) and A.dist<r:
+        for (A, _) in self.arcs[fn]:
+            if A.within_arc(p) and A.dist < r:
                 # if we find an arc containing p that is smaller than r
                 return False
         # otherwise, this is the best
         return True
+
     def add_path_end_to_face(self, p, v, fn, point_info=None):
         # takes a vector starting at p on face fn, goes towards v
         # finds its endpoint and adds it to the correct face with pointinfo attached
@@ -581,20 +595,21 @@ class Shape:
         if plot:
             to_plot.plot(X, Y, color=color)
 
-    def plot_faces(self,save_image=None,show=False,figsize=None):
+    def plot_faces(self, save_image=None, show=False, figsize=None,legend=lambda i,j:True):
 
         face_map, n, m = self.faces_to_plot_n_m()
 
-        fig, axs = plt.subplots(n, m,figsize=figsize)
-        def ploot(i,j):
-            if m>1 and n>1:
+        fig, axs = plt.subplots(n, m, figsize=figsize)
+
+        def ploot(i, j):
+            if m > 1 and n > 1:
                 return axs[i, j]
-            if m==1 and n==1:
+            if m == 1 and n == 1:
                 return axs
             return axs[m*i + j]
+
         for i in range(n):
             for j in range(m):
-
                 ploot(i, j).set_xticks([])
                 ploot(i, j).set_yticks([])
 
@@ -608,7 +623,7 @@ class Shape:
                     for ((p1, p2), f) in path:
                         (x, y) = tuple(p1.flatten())
                         (xp, yp) = tuple(p2.flatten())
-                        ploot(i, j).plot([x, xp], [y, yp], label=f.name,alpha=.5)
+                        ploot(i, j).plot([x, xp], [y, yp], label=f.name, alpha=.5)
                         # ploot(i, j).annotate(str(f.name),((x+ xp)/2,(y+yp)/2))
 
                     for (p, point_info) in self.points[face.name]:
@@ -617,7 +632,7 @@ class Shape:
                         s = None
                         plot = True
                         if point_info is None:
-                            point_info=dict()
+                            point_info = dict()
                         if 'color' in point_info:
                             color = point_info['color']
                         if 's' in point_info:
@@ -629,7 +644,8 @@ class Shape:
                             ploot(i, j).scatter(x, y, color=color, s=s)
                     for (A, arc_info) in self.arcs[face.name]:
                         self.draw_arc(ploot(i, j), A, arc_info=arc_info)
-                    ploot(i, j).legend()
+                    if legend(i,j):
+                        ploot(i, j).legend()
 
         if save_image is not None:
             plt.savefig(save_image)
