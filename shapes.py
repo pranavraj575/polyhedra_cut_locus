@@ -1,7 +1,9 @@
 import numpy as np, itertools
 from matplotlib import pyplot as plt
+from scipy.spatial import Voronoi
+from my_vornoi import voronoi_plot_2d
 
-TOL = .0001
+TOL = .001
 
 
 # rotation matrices
@@ -32,6 +34,16 @@ def flatten(L):
     for l in L:
         out += l
     return out
+
+
+class Bound:
+    # defines a bound between faces
+    def __init__(self, m, b, s, T, si):
+        self.m = m
+        self.b = b
+        self.s = s
+        self.T = T
+        self.si = si
 
 
 class Arc:
@@ -66,7 +78,7 @@ class Arc:
     def _strict_contains_angle(self, theta):
         if (self.low < theta + 2*np.pi and theta + 2*np.pi < self.high):
             return True, theta + 2*np.pi
-        if (self.low < theta and theta < self.high):
+        if (self.low < theta - self.tol and theta < self.high - self.tol):
             return True, theta
         return False, np.nan
 
@@ -375,6 +387,19 @@ class Face:
             self._create_vertices()
         return self.vertices
 
+    def get_exit_point(self, p, v):
+        # returns the first point that a ray starting from p and going to v exits face
+        # None if does not exist
+        q = p + v
+        # q represents the point on the line pq that is intersecting the closest boundary
+        if self.within_bounds(q):
+            return None
+        for bound in self.bounds:
+            if self.within_bound(p, bound) and not self.within_bound(q, bound):
+                # goes from inside bound to outside bound
+                q = self.grab_intersection(p, v, bound)
+        return q
+
     def points_on_path(self, p, v):
         # returns list of (face, initial point, end point) of a ray starting from p, taking vector v
         # if not self.within_bounds(p):
@@ -413,6 +438,20 @@ class Face:
 
     def neighbors(self):
         return [f for (_, _, f, _) in self.bounds]
+
+    def face_paths_to(self, fn, visited_names=None, diameter=None):
+        if visited_names is None:
+            visited_names = {self.name}
+        visited_names.add(self.name)
+        if self.name == fn:
+            yield []
+        elif diameter is not None and diameter <= 0:
+            return
+        else:
+            for (m, b, f, shift) in self.bounds:
+                if not f.name in visited_names:
+                    for path in f.face_paths_to(fn, visited_names=visited_names.copy(), diameter=None if diameter is None else diameter - 1):
+                        yield [(m, b, f, shift)] + path
 
     def get_vertices_of_face_bound(self, fn, update=True):
         # returns the vertices that face fn is touching
@@ -516,6 +555,7 @@ class Shape:
                 new_point_info = {k:point_info[k] for k in point_info}
                 if conditional_point_info is not None:
                     new_point_info.update(conditional_point_info(r))
+                new_point_info.update({'locus_pt':True})
                 self.add_point_to_face((p, new_point_info), fn)
 
     def get_cut_locus_arcs(self, fn):
@@ -529,6 +569,76 @@ class Shape:
                     out += [(p, A.dist, A, B) for p in ps]
 
         return [(A, B) for (p, r, A, B) in out if self.is_best_seen(p, r, fn)]
+
+    def get_voronoi_points_from_face_paths(self, p, source_fn, sink_fn, diameter=None):
+        source: Face = self.faces[source_fn]
+        points = []
+        for path in source.face_paths_to(sink_fn, diameter=diameter):
+            q = p.copy()
+            for bound in path:
+                q = source.shift_point_with_bound(q, bound)
+            points.append(q)
+        return points
+
+    def get_voronoi_points(self, fn):
+        tol = self.faces[fn].tol
+        points = dict()
+        for (A, B) in self.get_cut_locus_arcs(fn):
+            for p in (A.p, B.p):
+                (x, y) = tuple(p.flatten())
+                eq_class = None
+                for q in points:
+                    if np.linalg.norm(np.array((x, y)) - np.array(q)) <= tol:
+                        eq_class = q
+                if eq_class is None:
+                    points[(x, y)] = [(x, y)]
+                else:
+                    L = points.pop(eq_class)
+                    L.append((x, y))
+                    avg = (sum(q[0] for q in L)/len(L), sum(q[1] for q in L)/len(L))
+
+                    points[avg] = L
+
+        return [np.array([[x], [y]]) for (x, y) in points]
+
+    def plot_voronoi(self, p, source_fn, sink_fn, diameter, ax):
+        vp = self.get_voronoi_points_from_face_paths(p, source_fn, sink_fn, diameter=diameter)
+        if len(vp) >= 4:
+            points = np.concatenate(vp, axis=1)
+            points = points.T
+            vor = Voronoi(points)
+            fig = voronoi_plot_2d(vor, ax=ax, show_points=False, show_vertices=False, line_colors='black',
+                                  line_width=1, line_alpha=1)
+            return True
+        return False
+
+    def plot_voronoi_old(self, fn, ax):
+        vp = self.get_voronoi_points(fn)
+        if len(vp) >= 4:
+            points = np.concatenate(vp, axis=1)
+            points = points.T
+            vor = Voronoi(points)
+            fig = voronoi_plot_2d(vor, ax=ax, show_points=False, show_vertices=False, line_colors='black',
+                                  line_width=1, line_alpha=1)
+            return True
+        return False
+        if len(vp) == 2:
+            fc: Face = self.faces[fn]
+            p0, p1 = vp
+            (x0, y0), (x1, y1) = tuple(p0.flatten()), tuple(p1.flatten())
+            midpt = (p0 + p1)/2
+            vec = np.array([[-x1 + x0], [y1 - y0]])
+            vec = vec/np.linalg.norm(vec)
+            bound_dist = 2*max(np.linalg.norm(p0), np.linalg.norm(p1), max(b/(max(1, np.linalg.norm(m))) for (m, b, _, _) in fc.bounds))
+            exit = fc.get_exit_point(midpt, vec*bound_dist)
+            if exit is None:
+                vec = -vec
+                exit = fc.get_exit_point(midpt, vec*bound_dist)
+            if exit is None:
+                return
+            enter = fc.get_exit_point(exit, -vec*bound_dist)
+            if enter is not None:
+                ax.plot((enter[0], exit[0]), (enter[1], exit[1]), lw=2, alpha=0.6, color='black')
 
     def get_cut_locus_points(self, fn):
         arcs = self.arcs[fn]
@@ -595,7 +705,7 @@ class Shape:
         if plot:
             to_plot.plot(X, Y, color=color)
 
-    def plot_faces(self, save_image=None, show=False, figsize=None,legend=lambda i,j:True):
+    def plot_faces(self, save_image=None, show=False, figsize=None, legend=lambda i, j:True, voronoi=None):
 
         face_map, n, m = self.faces_to_plot_n_m()
 
@@ -625,12 +735,21 @@ class Shape:
                         (xp, yp) = tuple(p2.flatten())
                         ploot(i, j).plot([x, xp], [y, yp], label=f.name, alpha=.5)
                         # ploot(i, j).annotate(str(f.name),((x+ xp)/2,(y+yp)/2))
+                    xlim, ylim = ploot(i, j).get_xlim(), ploot(i, j).get_ylim()
+                    ignore_locus_points = False
+                    if voronoi is not None:
+                        # ignore_locus_points = self.plot_voronoi(face.name, ploot(i, j))
+                        (p, source_fn, diameter) = voronoi
+                        ignore_locus_points = self.plot_voronoi(p, source_fn, face.name, diameter=diameter, ax=ploot(i, j))
+                        ploot(i, j).set_xlim(xlim)
+                        ploot(i, j).set_ylim(ylim)
 
                     for (p, point_info) in self.points[face.name]:
                         x, y = tuple(np.array(p).flatten())
                         color = None
                         s = None
                         plot = True
+                        is_locus_point = False
                         if point_info is None:
                             point_info = dict()
                         if 'color' in point_info:
@@ -639,12 +758,15 @@ class Shape:
                             s = point_info['s']
                         if 'plot' in point_info:
                             plot = point_info['plot']
-
+                        if 'locus_pt' in point_info:
+                            is_locus_point = point_info['locus_pt']
+                        if ignore_locus_points and is_locus_point:
+                            plot = False
                         if plot:
                             ploot(i, j).scatter(x, y, color=color, s=s)
                     for (A, arc_info) in self.arcs[face.name]:
                         self.draw_arc(ploot(i, j), A, arc_info=arc_info)
-                    if legend(i,j):
+                    if legend(i, j):
                         ploot(i, j).legend()
 
         if save_image is not None:

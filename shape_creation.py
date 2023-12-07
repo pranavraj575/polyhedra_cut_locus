@@ -2,6 +2,7 @@ import numpy as np
 
 from shapes import *
 
+
 class Cube(Shape):
     # makes cube where faces 0,1,2,3 are the 'sides' in order (1 is to the right of 0)
     # 4 is the top, aligned with 0 on the right, 1 on the top
@@ -186,7 +187,9 @@ class Icosahedron(Shape):
             if i == 2:
                 return self.faces[6 + 2*j]
             return None
+
         return face_map, 4, 5
+
 
 class Dodecahedron(Shape):
     # makes dodecahedron
@@ -202,48 +205,50 @@ class Dodecahedron(Shape):
         super().__init__()
         for i in range(12):
             self.add_face()
-        tau=2*np.pi
-        top=self.faces[0]
+        tau = 2*np.pi
+        top = self.faces[0]
 
         for i in range(5):
-            curr = self.faces[1+i]
-            theta=-tau/4+i*tau/5
-            top.add_boundary_paired(curr,rowtation(theta),1,-coltation(theta),rotation_T(-i*tau/5),coltation(tau/4))
+            curr = self.faces[1 + i]
+            theta = -tau/4 + i*tau/5
+            top.add_boundary_paired(curr, rowtation(theta), 1, -coltation(theta), rotation_T(-i*tau/5), coltation(tau/4))
         for i in range(5):
-            curr = self.faces[1+i]
-            neigh = self.faces[1+(i + 1)%5]
-            curr.add_boundary_paired(neigh, rowtation(tau/4-tau/5), 1, -coltation(tau/4-tau/5), rotation_T(tau/2+tau*2/5), coltation(tau/4+tau/5))
+            curr = self.faces[1 + i]
+            neigh = self.faces[1 + (i + 1)%5]
+            curr.add_boundary_paired(neigh, rowtation(tau/4 - tau/5), 1, -coltation(tau/4 - tau/5), rotation_T(tau/2 + tau*2/5), coltation(tau/4 + tau/5))
 
-        bottom=self.faces[11]
-
-        for i in range(5):
-            curr = self.faces[6+i]
-            theta=tau/4-i*tau/5
-            bottom.add_boundary_paired(curr,rowtation(theta),1,-coltation(theta),rotation_T(i*tau/5),coltation(-tau/4))
-        for i in range(5):
-            curr = self.faces[6+i]
-            neigh = self.faces[6+(i + 1)%5]
-            curr.add_boundary_paired(neigh, rowtation(-tau/4+tau/5), 1, -coltation(-tau/4+tau/5), rotation_T(tau/2-tau*2/5), coltation(-tau/4-tau/5))
+        bottom = self.faces[11]
 
         for i in range(5):
-            floor = self.faces[6+i]
-            ceil = self.faces[1+i]
-            next_floor=self.faces[6+(i+1)%5]
-            floor.add_boundary_paired(ceil, rowtation(-tau/4+2*tau/5), 1, -coltation(-tau/4+2*tau/5), np.identity(2), coltation(tau/4+tau*2/5))
-            ceil.add_boundary_paired(next_floor,rowtation(tau/4-2*tau/5), 1,-coltation(tau/4-2*tau/5),np.identity(2),coltation(-tau/4-2*tau/5))
+            curr = self.faces[6 + i]
+            theta = tau/4 - i*tau/5
+            bottom.add_boundary_paired(curr, rowtation(theta), 1, -coltation(theta), rotation_T(i*tau/5), coltation(-tau/4))
+        for i in range(5):
+            curr = self.faces[6 + i]
+            neigh = self.faces[6 + (i + 1)%5]
+            curr.add_boundary_paired(neigh, rowtation(-tau/4 + tau/5), 1, -coltation(-tau/4 + tau/5), rotation_T(tau/2 - tau*2/5), coltation(-tau/4 - tau/5))
+
+        for i in range(5):
+            floor = self.faces[6 + i]
+            ceil = self.faces[1 + i]
+            next_floor = self.faces[6 + (i + 1)%5]
+            floor.add_boundary_paired(ceil, rowtation(-tau/4 + 2*tau/5), 1, -coltation(-tau/4 + 2*tau/5), np.identity(2), coltation(tau/4 + tau*2/5))
+            ceil.add_boundary_paired(next_floor, rowtation(tau/4 - 2*tau/5), 1, -coltation(tau/4 - 2*tau/5), np.identity(2), coltation(-tau/4 - 2*tau/5))
 
     def faces_to_plot_n_m(self):
         def face_map(i, j):
-            if i == 0 and j==2:
+            if i == 0 and j == 2:
                 return self.faces[0]
             if i == 1:
-                return self.faces[j+1]
+                return self.faces[j + 1]
             if i == 2:
-                return self.faces[j+6]
-            if i == 3 and j==0:
+                return self.faces[j + 6]
+            if i == 3 and j == 0:
                 return self.faces[11]
             return None
+
         return face_map, 4, 5
+
 
 class Antiprism(Shape):
     # makes uniform antiprism with n-gon (2n+2 faces)
@@ -257,61 +262,64 @@ class Antiprism(Shape):
     # 2 is at bottom of 0
     # n+2 is at top of 1
 
-    def __init__(self,n):
+    def __init__(self, n):
         super().__init__()
-        assert n>=3
-        self.n_gon=n
-        for i in range(2*n+2):
+        assert n >= 2
+        if n==2:
+            print("WARNING: 2 antiprism will display/act weird because of the line face")
+        self.n_gon = n
+        for i in range(2*n + 2):
             self.add_face()
-        dtheta=2*np.pi/n
-        top=self.faces[0]
-        bottom=self.faces[1]
-        r=np.sqrt(3)/np.tan(np.pi/n)
+        dtheta = 2*np.pi/n
+        top = self.faces[0]
+        bottom = self.faces[1]
+        r = np.sqrt(3)/np.tan(np.pi/n)
 
         for i in range(n):
-            curr=self.faces[i+2]
-            theta=-np.pi/2+i*dtheta
-            top.add_boundary_paired(curr,rowtation(theta),r,-r*coltation(theta),rotation_T(-i*dtheta),coltation(np.pi/2))
+            curr = self.faces[i + 2]
+            theta = -np.pi/2 + i*dtheta
+            top.add_boundary_paired(curr, rowtation(theta), r, -r*coltation(theta), rotation_T(-i*dtheta), coltation(np.pi/2))
 
         for i in range(n):
-            curr=self.faces[n+i+2]
-            theta=np.pi/2-i*dtheta
-            bottom.add_boundary_paired(curr,rowtation(theta),r,-r*coltation(theta),rotation_T(i*dtheta),coltation(-np.pi/2))
+            curr = self.faces[n + i + 2]
+            theta = np.pi/2 - i*dtheta
+            bottom.add_boundary_paired(curr, rowtation(theta), r, -r*coltation(theta), rotation_T(i*dtheta), coltation(-np.pi/2))
 
         for i in range(n):
-            floor=self.faces[i+2+n]
-            ceil=self.faces[i+2]
-            next_floor=self.faces[(i+1)%n+2+n]
-            floor.add_boundary_paired(ceil,rowtation(np.pi/6),1,-coltation(np.pi/6),np.identity(2),coltation(-np.pi*5/6))
-            ceil.add_boundary_paired(next_floor,rowtation(-np.pi/6),1,-coltation(-np.pi/6),np.identity(2),coltation(np.pi*5/6))
-
+            floor = self.faces[i + 2 + n]
+            ceil = self.faces[i + 2]
+            next_floor = self.faces[(i + 1)%n + 2 + n]
+            floor.add_boundary_paired(ceil, rowtation(np.pi/6), 1, -coltation(np.pi/6), np.identity(2), coltation(-np.pi*5/6))
+            ceil.add_boundary_paired(next_floor, rowtation(-np.pi/6), 1, -coltation(-np.pi/6), np.identity(2), coltation(np.pi*5/6))
 
     def faces_to_plot_n_m(self):
-        center=self.n_gon//2
+        center = self.n_gon//2
+
         def face_map(i, j):
-            if i==0 and j==center:
+            if i == 0 and j == center:
                 return self.faces[0]
-            if i==3 and j==center:
+            if i == 3 and j == center - ((self.n_gon+1)%2):
                 return self.faces[1]
-            if i==1:
-                return self.faces[2+(j+center)%self.n_gon]
-            if i==2:
-                return self.faces[self.n_gon+2+(j+center)%self.n_gon]
+            if i == 1:
+                return self.faces[2 + (j + center)%self.n_gon]
+            if i == 2:
+                return self.faces[self.n_gon + 2 + (j + center+1)%self.n_gon]
             return None
-        return face_map, 4,self.n_gon
+
+        return face_map, 4, self.n_gon
+
 
 class NTorus(Shape):
     # makes n-torus
-    def __init__(self,n):
+    def __init__(self, n):
         super().__init__()
         self.add_face()
-        face=self.faces[0]
-        face:Face
+        face = self.faces[0]
+        face: Face
         for i in range(n):
-            ei=np.zeros((n,1))
-            ei[i,0]=1
-            face.add_boundary_paired(face,ei.T,1,-ei,np.identity(n),-ei)
-
+            ei = np.zeros((n, 1))
+            ei[i, 0] = 1
+            face.add_boundary_paired(face, ei.T, 1, -ei, np.identity(n), -ei)
 
 
 class Torus(NTorus):
@@ -322,23 +330,33 @@ class Torus(NTorus):
     def faces_to_plot_n_m(self):
         def face_map(i, j):
             return self.faces[0]
-        return face_map, 1,1
 
-if __name__=="__main__":
+        return face_map, 1, 1
+
+
+if __name__ == "__main__":
     from display_utils import *
-    cube = Antiprism(7)
+
+    cube = Cube()
+    top=cube.faces[4]
+    bottom=cube.faces[5]
+    top:Face
+    for path in top.face_paths_to(bottom.name):
+        for (_,_,f,_) in path:
+            print(f.name,end=', ')
+        print()
     cube.plot_faces()
 
-    face:Face=cube.faces[0]
+    face: Face = cube.faces[0]
     fn = 0
     p = np.array([[-1.0], [0.0]])
 
-    cube.add_point_to_face((p, {'color':'red','s':20}), fn)
+    cube.add_point_to_face((p, {'color':'red', 's':20}), fn)
 
     radii = [1 + i/11 for i in range(115)]
     for r, color in zip(radii, rb_gradient(len(radii))):
         A = Arc(p, 0, np.pi*2, r)
         cube.add_arc_end_to_face(A, fn, arc_info={"color":color, 'plot':False})
-    cube.add_all_cut_locus_points(point_info={'color':'black','s':2})
+    cube.add_all_cut_locus_points(point_info={'color':'black', 's':2})
 
-    cube.plot_faces(show=True,legend=lambda i,j:i==1 or i==2)
+    cube.plot_faces(show=True, legend=lambda i, j:i == 1 or i == 2)
