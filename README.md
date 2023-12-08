@@ -27,22 +27,27 @@ python3 voronoi_interactive.py -h
     ```bash
     python3 voronoi_interactive.py --shape tetrahedron
     ```
+    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/tetrahedron/p_(-0.4%2C%20-0.6)_face_3.png)
   * Cube:
     ```bash
     python3 voronoi_interactive.py --shape cube
     ```
+    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/cube/p_(0.8%2C%200.2)_face_1.png)
   * Octahedron:
     ```bash
     python3 voronoi_interactive.py --shape octahedron --click
     ```
+    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/octahedron/p_(0.0649519052838329%2C%200.16250000000000003)_face_1.png)
   * Dodecahedron:
     ```bash
     python3 voronoi_interactive.py --shape dodecahedron --click
     ```
+    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/dodecahedron/p_(0.1902113032590307%2C%200.1368033988749895)_face_0.png)
   * Icosahedron:
     ```bash
     python3 voronoi_interactive.py --shape icosahedron --click
     ```
+    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/icosahedron/p_(0.10825317547305484%2C%200.1375)_face_1.png)
   * Antiprism:
     (replace `<n>` with the n-gon you want
     ```bash
