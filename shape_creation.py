@@ -4,10 +4,13 @@ from shapes import *
 
 
 class Cube(Shape):
-    # makes cube where faces 0,1,2,3 are the 'sides' in order (1 is to the right of 0)
-    # 4 is the top, aligned with 0 on the right, 1 on the top
-    # 5 is the bottom, aligned with 0 on the right, 1 on the bottom
     def __init__(self):
+        """
+        makes cube where faces 0,1,2,3 are the 'sides' in order (1 is to the right of 0)
+        4 is the top, aligned with 0 on the right, 1 on the top
+        5 is the bottom, aligned with 0 on the right, 1 on the bottom
+        """
+
         super().__init__()
         for i in range(6):
             self.add_face()
@@ -67,10 +70,12 @@ class Cube(Shape):
 
 
 class Tetrahedron(Shape):
-    # makes tetrahedron where face 0 borders face 1 on the right, 2 on the left and 3 on the bottom
-    # 3 is upside down triangle for display purposes
-    # each face has a circumcenter of radius 1
     def __init__(self):
+        """
+        makes tetrahedron where face 0 borders face 1 on the right, 2 on the left and 3 on the bottom
+        3 is upside down triangle for display purposes
+        each face has a circumcenter of radius 1
+        """
         super().__init__()
 
         for i in range(4):
@@ -101,11 +106,13 @@ class Tetrahedron(Shape):
 
 
 class Octahedron(Shape):
-    # makes octahedron where the top half are faces 0,1,2,3 (1 is to the right of 0)
-    # bottom half is 4,5,6,7 (4 is below 0, 5 below 1)
-    # each face has a circumcenter of radius 1
-    # we will make 0,1,2,3 normal triangles and 4,5,6,7 upside down triangles for visualization purposes
     def __init__(self):
+        """
+        makes octahedron where the top half are faces 0,1,2,3 (1 is to the right of 0)
+        bottom half is 4,5,6,7 (4 is below 0, 5 below 1)
+        each face has a circumcenter of radius 1
+        we will make 0,1,2,3 normal triangles and 4,5,6,7 upside down triangles for visualization purposes
+        """
         super().__init__()
 
         for i in range(8):
@@ -134,13 +141,15 @@ class Octahedron(Shape):
 
 
 class Icosahedron(Shape):
-    # makes icosahedron
-    # top 5 are faces 0-4 (1 to the right of 0)
-    # bottom 5 are faces 15-19 (16 to the right of 15, and all upside down)
-    # middle 10 are faces 5-14 (11 to the right of 10, and alternating upside down)
-    # (0,1,2,3,4) is above (5,7,9,11,13). (also 5,7,9,11,13 are all down)
-    # (6,8,10,12,14) is above (15,16,17,18,19)
     def __init__(self):
+        """
+        makes icosahedron
+        top 5 are faces 0-4 (1 to the right of 0)
+        bottom 5 are faces 15-19 (16 to the right of 15, and all upside down)
+        middle 10 are faces 5-14 (11 to the right of 10, and alternating upside down)
+        (0,1,2,3,4) is above (5,7,9,11,13). (also 5,7,9,11,13 are all down)
+        (6,8,10,12,14) is above (15,16,17,18,19)
+        """
         super().__init__()
 
         for i in range(20):
@@ -192,16 +201,17 @@ class Icosahedron(Shape):
 
 
 class Dodecahedron(Shape):
-    # makes dodecahedron
-    # 0 on the top
-    # 1-5 surrounding 0 (upside down, 2 to the right of 1)
-    # 11 on the bottom (upside down)
-    # 6-10 surrounding 11 (7 to right of 6)
-    # middle faces zig zag
-    #  1 2 3 4  5
-    # 6 7 8 9 10
-
     def __init__(self):
+        """
+        makes dodecahedron
+        0 on the top
+        1-5 surrounding 0 (upside down, 2 to the right of 1)
+        11 on the bottom (upside down)
+        6-10 surrounding 11 (7 to right of 6)
+        middle faces zig zag
+         1 2 3 4  5
+        6 7 8 9 10
+        """
         super().__init__()
         for i in range(12):
             self.add_face()
@@ -251,18 +261,21 @@ class Dodecahedron(Shape):
 
 
 class Antiprism(Shape):
-    # makes uniform antiprism with n-gon (2n+2 faces)
-    # 0 on the top
-    # 1 on the bottom
-    # 2 to n+1 are upside down triangles surrounding 0 (3 to right of 2)
-    # n+2 to 2n+1 are triangles surrounding 1 (n+3 to right of n+2)
-    # middle faces zig zag
-    # (n+1)      2       3 ...
-    #      (n+2)   (n+3)   ...
-    # 2 is at bottom of 0
-    # n+2 is at top of 1
-
     def __init__(self, n):
+        """
+        makes uniform antiprism with n-gon (2n+2 faces)
+        0 on the top
+        1 on the bottom
+        2 to n+1 are upside down triangles surrounding 0 (3 to right of 2)
+        n+2 to 2n+1 are triangles surrounding 1 (n+3 to right of n+2)
+        middle faces zig zag
+        (n+1)      2       3 ...
+             (n+2)   (n+3)   ...
+        2 is at bottom of 0
+        n+2 is at top of 1
+
+        :param n: n-gon for root of antiprism
+        """
         super().__init__()
         assert n >= 2
         if n == 2:
@@ -310,8 +323,12 @@ class Antiprism(Shape):
 
 
 class NTorus(Shape):
-    # makes n-torus
     def __init__(self, n):
+        """
+        makes n-torus, single face
+
+        :param n: dimension of torus
+        """
         super().__init__()
         self.add_face()
         face = self.faces[0]
@@ -323,8 +340,10 @@ class NTorus(Shape):
 
 
 class Torus(NTorus):
-    # makes torus
     def __init__(self):
+        """
+        makes 2-torus
+        """
         super().__init__(2)
 
     def faces_to_plot_n_m(self):
@@ -337,14 +356,17 @@ class Torus(NTorus):
 if __name__ == "__main__":
     from display_utils import *
 
-    cube = Dodecahedron()
-    cube.interactive_vornoi_plot()
+    cube = Tetrahedron()
+    p = np.array([[0.0], [0.0]])
+    cube.add_point_to_face(p, 0, {'color':'black', 's':20})
+
+    cube.interactive_vornoi_plot(event_key='motion_notify_event')
     quit()
     top = cube.faces[4]
     bottom = cube.faces[5]
     top: Face
     for path in top.face_paths_to(bottom.name):
-        for (_, _, f, _) in path:
+        for (_, f) in path:
             print(f.name, end=', ')
         print()
     cube.plot_faces()
@@ -353,7 +375,7 @@ if __name__ == "__main__":
     fn = 0
     p = np.array([[-1.0], [0.0]])
 
-    cube.add_point_to_face((p, {'color':'red', 's':20}), fn)
+    cube.add_point_to_face(p, fn, {'color':'red', 's':20})
 
     radii = [1 + i/11 for i in range(115)]
     for r, color in zip(radii, rb_gradient(len(radii))):

@@ -28,7 +28,7 @@ if __name__ == "__main__":
     thus, we can embed these as 4-hypercubes, and we need at least 5 sets
     """
 
-    cube.add_point_to_face((p, {'color':'black', 's':40}), fn)
+    cube.add_point_to_face(p, fn, {'color':'black', 's':40})
 
     radii = [1.4 + np.sqrt(i)/1.4 for i in range(110)]
     i = 0

@@ -17,7 +17,7 @@ for n in range(3, 10):
     for mult in (np.arange(c))*.5/(c-1):
         p1 = coltation(-np.pi/2 - np.pi/n)*R*mult
         cube = Antiprism(n)
-        cube.add_point_to_face((p1, {'color':'black', 's':40}), fn)
+        cube.add_point_to_face(p1, fn,{'color':'black', 's':40})
         name = 'p_' + str(tuple(p1.flatten())) + '_face_' + str(fn) + '.png'
         cube.plot_faces(save_image=os.path.join(folder, name), show=False, figsize=((n)*2.5, 8), legend=lambda i, j:i == 1 or i == 2,
                         voronoi=(p1, fn, 5))
@@ -26,7 +26,7 @@ for n in range(3, 10):
             cube = Antiprism(n)
             p2 = coltation(-np.pi/2 - np.pi/n)*R*mult+coltation(-np.pi/2)*mult2*R
 
-            cube.add_point_to_face((p2, {'color':'black', 's':40}), fn)
+            cube.add_point_to_face(p2, fn, {'color':'black', 's':40})
             name = 'p_' + str(tuple(p2.flatten())) + '_face_' + str(fn) + '.png'
             cube.plot_faces(save_image=os.path.join(folder, name), show=False, figsize=((n)*2.5, 8), legend=lambda i, j:i == 1 or i == 2,
                             voronoi=(p2, fn, 5))

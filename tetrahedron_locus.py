@@ -10,7 +10,7 @@ if __name__ == "__main__":
     fn = 3
     p = np.array([[-.4], [-.6]])
 
-    cube.add_point_to_face((p, {'color':'black', 's':40}), fn)
+    cube.add_point_to_face(p, fn, {'color':'black', 's':40})
 
     radii = [.5 + np.sqrt(i)/3.3 for i in range(99)]
     i = 0
