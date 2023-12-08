@@ -1,4 +1,4 @@
-# mitochondria
+# Cut Locus Visualization
 Visualize the cut locus of points on a polytope consisting of 2-d faces
 
 tested with [Python 3.8.10](https://www.python.org/downloads/release/python-3810/)
