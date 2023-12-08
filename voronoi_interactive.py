@@ -36,9 +36,9 @@ if args.shape == 'antiprism':
     shape = SHAPE(args.n)
 else:
     shape = SHAPE()
-for fn in shape.faces:
-
-    shape.add_point_to_face(np.zeros((2, 1)), fn, {'color':'black', 's':1})
+if args.center_pt:
+    for fn in shape.faces:
+        shape.add_point_to_face(np.zeros((2, 1)), fn, {'color':'black', 's':1})
 shape.interactive_vornoi_plot(diameter=args.diameter if args.diameter>0 else None,
                               event_key='button_press_event'if args.click else 'motion_notify_event',
                               legend=lambda i,j:args.legend)
