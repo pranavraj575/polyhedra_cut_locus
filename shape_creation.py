@@ -265,7 +265,7 @@ class Antiprism(Shape):
     def __init__(self, n):
         super().__init__()
         assert n >= 2
-        if n==2:
+        if n == 2:
             print("WARNING: 2 antiprism will display/act weird because of the line face")
         self.n_gon = n
         for i in range(2*n + 2):
@@ -298,12 +298,12 @@ class Antiprism(Shape):
         def face_map(i, j):
             if i == 0 and j == center:
                 return self.faces[0]
-            if i == 3 and j == center - ((self.n_gon+1)%2):
+            if i == 3 and j == center - ((self.n_gon + 1)%2):
                 return self.faces[1]
             if i == 1:
                 return self.faces[2 + (j + center)%self.n_gon]
             if i == 2:
-                return self.faces[self.n_gon + 2 + (j + center+1)%self.n_gon]
+                return self.faces[self.n_gon + 2 + (j + center + 1)%self.n_gon]
             return None
 
         return face_map, 4, self.n_gon
@@ -337,13 +337,15 @@ class Torus(NTorus):
 if __name__ == "__main__":
     from display_utils import *
 
-    cube = Cube()
-    top=cube.faces[4]
-    bottom=cube.faces[5]
-    top:Face
+    cube = Dodecahedron()
+    cube.interactive_vornoi_plot()
+    quit()
+    top = cube.faces[4]
+    bottom = cube.faces[5]
+    top: Face
     for path in top.face_paths_to(bottom.name):
-        for (_,_,f,_) in path:
-            print(f.name,end=', ')
+        for (_, _, f, _) in path:
+            print(f.name, end=', ')
         print()
     cube.plot_faces()
 

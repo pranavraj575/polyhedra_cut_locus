@@ -705,6 +705,97 @@ class Shape:
         if plot:
             to_plot.plot(X, Y, color=color)
 
+    def plot_face_boundaries(self, axs):
+        face_map, n, m = self.faces_to_plot_n_m()
+
+        def ploot(i, j):
+            if m > 1 and n > 1:
+                return axs[i, j]
+            if m == 1 and n == 1:
+                return axs
+            return axs[m*i + j]
+
+        for i in range(n):
+            for j in range(m):
+                face = face_map(i, j)
+                if face is not None:
+                    ploot(i, j).set_title("FACE " + str(face.name))
+
+                    path = face.get_path_and_faces()
+                    for ((p1, p2), f) in path:
+                        (x, y) = tuple(p1.flatten())
+                        (xp, yp) = tuple(p2.flatten())
+                        ploot(i, j).plot([x, xp], [y, yp], label=f.name, alpha=.5)
+
+    def interactive_vornoi_plot(self, figsize=None, legend=lambda i, j:True, diameter=None, event_key='button_press_event'):
+        # event_key can be 'motion_notify_event' or 'button_press_event'
+        plt.rcParams["figure.autolayout"] = True
+        face_map, n, m = self.faces_to_plot_n_m()
+        fig, axs = plt.subplots(n, m, figsize=figsize)
+
+        def ploot(i, j):
+            if m > 1 and n > 1:
+                return axs[i, j]
+            if m == 1 and n == 1:
+                return axs
+            return axs[m*i + j]
+
+        list_axes = []
+        for i in range(n):
+            for j in range(m):
+                list_axes.append((ploot(i, j), (i, j)))
+
+        def ploot_inv(ax):
+            for (x, (i, j)) in list_axes:
+                if x == ax:
+                    return (i, j)
+            return None
+
+        def mouse_event(event):
+            ax = event.inaxes
+            if ax is None:
+                return
+            for i in range(n):
+                for j in range(m):
+                    ploot(i, j).cla()
+            p = np.array([[event.xdata], [event.ydata]])
+            (i, j) = ploot_inv(ax)
+            fc = face_map(i, j)
+            fc: Face
+            if fc is None:
+                return
+            if not fc.within_bounds(p):
+                return
+
+            self.plot_face_boundaries(axs)
+            for i in range(n):
+                for j in range(m):
+                    ploot(i, j).set_xticks([])
+                    ploot(i, j).set_yticks([])
+            ax.scatter(event.xdata, event.ydata)
+
+            source_fn = fc.name
+
+            for i in range(n):
+                for j in range(m):
+                    face = face_map(i, j)
+                    if face is not None:
+                        xlim, ylim = ploot(i, j).get_xlim(), ploot(i, j).get_ylim()
+                        self.plot_voronoi(p, source_fn, face.name, diameter=diameter, ax=ploot(i, j))
+                        ploot(i, j).set_xlim(xlim)
+                        ploot(i, j).set_ylim(ylim)
+
+            plt.show()
+
+        cid = fig.canvas.mpl_connect(event_key, mouse_event)
+        self.plot_face_boundaries(axs)
+
+        for i in range(n):
+            for j in range(m):
+                ploot(i, j).set_xticks([])
+                ploot(i, j).set_yticks([])
+        plt.show()
+
     def plot_faces(self, save_image=None, show=False, figsize=None, legend=lambda i, j:True, voronoi=None):
 
         face_map, n, m = self.faces_to_plot_n_m()

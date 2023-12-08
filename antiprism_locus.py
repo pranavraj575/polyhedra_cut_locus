@@ -4,28 +4,30 @@ from display_utils import *
 import os
 
 # if __name__ == "__main__":
-for n in range(3, 20):
-    # n=7
-    # for mult in (np.arange(10)+1)/10:
+for n in range(3, 10):
     print(n)
-    cube = Antiprism(n)
-
+    c=5
     r = np.sqrt(3)/np.tan(np.pi/n)
     R = r/np.cos(np.pi/n)
-
     fn = 0
-
-    p = np.array([[0.], [0.]])
-    # p = coltation(-np.pi/2 - np.pi/n)*r*.1
-    # p = np.array([[0.], [-r*mult]])
-    # p = coltation(-np.pi/2 - 2*np.pi/n)*r*mult
-    # p = coltation(-np.pi/2 - np.pi/n)*.05*r**2+coltation(-np.pi/2)*.05*np.sqrt(r)
-
-    cube.add_point_to_face((p, {'color':'black', 's':40}), fn)
-
     folder = os.path.join('images', 'antiprisms', str(n))
     if not os.path.exists(folder):
         os.makedirs(folder)
-    name = 'p_' + str(tuple(p.flatten())) + '_face_' + str(fn) + '.png'
-    cube.plot_faces(save_image=os.path.join(folder, name), show=False, figsize=((n)*2.5, 8), legend=lambda i, j:i == 1 or i == 2,
-                    voronoi=(p, fn, 5))  # DIAMETER ONLY TRUE FOR TOP OR BOTTOM FACES
+
+    for mult in (np.arange(c))*.5/(c-1):
+        p1 = coltation(-np.pi/2 - np.pi/n)*R*mult
+        cube = Antiprism(n)
+        cube.add_point_to_face((p1, {'color':'black', 's':40}), fn)
+        name = 'p_' + str(tuple(p1.flatten())) + '_face_' + str(fn) + '.png'
+        cube.plot_faces(save_image=os.path.join(folder, name), show=False, figsize=((n)*2.5, 8), legend=lambda i, j:i == 1 or i == 2,
+                        voronoi=(p1, fn, 5))
+
+        for mult2 in (np.arange(c))*.25/(c-1):
+            cube = Antiprism(n)
+            p2 = coltation(-np.pi/2 - np.pi/n)*R*mult+coltation(-np.pi/2)*mult2*R
+
+            cube.add_point_to_face((p2, {'color':'black', 's':40}), fn)
+            name = 'p_' + str(tuple(p2.flatten())) + '_face_' + str(fn) + '.png'
+            cube.plot_faces(save_image=os.path.join(folder, name), show=False, figsize=((n)*2.5, 8), legend=lambda i, j:i == 1 or i == 2,
+                            voronoi=(p2, fn, 5))
+
