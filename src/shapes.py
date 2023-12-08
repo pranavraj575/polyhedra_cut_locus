@@ -1,7 +1,7 @@
 import numpy as np, itertools
 from matplotlib import pyplot as plt
 from scipy.spatial import Voronoi
-from my_vornoi import voronoi_plot_2d
+from src.my_vornoi import voronoi_plot_2d
 
 TOL = .001
 
@@ -451,6 +451,7 @@ class Face:
         self.dimension = None
         self.bound_M = None
         self.bound_b = None
+        self.memoized_face_paths = dict()
 
         if bounds_faces is not None:
             for (bound, F) in bounds_faces:
@@ -561,7 +562,7 @@ class Face:
             self._create_bound_arrays()
         n = len(self.bounds)
         if n < self.dimension:
-            #print("WARNING: no vertices since not enough boundaries")
+            # print("WARNING: no vertices since not enough boundaries")
             return
         for rows in itertools.combinations(range(n), self.dimension):
             sub_M = self.bound_M[rows, :]
@@ -650,7 +651,7 @@ class Face:
         """
         return [f for (_, f) in self.bounds]
 
-    def face_paths_to(self, fn, visited_names=None, diameter=None):
+    def _face_paths_to(self, fn, visited_names=None, diameter=None):
         """
         returns all paths to specified face using DFS
 
@@ -669,8 +670,28 @@ class Face:
         else:
             for (bound, f) in self.bounds:
                 if not f.name in visited_names:
-                    for path in f.face_paths_to(fn, visited_names=visited_names.copy(), diameter=None if diameter is None else diameter - 1):
+                    for path in f._face_paths_to(fn, visited_names=visited_names.copy(), diameter=None if diameter is None else diameter - 1):
                         yield [(bound, f)] + path
+
+    def face_paths_to(self, fn, visited_names=None, diameter=None):
+        """
+        memoized version of _face_path_to
+        only memoizes if visited names is None
+
+        :param fn: name of target face
+        :param visited_names: set of faces we have already visited
+        :param diameter: longest path of faces to consider (None if infinite)
+        :return: (Bound,Face) list of 'edges' and 'next Faces'
+        """
+        if visited_names is None:
+            if (fn, diameter) in self.memoized_face_paths:
+                return self.memoized_face_paths[(fn, diameter)]
+        out = list(self._face_paths_to(fn, visited_names=visited_names, diameter=diameter))
+
+        if visited_names is None:
+            self.memoized_face_paths[(fn, diameter)] = out
+
+        return out
 
     def get_vertices_of_face_bound(self, fn):
         """
@@ -877,7 +898,6 @@ class Shape:
                 q = bound.shift_point(q)
             points.append(q)
         return points
-
 
     def plot_voronoi(self, p, source_fn, sink_fn, diameter, ax):
         """
@@ -1095,7 +1115,7 @@ class Shape:
                 for j in range(m):
                     ploot(i, j).set_xticks([])
                     ploot(i, j).set_yticks([])
-            ax.scatter(event.xdata, event.ydata)
+            ax.scatter(event.xdata, event.ydata, color='purple')
 
             source_fn = fc.name
 

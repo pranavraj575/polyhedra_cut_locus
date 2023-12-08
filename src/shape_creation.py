@@ -1,6 +1,5 @@
 import numpy as np
-
-from shapes import *
+from src.shapes import *
 
 
 class Cube(Shape):
@@ -37,7 +36,6 @@ class Cube(Shape):
             # which is same as 'entering' on right
             T = rotation_T(theta)
             si = np.array([[np.cos(angle)], [np.sin(angle)]])
-            # add_boundary_pair(curr, top, np.array([[0, 1]]), 1, s, T, si)
             curr.add_boundary_paired(top, np.array([[0, 1]]), 1, s, T, si)
 
         for i in range(4):
@@ -53,7 +51,6 @@ class Cube(Shape):
             # which is same as 'entering' on right
             T = rotation_T(theta)
             si = np.array([[np.cos(angle)], [np.sin(angle)]])
-            # add_boundary_pair(curr, bot, np.array([[0, -1]]), 1, s, T, si)
             curr.add_boundary_paired(bot, np.array([[0, -1]]), 1, s, T, si)
 
     def faces_to_plot_n_m(self):
@@ -339,26 +336,57 @@ class NTorus(Shape):
             face.add_boundary_paired(face, ei.T, 1, -ei, np.identity(n), -ei)
 
 
-class Torus(NTorus):
+class LargeNTorus(Shape):
+    def __init__(self, n):
+        """
+        makes n-torus, 2^n faces, each dimension is 2 faces long
+        """
+        super().__init__()
+
+        def name(i):
+            """
+            binary name of face i
+            """
+            name = bin(i)[2:]
+            while len(name) < n:
+                name = '0' + name
+            return name[::-1]
+
+        for i in range(int(2**n)):
+            self.add_face(Face(name=name(i)))
+        for i in range(int(2**n)):
+            nm = name(i)
+            for k in range(n):
+                neigh_nm = nm[:k] + str((int(nm[k]) + 1)%2) + nm[k + 1:]
+                ek = np.zeros((n, 1))
+                ek[k][0] = 1
+
+                self.faces[nm].add_boundary_paired(self.faces[neigh_nm], ek.T, 1, -ek, np.identity(n), -ek)
+
+
+class Large2Torus(LargeNTorus):
     def __init__(self):
         """
-        makes 2-torus
+        makes 2-torus, 4 faces for plotting reasons
+
+        0 1
+        2 3
         """
         super().__init__(2)
 
     def faces_to_plot_n_m(self):
         def face_map(i, j):
-            return self.faces[0]
+            return self.faces[str(j) + str(i)]
 
-        return face_map, 1, 1
+        return face_map, 2, 2
 
 
 if __name__ == "__main__":
     from display_utils import *
 
-    cube = Tetrahedron()
+    cube = Large2Torus()
     p = np.array([[0.0], [0.0]])
-    cube.add_point_to_face(p, 0, {'color':'black', 's':20})
+    # cube.add_point_to_face(p, '00', {'color':'black', 's':20})
 
     cube.interactive_vornoi_plot(event_key='motion_notify_event')
     quit()

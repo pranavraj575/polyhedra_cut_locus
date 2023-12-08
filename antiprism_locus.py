@@ -1,9 +1,7 @@
-from shapes import *
-from shape_creation import Antiprism
-from display_utils import *
+from src.shapes import *
+from src.shape_creation import Antiprism
 import os
 
-# if __name__ == "__main__":
 for n in range(3, 10):
     print(n)
     c=5
