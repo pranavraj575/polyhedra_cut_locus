@@ -54,7 +54,9 @@ python3 voronoi_interactive.py -h
     ```bash
     python3 voronoi_interactive.py --shape antiprism --n <n> --click
     ```
+    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/antiprisms/5/p_(-0.21650635094610957%2C%20-1.034680636892047)_face_0.png)
   * Torus:
     ```bash
     python3 voronoi_interactive.py --shape torus
     ```
+    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/2torus/sample.png)
