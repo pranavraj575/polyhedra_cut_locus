@@ -16,7 +16,7 @@ Run `voronoi_interactive.py` in the mitochondria folder
 
 Example:
 ```bash
-python3 voronoi_interactive.py --shape antiprism --n 4 --center_pt --legend 
+python3 voronoi_interactive.py --shape tetrahedron --center_pt --legend 
 ```
 To see the possible arguments, run the following:
 ```bash
