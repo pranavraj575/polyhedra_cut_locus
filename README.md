@@ -59,7 +59,6 @@ python3 voronoi_interactive.py -h
     ```bash
     python3 voronoi_interactive.py --shape prism --n <n>
     ```
-    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/hexagonal_prism.png)
     ![](https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/pentagonal_prism.png)
     
   * Antiprism:
@@ -81,6 +80,7 @@ python3 voronoi_interactive.py -h
     ```bash
     python3 voronoi_interactive.py --shape longpyramid --n <n>
     ```
+    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/elongated_pentagonal_pyramid.png)
     
   * Bipyramid:
     (replace `<n>` with the n-gon you want (`3<=n<=6`)
@@ -94,6 +94,7 @@ python3 voronoi_interactive.py -h
     ```bash
     python3 voronoi_interactive.py --shape longbipyramid --n <n>
     ```
+    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/elongated_octahedron.png)
     
   * Torus:
     ```bash
