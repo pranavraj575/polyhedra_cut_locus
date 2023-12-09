@@ -6,7 +6,9 @@ tested with [Python 3.8.10](https://www.python.org/downloads/release/python-3810
 ![](https://github.com/pranavraj575/mitochondria/blob/main/images/tetrahedron/demo.gif)
 ## Installation (assuming [Python](https://www.python.org/downloads/release/python-3810/) is installed)
 * Option 1: [Download zip](https://github.com/pranavraj575/mitochondria/archive/refs/heads/main.zip), then extract all
-  run the following in terminal/command prompt to install Python package: (replace `<name of folder>` with path of folder you extracted it to)
+  run the following in terminal/command prompt to install Python package:
+
+  (replace `<name of folder>` with path of folder you extracted it to)
   ```bash
   cd <name of folder>
   pip3 install -e .
