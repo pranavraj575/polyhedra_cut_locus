@@ -23,7 +23,7 @@ tested with [Python 3.8.10](https://www.python.org/downloads/release/python-3810
 
 Run `voronoi_interactive.py` in the mitochondria folder
 
-Example:
+Example: (try replacing `python3` with `python` if you get error "Python was not found")
 ```bash
 python3 voronoi_interactive.py --shape tetrahedron --center_pt --legend 
 ```
