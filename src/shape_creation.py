@@ -40,12 +40,12 @@ class Prism(Shape):
 
     def faces_to_plot_n_m(self):
         def face_map(i, j):
-            mid = self.n//2
+            shift = self.n//2
             if i == 1:
-                return self.faces[(j - mid)%self.n]
-            if i == 0 and j == mid:
+                return self.faces[(j - shift)%self.n]
+            if i == 0 and j == shift:
                 return self.faces[self.n]
-            if i == 2 and j == mid:
+            if i == 2 and j == shift:
                 return self.faces[self.n + 1]
             return None
 
@@ -363,12 +363,15 @@ class Antiprism(Shape):
 class ElongatedBipyramid(Shape):
     def __init__(self, n):
         """
-        makes bipyramid with 2n triangles(3<=n<=6) and n squares
+        makes elongated bipyramid with 2n triangles(3<=n<=6) and n squares
         triangle faces 0 to (n-1) are on the top (1 to the right of 0)
         square faces n to 2n-1 are on the bottom (n+1 to the right of n)
         triangle faces 2n to 3n-1 are on the bottom (n+1 to the right of n)
 
         face i is above face i+n
+
+        triangle faces have an inscribed circle radius 1
+        thus, square side lengths are 2*sqrt(3)
         """
         super().__init__()
         assert 2 <= n and n <= 6
@@ -378,6 +381,9 @@ class ElongatedBipyramid(Shape):
         I = np.identity(2)
         e1 = np.array([[1], [0]])
         e2 = np.array([[0], [1]])
+
+        square_r = np.sqrt(3)
+
         for i in range(n):
             curr = self.faces[i]
             neigh = self.faces[(i + 1)%n]
@@ -386,7 +392,7 @@ class ElongatedBipyramid(Shape):
         for i in range(n):
             curr = self.faces[n + i]
             neigh = self.faces[n + (i + 1)%n]
-            curr.add_boundary_paired(neigh, e1.T, 1, -e1, I, -e1)
+            curr.add_boundary_paired(neigh, e1.T, square_r, -square_r*e1, I, -square_r*e1)
 
         for i in range(n):
             curr = self.faces[2*n + i]
@@ -397,12 +403,71 @@ class ElongatedBipyramid(Shape):
             top = self.faces[i]
             mid = self.faces[n + i]
             bot = self.faces[2*n + i]
-            for t, b in ((top, mid), (mid, bot)):
-                t.add_boundary_paired(b, -e2.T, 1, e2, I, e2)
+            top.add_boundary_paired(mid, -e2.T, 1, e2, I, square_r*e2)
+            mid.add_boundary_paired(bot, -e2.T, square_r, square_r*e2, I, e2)
 
     def faces_to_plot_n_m(self):
         def face_map(i, j):
             return self.faces[i*self.n + j]
+
+        return face_map, 3, self.n
+
+
+class ElongatedPyramid(Shape):
+    def __init__(self, n):
+        """
+        makes elongated pyramid with n triangles(3<=n<=6), n squares, and one n-gon
+        triangle faces 0 to (n-1) are on the top (1 to the right of 0)
+        square faces n to 2n-1 are on the bottom (n+1 to the right of n)
+        face i is above face i+n
+
+        n-gon is face 2n on the bottom (face n is above face 2n)
+
+        square faces have side length 2
+        thus, triangle faces have an inscribed circle of 1/sqrt(3)
+        n-gon has a face with inscribed r = 1/tan(pi/n)
+        """
+        super().__init__()
+        assert 2 <= n and n <= 6
+        self.n = n
+        for i in range(2*n + 1):
+            self.add_face()
+        I = np.identity(2)
+        e1 = np.array([[1], [0]])
+        e2 = np.array([[0], [1]])
+        triangle_r = 1/np.sqrt(3)
+        n_gon_r = 1/np.tan(np.pi/n)
+        for i in range(n):
+            curr = self.faces[i]
+            neigh = self.faces[(i + 1)%n]
+            curr.add_boundary_paired(neigh, rowtation(np.pi/6), triangle_r, -triangle_r*coltation(np.pi/6), rotation_T(-np.pi/3), triangle_r*coltation(np.pi*5/6))
+
+        for i in range(n):
+            curr = self.faces[n + i]
+            neigh = self.faces[n + (i + 1)%n]
+            curr.add_boundary_paired(neigh, e1.T, 1, -e1, I, -e1)
+
+        for i in range(n):
+            top = self.faces[i]
+            bot = self.faces[n + i]
+            top.add_boundary_paired(bot, -e2.T, triangle_r, triangle_r*e2, I, e2)
+
+        bottom = self.faces[2*n]
+        for i in range(n):
+            curr = self.faces[n + i]
+            theta = np.pi/2 - 2*np.pi*i/n
+            # "angle" of boundary of bottom face.
+            bottom.add_boundary_paired(curr, rowtation(theta), n_gon_r, -n_gon_r*coltation(theta), rotation_T(2*np.pi*i/n), -e2)
+
+    def faces_to_plot_n_m(self):
+        shift = self.n//2
+
+        def face_map(i, j):
+            if i <= 1:
+                return self.faces[i*self.n + (j - shift)%self.n]
+            elif j == shift:
+                return self.faces[2*self.n]
+            return None
 
         return face_map, 3, self.n
 

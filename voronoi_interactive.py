@@ -1,5 +1,5 @@
 from src.shapes import Shape
-from src.shape_creation import Tetrahedron, Cube, Octahedron, Dodecahedron, Icosahedron, Prism, Pyramid, Bipyramid, ElongatedBipyramid, Antiprism, Large2Torus
+from src.shape_creation import Tetrahedron, Cube, Octahedron, Dodecahedron, Icosahedron, Prism, Pyramid, ElongatedPyramid, Bipyramid, ElongatedBipyramid, Antiprism, Large2Torus
 import argparse
 import numpy as np
 
@@ -10,12 +10,13 @@ mapping = {'tetrahedron':Tetrahedron,
            'icosahedron':Icosahedron,
            'pyramid':Pyramid,
            'bipyramid':Bipyramid,
-           'longpyramid':ElongatedBipyramid,
+           'longpyramid':ElongatedPyramid,
+           'longbipyramid':ElongatedBipyramid,
            'prism':Prism,
            'antiprism':Antiprism,
            'torus':Large2Torus}
 
-arg_n = ('prism', 'antiprism', 'pyramid', 'bipyramid', 'longpyramid')
+arg_n = ('prism', 'antiprism', 'pyramid', 'longpyramid', 'bipyramid', 'longbipyramid')
 # shapes that take n as an arg
 
 PARSER = argparse.ArgumentParser()
