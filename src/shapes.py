@@ -1015,11 +1015,12 @@ class Shape:
         if plot:
             ax.plot(X, Y, color=color)
 
-    def plot_face_boundaries(self, axs):
+    def plot_face_boundaries(self, axs, legend):
         """
         plots faces and points/arcs on faces
 
         :param axs: axis to plot on
+        :param legend: (i,j)-> whether to put a legend on plot (i,j)
         """
         face_map, n, m = self.faces_to_plot_n_m()
 
@@ -1060,10 +1061,11 @@ class Shape:
 
                     for (A, arc_info) in self.arcs[face.name]:
                         self.draw_arc(ploot(i, j), A, arc_info=arc_info)
+                    if legend(i, j):
+                        ploot(i, j).legend()
 
     def interactive_vornoi_plot(self, figsize=None, legend=lambda i, j:False, diameter=None, event_key='button_press_event'):
         """
-
         :param figsize: initial figure size (inches)
         :param legend: (i,j)-> whether to put a legend on plot (i,j)
         :param diameter: longest path of faces to consider when creating paths for vornoi plot
@@ -1110,7 +1112,7 @@ class Shape:
             if not fc.within_bounds(p):
                 return
 
-            self.plot_face_boundaries(axs)
+            self.plot_face_boundaries(axs, legend=legend)
             for i in range(n):
                 for j in range(m):
                     ploot(i, j).set_xticks([])
@@ -1127,12 +1129,10 @@ class Shape:
                         self.plot_voronoi(p, source_fn, face.name, diameter=diameter, ax=ploot(i, j))
                         ploot(i, j).set_xlim(xlim)
                         ploot(i, j).set_ylim(ylim)
-                        if legend(i, j):
-                            ploot(i, j).legend()
             plt.show()
 
         cid = fig.canvas.mpl_connect(event_key, mouse_event)
-        self.plot_face_boundaries(axs)
+        self.plot_face_boundaries(axs, legend=legend)
 
         for i in range(n):
             for j in range(m):
@@ -1165,7 +1165,7 @@ class Shape:
             for j in range(m):
                 ploot(i, j).set_xticks([])
                 ploot(i, j).set_yticks([])
-        self.plot_face_boundaries(axs)
+        self.plot_face_boundaries(axs, legend=legend)
         for i in range(n):
             for j in range(m):
                 face = face_map(i, j)
@@ -1177,8 +1177,6 @@ class Shape:
                         ignore_locus_points = self.plot_voronoi(p, source_fn, face.name, diameter=diameter, ax=ploot(i, j))
                         ploot(i, j).set_xlim(xlim)
                         ploot(i, j).set_ylim(ylim)
-                    if legend(i, j):
-                        ploot(i, j).legend()
 
         if save_image is not None:
             plt.savefig(save_image)

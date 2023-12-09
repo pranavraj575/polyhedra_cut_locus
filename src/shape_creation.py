@@ -2,96 +2,83 @@ import numpy as np
 from src.shapes import *
 
 
-class Cube(Shape):
-    def __init__(self):
+class Prism(Shape):
+    def __init__(self, n):
         """
-        makes cube where faces 0,1,2,3 are the 'sides' in order (1 is to the right of 0)
-        4 is the top, aligned with 0 on the right, 1 on the top
-        5 is the bottom, aligned with 0 on the right, 1 on the bottom
+        makes n-gon prism where faces 0 to (n-1) are the 'sides' in order (1 is to the right of 0)
+        n is the top, aligned with 0 on the bottom
+        (n+1) is the bottom, aligned with 0 on the top
         """
 
         super().__init__()
-        for i in range(6):
+        assert n > 1
+        self.n = n
+        for i in range(n + 2):
             self.add_face()
-
-        for i in range(4):
+        I = np.identity(2)
+        e1 = np.array([[1], [0]])
+        e2 = np.array([[0], [1]])
+        for i in range(n):
             curr: Face = self.faces[i]
-            neigh = self.faces[(i + 1)%4]
-            I = np.identity(2)
-            s = np.array([[1], [0]])
-            curr.add_boundary_paired(neigh, np.array([[1, 0]]), 1, -s, I, -s)
+            neigh = self.faces[(i + 1)%n]
+            curr.add_boundary_paired(neigh, e1.T, 1, -e1, I, -e1)
 
-        top = self.faces[4]
-        bot = self.faces[5]
+        top = self.faces[n]
+        bot = self.faces[n + 1]
+        r = 1/np.tan(np.pi/n)
 
-        for i in range(4):
+        for i in range(n):
             curr = self.faces[i]
-            angle = i*np.pi/2
+            theta = -np.pi/2 + 2*np.pi*i/n
             # "angle" of boundary of top face.
-            # 0th face is the right one, so angle is 0
-            s = np.array([[0], [-1]])
-            theta = np.pi + (angle - np.pi/2)  # since we move top (pi/2) to the angle
-            # adding pi to the angle because portal logic
-            # 'exiting' through top, then rotating to the left leads to 'exiting' through left,
-            # which is same as 'entering' on right
-            T = rotation_T(theta)
-            si = np.array([[np.cos(angle)], [np.sin(angle)]])
-            curr.add_boundary_paired(top, np.array([[0, 1]]), 1, s, T, si)
-
-        for i in range(4):
+            top.add_boundary_paired(curr, rowtation(theta), r, -r*coltation(theta), rotation_T(-2*np.pi*i/n), e2)
+        for i in range(n):
             curr = self.faces[i]
-            angle = -i*np.pi/2
+            theta = np.pi/2 - 2*np.pi*i/n
             # "angle" of boundary of bottom face.
-            # 0th face is the right one, so angle is 0
-            # inverted since we are going clockwise instead of counter
-            s = np.array([[0], [1]])
-            theta = np.pi + (angle - (-np.pi/2))  # since we move bottom (-pi/2) to the angle
-            # adding pi to the angle because portal logic
-            # 'exiting' through top, then rotating to the left leads to 'exiting' through left,
-            # which is same as 'entering' on right
-            T = rotation_T(theta)
-            si = np.array([[np.cos(angle)], [np.sin(angle)]])
-            curr.add_boundary_paired(bot, np.array([[0, -1]]), 1, s, T, si)
+            bot.add_boundary_paired(curr, rowtation(theta), r, -r*coltation(theta), rotation_T(2*np.pi*i/n), -e2)
 
     def faces_to_plot_n_m(self):
         def face_map(i, j):
+            mid = self.n//2
             if i == 1:
-                return self.faces[(j + 2)%4]
-            if i == 0 and j == 1:
-                return self.faces[4]
-            if i == 2 and j == 1:
-                return self.faces[5]
+                return self.faces[(j - mid)%self.n]
+            if i == 0 and j == mid:
+                return self.faces[self.n]
+            if i == 2 and j == mid:
+                return self.faces[self.n + 1]
             return None
 
-        return face_map, 3, 4
+        return face_map, 3, self.n
 
 
-class Tetrahedron(Shape):
-    def __init__(self):
+class Pyramid(Shape):
+    def __init__(self, n):
         """
-        makes tetrahedron where face 0 borders face 1 on the right, 2 on the left and 3 on the bottom
-        3 is upside down triangle for display purposes
-        each face has a circumcenter of radius 1
+        makes pyramid with an n-gon base (3<=n<=6)
+        face n is the bottom
+        face 0 to n-1 are triangles, with face 1 to the right of face 0
+
+        the top of face n borders the bottom of face 0
         """
         super().__init__()
-
-        for i in range(4):
+        assert 3 <= n and n <= 6
+        self.n = n
+        for i in range(n + 1):
             self.add_face()
+        bottom = self.faces[n]
 
-        for i in range(3):
+        for i in range(n):
             curr = self.faces[i]
-            neigh = self.faces[(i + 1)%3]
+            neigh = self.faces[(i + 1)%n]
             curr.add_boundary_paired(neigh, rowtation(np.pi/6), 1, -coltation(np.pi/6), rotation_T(-np.pi/3), coltation(np.pi*5/6))
+        r = np.sqrt(3)/np.tan(np.pi/n)
+        for i in range(n):
+            curr = self.faces[i]
+            theta = np.pi/2 - 2*i*np.pi/n
+            curr.add_boundary_paired(bottom, np.array([[0, -1]]), 1, np.array([[0], [1]]), rotation_T(-i*2*np.pi/n), r*coltation(theta))
 
-        front, right, left, bottom = [self.faces[i] for i in range(4)]
-
-        front.add_boundary_paired(bottom, np.array([[0, -1]]), 1, np.array([[0], [1]]), np.identity(2), np.array([[0], [1]]))
-
-        right.add_boundary_paired(bottom, np.array([[0, -1]]), 1, np.array([[0], [1]]), rotation_T(-np.pi*2/3), coltation(-np.pi/6))
-
-        left.add_boundary_paired(bottom, np.array([[0, -1]]), 1, np.array([[0], [1]]), rotation_T(np.pi*2/3), coltation(-np.pi*5/6))
-
-    def faces_to_plot_n_m(self):
+    def _tetrahedron_faces_to_plot_n_m(self):
         def face_map(i, j):
             if i == 1 and j == 1:
                 return self.faces[3]
@@ -101,40 +88,94 @@ class Tetrahedron(Shape):
 
         return face_map, 2, 3
 
+    def _large_prism_faces_to_plot_n_m(self):
+        shift = self.n//2
 
-class Octahedron(Shape):
+        def face_map(i, j):
+            if i == 0:
+                return self.faces[(j - shift)%self.n]
+            if i == 1 and j == shift:
+                return self.faces[self.n]
+            return None
+
+        return face_map, 2, self.n
+
+    def faces_to_plot_n_m(self):
+        if self.n == 3:
+            return self._tetrahedron_faces_to_plot_n_m()
+        return self._large_prism_faces_to_plot_n_m()
+
+
+class Bipyramid(Shape):
+    def __init__(self, n):
+        """
+        makes bipyramid with 2n triangles(3<=n<=6)
+        faces 0 to (n-1) are on the top (1 to the right of 0)
+        faces n to 2n-1 are on the bottom (n+1 to the right of n)
+
+        face i is above face i+n
+        """
+        super().__init__()
+        assert 2 <= n and n <= 6
+        self.n = n
+        for i in range(2*n):
+            self.add_face()
+
+        for i in range(n):
+            curr = self.faces[i]
+            neigh = self.faces[(i + 1)%n]
+            curr.add_boundary_paired(neigh, rowtation(np.pi/6), 1, -coltation(np.pi/6), rotation_T(-np.pi/3), coltation(np.pi*5/6))
+
+        for i in range(n):
+            curr = self.faces[n + i]
+            neigh = self.faces[n + (i + 1)%n]
+            curr.add_boundary_paired(neigh, rowtation(-np.pi/6), 1, -coltation(-np.pi/6), rotation_T(np.pi/3), coltation(-np.pi*5/6))
+
+        for i in range(n):
+            top = self.faces[i]
+            bot = self.faces[i + self.n]
+            top.add_boundary_paired(bot, np.array([[0, -1]]), 1, np.array([[0], [1]]), np.identity(2), np.array([[0], [1]]))
+
+    def faces_to_plot_n_m(self):
+        def face_map(i, j):
+            return self.faces[i*self.n + j]
+
+        return face_map, 2, self.n
+
+
+class Tetrahedron(Pyramid):
     def __init__(self):
         """
+        special case of pyramid
+        makes tetrahedron where face 0 borders face 1 on the right, 2 on the left and 3 on the bottom
+        3 is upside down triangle for display purposes
+        each face has a circumcenter of radius 1
+        """
+        super().__init__(3)
+
+
+class Cube(Prism):
+    def __init__(self):
+        """
+        special case, square prism
+        makes cube where faces 0,1,2,3 are the 'sides' in order (1 is to the right of 0)
+        4 is the top, aligned with 0 on the bottom
+        5 is the bottom, aligned with 0 on the top
+        """
+
+        super().__init__(4)
+
+
+class Octahedron(Bipyramid):
+    def __init__(self):
+        """
+        special case of bipyramid
         makes octahedron where the top half are faces 0,1,2,3 (1 is to the right of 0)
         bottom half is 4,5,6,7 (4 is below 0, 5 below 1)
         each face has a circumcenter of radius 1
         we will make 0,1,2,3 normal triangles and 4,5,6,7 upside down triangles for visualization purposes
         """
-        super().__init__()
-
-        for i in range(8):
-            self.add_face()
-
-        for i in range(4):
-            curr = self.faces[i]
-            neigh = self.faces[(i + 1)%4]
-            curr.add_boundary_paired(neigh, rowtation(np.pi/6), 1, -coltation(np.pi/6), rotation_T(-np.pi/3), coltation(np.pi*5/6))
-
-        for i in range(4):
-            curr = self.faces[4 + i]
-            neigh = self.faces[4 + (i + 1)%4]
-            curr.add_boundary_paired(neigh, rowtation(-np.pi/6), 1, -coltation(-np.pi/6), rotation_T(np.pi/3), coltation(-np.pi*5/6))
-
-        for i in range(4):
-            top = self.faces[i]
-            bot = self.faces[4 + i]
-            top.add_boundary_paired(bot, np.array([[0, -1]]), 1, np.array([[0], [1]]), np.identity(2), np.array([[0], [1]]))
-
-    def faces_to_plot_n_m(self):
-        def face_map(i, j):
-            return self.faces[i*4 + j]
-
-        return face_map, 2, 4
+        super().__init__(4)
 
 
 class Icosahedron(Shape):
@@ -319,6 +360,53 @@ class Antiprism(Shape):
         return face_map, 4, self.n_gon
 
 
+class ElongatedBipyramid(Shape):
+    def __init__(self, n):
+        """
+        makes bipyramid with 2n triangles(3<=n<=6) and n squares
+        triangle faces 0 to (n-1) are on the top (1 to the right of 0)
+        square faces n to 2n-1 are on the bottom (n+1 to the right of n)
+        triangle faces 2n to 3n-1 are on the bottom (n+1 to the right of n)
+
+        face i is above face i+n
+        """
+        super().__init__()
+        assert 2 <= n and n <= 6
+        self.n = n
+        for i in range(3*n):
+            self.add_face()
+        I = np.identity(2)
+        e1 = np.array([[1], [0]])
+        e2 = np.array([[0], [1]])
+        for i in range(n):
+            curr = self.faces[i]
+            neigh = self.faces[(i + 1)%n]
+            curr.add_boundary_paired(neigh, rowtation(np.pi/6), 1, -coltation(np.pi/6), rotation_T(-np.pi/3), coltation(np.pi*5/6))
+
+        for i in range(n):
+            curr = self.faces[n + i]
+            neigh = self.faces[n + (i + 1)%n]
+            curr.add_boundary_paired(neigh, e1.T, 1, -e1, I, -e1)
+
+        for i in range(n):
+            curr = self.faces[2*n + i]
+            neigh = self.faces[2*n + (i + 1)%n]
+            curr.add_boundary_paired(neigh, rowtation(-np.pi/6), 1, -coltation(-np.pi/6), rotation_T(np.pi/3), coltation(-np.pi*5/6))
+
+        for i in range(n):
+            top = self.faces[i]
+            mid = self.faces[n + i]
+            bot = self.faces[2*n + i]
+            for t, b in ((top, mid), (mid, bot)):
+                t.add_boundary_paired(b, -e2.T, 1, e2, I, e2)
+
+    def faces_to_plot_n_m(self):
+        def face_map(i, j):
+            return self.faces[i*self.n + j]
+
+        return face_map, 3, self.n
+
+
 class NTorus(Shape):
     def __init__(self, n):
         """
@@ -384,11 +472,11 @@ class Large2Torus(LargeNTorus):
 if __name__ == "__main__":
     from display_utils import *
 
-    cube = Large2Torus()
+    cube = Pyramid(5)
     p = np.array([[0.0], [0.0]])
     # cube.add_point_to_face(p, '00', {'color':'black', 's':20})
 
-    cube.interactive_vornoi_plot(event_key='motion_notify_event')
+    cube.interactive_vornoi_plot(event_key='motion_notify_event', legend=lambda i, j:True)
     quit()
     top = cube.faces[4]
     bottom = cube.faces[5]

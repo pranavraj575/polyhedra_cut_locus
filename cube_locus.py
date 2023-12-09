@@ -9,8 +9,8 @@ if __name__ == "__main__":
     fn = 2
     p = np.array([[-1], [0]])
 
-    fn=1
-    p=np.array([[.8], [.2]])
+    fn = 1
+    p = np.array([[.8], [.2]])
 
     cube.add_point_to_face(p, fn, {'color':'purple', 's':40})
 
