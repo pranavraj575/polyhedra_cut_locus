@@ -433,6 +433,21 @@ class Bound:
         b = b.flatten()[0]
         return Bound(m, b, -self.si, Ti, -self.s, self.dimension)
 
+    def concatenate_with(self, T=None, s=None):
+        """
+        given some point x that is translated previously like T' x + s',
+            concatenate the translation to this one
+
+            T((T' x + s')+s)+si=T T' x + T(s'+s)+si
+
+        :param T: (self.dimension x self.dimension) translation matrix
+        :param s: shift
+        :return: (self.dimension x self.dimension) tranlstion, (self.dimension x 1) shift
+        """
+        if T is None: T = np.identity(self.dimension)
+        if s is None: s = np.zeros((self.dimension, 1))
+        return (self.T@T, self.si + self.T@(self.s + s))
+
 
 class Face:
     def __init__(self, name, bounds_faces=None, tolerance=TOL):
@@ -451,7 +466,6 @@ class Face:
         self.dimension = None
         self.bound_M = None
         self.bound_b = None
-        self.memoized_face_paths = dict()
 
         if bounds_faces is not None:
             for (bound, F) in bounds_faces:
@@ -507,9 +521,6 @@ class Face:
         """
         if not self.dimension == 2:
             raise Exception("this will not work in !=2 dimensions")
-        # path=[]
-        # for (v, rows) in self.get_vertices(update=update):
-        #    path.append(((v[0, 0], v[1, 0]), rows))
         path = self.get_vertices()
         out = []
         for i in range(len(path)):
@@ -562,7 +573,7 @@ class Face:
             self._create_bound_arrays()
         n = len(self.bounds)
         if n < self.dimension:
-            # print("WARNING: no vertices since not enough boundaries")
+            print("WARNING: no vertices since not enough boundaries")
             return
         for rows in itertools.combinations(range(n), self.dimension):
             sub_M = self.bound_M[rows, :]
@@ -679,7 +690,7 @@ class Face:
         """
         return [f for (_, f) in self.bounds]
 
-    def _face_paths_to(self, fn, visited_names=None, diameter=None):
+    def face_paths_to(self, fn, visited_names=None, diameter=None):
         """
         returns all paths to specified face using DFS
 
@@ -698,28 +709,8 @@ class Face:
         else:
             for (bound, f) in self.bounds:
                 if not f.name in visited_names:
-                    for path in f._face_paths_to(fn, visited_names=visited_names.copy(), diameter=None if diameter is None else diameter - 1):
+                    for path in f.face_paths_to(fn, visited_names=visited_names.copy(), diameter=None if diameter is None else diameter - 1):
                         yield [(bound, f)] + path
-
-    def face_paths_to(self, fn, visited_names=None, diameter=None):
-        """
-        memoized version of _face_path_to
-        only memoizes if visited names is None
-
-        :param fn: name of target face
-        :param visited_names: set of faces we have already visited
-        :param diameter: longest path of faces to consider (None if infinite)
-        :return: (Bound,Face) list of 'edges' and 'next Faces'
-        """
-        if visited_names is None:
-            if (fn, diameter) in self.memoized_face_paths:
-                return self.memoized_face_paths[(fn, diameter)]
-        out = list(self._face_paths_to(fn, visited_names=visited_names, diameter=diameter))
-
-        if visited_names is None:
-            self.memoized_face_paths[(fn, diameter)] = out
-
-        return out
 
     def get_vertices_of_face_bound(self, fn):
         """
@@ -746,8 +737,6 @@ class Face:
         :param A: Arc
         :return: list of (Face, Arc), list of resulting arcs and their home faces
         """
-        #
-        # returns
         arr = np.array([A])
         for ((a, b), f) in self.get_path_and_faces():
             arr = [B.break_arc(a, b) for B in arr]
@@ -777,17 +766,21 @@ class Face:
 
 
 class Shape:
-    def __init__(self, faces=None):
+    def __init__(self, faces=None, tolerance=TOL):
         """
         A set of faces, representing a shape
         :param faces: initial set of faces
             Note: usually start empty and add faces as we go
+        :param tolerance: tolerance for within_face and such
+            adds this to autogenreated faces
         """
         if faces is None:
             faces = dict()
+        self.tol = tolerance
         self.faces = {face.name: face for face in faces}
         self.points = {face.name: [] for face in self.faces}
         self.arcs = {face.name: [] for face in self.faces}
+        self.memoized_face_translations = dict()
 
     def _pick_new_face_name(self):
         """
@@ -814,7 +807,7 @@ class Shape:
             if None, initializes new face and adds it
         """
         if face is None:
-            face = Face(self._pick_new_face_name())
+            face = Face(self._pick_new_face_name(), tolerance=self.tol)
         self.faces[face.name] = face
         self.reset_face(face.name)
 
@@ -908,6 +901,34 @@ class Shape:
 
         return [(A, B) for (p, r, A, B) in out if self.is_best_seen(p, r, fn)]
 
+    def _get_voronoi_translations(self, source_fn, sink_fn, diameter=None):
+        """
+        full version of get_voronoi_translations
+        """
+        source: Face = self.faces[source_fn]
+        translations = []
+        for path in source.face_paths_to(sink_fn, diameter=diameter):
+            T, s = np.identity(source.dimension), np.zeros((source.dimension, 1))
+            for (bound, _) in path:
+                bound: Bound
+                T, s = bound.concatenate_with(T, s)
+            translations.append((T, s))
+        return translations
+
+    def get_voronoi_translations(self, source_fn, sink_fn, diameter=None):
+        """
+        memoized _get_voronoi_translations
+        Gets translations of p on the source
+            considers every possible face path from source face to sink face
+        :param source_fn: face name of source
+        :param sink_fn: face name of sink
+        :param diameter: cap on length of face path to consider, None if infinite
+        :return: list of (T,s) translation matrix and shift such that each Tp+s translates p to sink face
+        """
+        if (source_fn, sink_fn, diameter) not in self.memoized_face_translations:
+            self.memoized_face_translations[(source_fn, sink_fn, diameter)] = self._get_voronoi_translations(source_fn, sink_fn, diameter=diameter)
+        return self.memoized_face_translations[(source_fn, sink_fn, diameter)]
+
     def get_voronoi_points_from_face_paths(self, p, source_fn, sink_fn, diameter=None):
         """
         Gets voronoi points spawned by p on the source
@@ -918,13 +939,9 @@ class Shape:
         :param diameter: cap on length of face path to consider, None if infinite
         :return: list of column vector voronoi points
         """
-        source: Face = self.faces[source_fn]
         points = []
-        for path in source.face_paths_to(sink_fn, diameter=diameter):
-            q = p.copy()
-            for (bound, f) in path:
-                q = bound.shift_point(q)
-            points.append(q)
+        for (T, s) in self.get_voronoi_translations(source_fn, sink_fn, diameter=diameter):
+            points.append(T@p + s)
         return points
 
     def plot_voronoi(self, p, source_fn, sink_fn, diameter, ax):
