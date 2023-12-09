@@ -13,7 +13,7 @@ tested with [Python 3.8.10](https://www.python.org/downloads/release/python-3810
   cd <name of folder>
   pip3 install -e .
   ```
-* **Option 2**: Clone Repository, then install the python package
+* **Option 2**: Clone Repository, then install the python package (assumes [Git is installed](https://github.com/git-guides/install-git))
   ```bash
   git clone https://github.com/pranavraj575/mitochondria
   pip3 install -e mitochondria
