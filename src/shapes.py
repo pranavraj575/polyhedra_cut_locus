@@ -480,7 +480,7 @@ class Face:
         """
         if self.dimension != 2:
             return
-        self.vertices.sort(key=lambda v:(2*np.pi + np.arctan2(v[0][1][0], v[0][0][0]))%(2*np.pi))
+        self.vertices.sort(key=lambda v: (2*np.pi + np.arctan2(v[0][1][0], v[0][0][0]))%(2*np.pi))
 
     def get_plot_bounds(self):
         """
@@ -785,9 +785,9 @@ class Shape:
         """
         if faces is None:
             faces = dict()
-        self.faces = {face.name:face for face in faces}
-        self.points = {face.name:[] for face in self.faces}
-        self.arcs = {face.name:[] for face in self.faces}
+        self.faces = {face.name: face for face in faces}
+        self.points = {face.name: [] for face in self.faces}
+        self.arcs = {face.name: [] for face in self.faces}
 
     def _pick_new_face_name(self):
         """
@@ -885,10 +885,10 @@ class Shape:
         """
         for fn in self.faces:
             for (p, r) in self.get_cut_locus_points(fn):
-                new_point_info = {k:point_info[k] for k in point_info}
+                new_point_info = {k: point_info[k] for k in point_info}
                 if conditional_point_info is not None:
                     new_point_info.update(conditional_point_info(r))
-                new_point_info.update({'locus_pt':True})
+                new_point_info.update({'locus_pt': True})
                 self.add_point_to_face(p, fn, new_point_info)
 
     def get_cut_locus_arcs(self, fn):
@@ -1092,7 +1092,7 @@ class Shape:
                     if legend(i, j):
                         ploot(i, j).legend()
 
-    def interactive_vornoi_plot(self, figsize=None, legend=lambda i, j:False, diameter=None, event_key='button_press_event'):
+    def interactive_vornoi_plot(self, figsize=None, legend=lambda i, j: False, diameter=None, event_key='button_press_event'):
         """
         :param figsize: initial figure size (inches)
         :param legend: (i,j)-> whether to put a legend on plot (i,j)
@@ -1167,7 +1167,7 @@ class Shape:
                 ploot(i, j).set_yticks([])
         plt.show()
 
-    def plot_faces(self, save_image=None, show=False, figsize=None, legend=lambda i, j:True, voronoi=None):
+    def plot_faces(self, save_image=None, show=False, figsize=None, legend=lambda i, j: True, voronoi=None):
         """
         plots all faces of graph
         :param save_image: whether to save the image

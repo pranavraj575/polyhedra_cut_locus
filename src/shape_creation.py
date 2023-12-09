@@ -541,7 +541,7 @@ if __name__ == "__main__":
     p = np.array([[0.0], [0.0]])
     # cube.add_point_to_face(p, '00', {'color':'black', 's':20})
 
-    cube.interactive_vornoi_plot(event_key='motion_notify_event', legend=lambda i, j:True)
+    cube.interactive_vornoi_plot(event_key='motion_notify_event', legend=lambda i, j: True)
     quit()
     top = cube.faces[4]
     bottom = cube.faces[5]
@@ -556,12 +556,12 @@ if __name__ == "__main__":
     fn = 0
     p = np.array([[-1.0], [0.0]])
 
-    cube.add_point_to_face(p, fn, {'color':'red', 's':20})
+    cube.add_point_to_face(p, fn, {'color': 'red', 's': 20})
 
     radii = [1 + i/11 for i in range(115)]
     for r, color in zip(radii, rb_gradient(len(radii))):
         A = Arc(p, 0, np.pi*2, r)
-        cube.add_arc_end_to_face(A, fn, arc_info={"color":color, 'plot':False})
-    cube.add_all_cut_locus_points(point_info={'color':'black', 's':2})
+        cube.add_arc_end_to_face(A, fn, arc_info={"color": color, 'plot': False})
+    cube.add_all_cut_locus_points(point_info={'color': 'black', 's': 2})
 
-    cube.plot_faces(show=True, legend=lambda i, j:i == 1 or i == 2)
+    cube.plot_faces(show=True, legend=lambda i, j: i == 1 or i == 2)

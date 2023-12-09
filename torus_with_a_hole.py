@@ -15,32 +15,32 @@ def plot_bounds(nine=False):
     low, high = (-1, 2) if nine else (0, 1)
     linewidth = 4
     alpha = .4
-    color='black'
+    color = 'black'
     for x in (0, 1):
         plt.plot((x, x), (low, high), '--', color=color, linewidth=linewidth, alpha=alpha)
         plt.plot((low, high), (x, x), '--', color=color, linewidth=linewidth, alpha=alpha)
-    length=.05
-    ht=length/2
+    length = .05
+    ht = length/2
 
-    plt.plot((.5-length/2,.5+length/2),(1-ht,1), '-', color=color, linewidth=linewidth, alpha=alpha)
-    plt.plot((.5-length/2,.5+length/2),(1+ht,1), '-', color=color, linewidth=linewidth, alpha=alpha)
+    plt.plot((.5 - length/2, .5 + length/2), (1 - ht, 1), '-', color=color, linewidth=linewidth, alpha=alpha)
+    plt.plot((.5 - length/2, .5 + length/2), (1 + ht, 1), '-', color=color, linewidth=linewidth, alpha=alpha)
 
-    plt.plot((.5-length/2,.5+length/2),(ht,0), '-', color=color, linewidth=linewidth, alpha=alpha)
-    plt.plot((.5-length/2,.5+length/2),(-ht,0), '-', color=color, linewidth=linewidth, alpha=alpha)
+    plt.plot((.5 - length/2, .5 + length/2), (ht, 0), '-', color=color, linewidth=linewidth, alpha=alpha)
+    plt.plot((.5 - length/2, .5 + length/2), (-ht, 0), '-', color=color, linewidth=linewidth, alpha=alpha)
 
-    offset=length/2
+    offset = length/2
 
-    plt.plot((1-ht,1),(.5-length/2+offset,.5+length/2+offset), '-', color=color, linewidth=linewidth, alpha=alpha)
-    plt.plot((1+ht,1),(.5-length/2+offset,.5+length/2+offset), '-', color=color, linewidth=linewidth, alpha=alpha)
+    plt.plot((1 - ht, 1), (.5 - length/2 + offset, .5 + length/2 + offset), '-', color=color, linewidth=linewidth, alpha=alpha)
+    plt.plot((1 + ht, 1), (.5 - length/2 + offset, .5 + length/2 + offset), '-', color=color, linewidth=linewidth, alpha=alpha)
 
-    plt.plot((1-ht,1),(.5-length/2-offset,.5+length/2-offset), '-', color=color, linewidth=linewidth, alpha=alpha)
-    plt.plot((1+ht,1),(.5-length/2-offset,.5+length/2-offset), '-', color=color, linewidth=linewidth, alpha=alpha)
+    plt.plot((1 - ht, 1), (.5 - length/2 - offset, .5 + length/2 - offset), '-', color=color, linewidth=linewidth, alpha=alpha)
+    plt.plot((1 + ht, 1), (.5 - length/2 - offset, .5 + length/2 - offset), '-', color=color, linewidth=linewidth, alpha=alpha)
 
-    plt.plot((-ht,0),(.5-length/2+offset,.5+length/2+offset), '-', color=color, linewidth=linewidth, alpha=alpha)
-    plt.plot((+ht,0),(.5-length/2+offset,.5+length/2+offset), '-', color=color, linewidth=linewidth, alpha=alpha)
+    plt.plot((-ht, 0), (.5 - length/2 + offset, .5 + length/2 + offset), '-', color=color, linewidth=linewidth, alpha=alpha)
+    plt.plot((+ht, 0), (.5 - length/2 + offset, .5 + length/2 + offset), '-', color=color, linewidth=linewidth, alpha=alpha)
 
-    plt.plot((-ht,0),(.5-length/2-offset,.5+length/2-offset), '-', color=color, linewidth=linewidth, alpha=alpha)
-    plt.plot((+ht,0),(.5-length/2-offset,.5+length/2-offset), '-', color=color, linewidth=linewidth, alpha=alpha)
+    plt.plot((-ht, 0), (.5 - length/2 - offset, .5 + length/2 - offset), '-', color=color, linewidth=linewidth, alpha=alpha)
+    plt.plot((+ht, 0), (.5 - length/2 - offset, .5 + length/2 - offset), '-', color=color, linewidth=linewidth, alpha=alpha)
 
 
 def geodesic_counts_plain(points, consider, tol=TOL):
@@ -229,69 +229,74 @@ def which_shortest_paths(points, consider, tol=TOL):
     actual = paths_dist(points, consider)
     diffs = np.expand_dims(np.min(actual, axis=1), 1)
     return actual - diffs <= tol
-def break_into_segs(a,b):
-    def break_i(a,b,i):
-        if a[i]>b[i]:
-            aa=b
-            bb=a
+
+
+def break_into_segs(a, b):
+    def break_i(a, b, i):
+        if a[i] > b[i]:
+            aa = b
+            bb = a
         else:
-            aa=a
-            bb=b
+            aa = a
+            bb = b
         # this ensures aa[i]<=bb[i]
-        ai=aa[i]
-        bi=bb[i]
-        if bi<=np.floor(ai)+1: # if ai and bi are on the same integer interval
-            yield (aa,bb)
+        ai = aa[i]
+        bi = bb[i]
+        if bi <= np.floor(ai) + 1:  # if ai and bi are on the same integer interval
+            yield (aa, bb)
             return
-        v=bb-aa
-        v=v/v[i] #defined since bi>ai, so v[i] non-zero
-        partition=[j for j in range(int(np.floor(ai)+1),int(np.ceil(bi)))]# how to partition this range into unit intervals
+        v = bb - aa
+        v = v/v[i]  # defined since bi>ai, so v[i] non-zero
+        partition = [j for j in range(int(np.floor(ai) + 1), int(np.ceil(bi)))]  # how to partition this range into unit intervals
         partition.append(bi)
-        last_val=ai
-        last_point=aa
+        last_val = ai
+        last_point = aa
         for val in partition:
-            diff=val-last_val
-            point=last_point+v*diff
-            yield (last_point,point)
-            last_val=val
-            last_point=point
-    for (aa,bb) in break_i(a,b,0):
-        for (aaa,bbb) in break_i(aa,bb,1):
-            yield (aaa,bbb)
-def plot_line(a,b,color='red'):
-    for (aa,bb) in break_into_segs(a,b):
-        shift=np.array((0,0))
-        for v in (aa,bb):
-            vv=v+shift
+            diff = val - last_val
+            point = last_point + v*diff
+            yield (last_point, point)
+            last_val = val
+            last_point = point
+
+    for (aa, bb) in break_i(a, b, 0):
+        for (aaa, bbb) in break_i(aa, bb, 1):
+            yield (aaa, bbb)
+
+
+def plot_line(a, b, color='red'):
+    for (aa, bb) in break_into_segs(a, b):
+        shift = np.array((0, 0))
+        for v in (aa, bb):
+            vv = v + shift
             for i in range(2):
-                while vv[i]<0:
-                    vv[i]+=1
-                    shift[i]+=1
-                while vv[i]>1:
-                    vv[i]-=1
-                    shift[i]-=1
-        aa=aa+shift
-        bb=bb+shift
-        plt.plot([aa[0],bb[0]],[aa[1],bb[1]],color=color)
+                while vv[i] < 0:
+                    vv[i] += 1
+                    shift[i] += 1
+                while vv[i] > 1:
+                    vv[i] -= 1
+                    shift[i] -= 1
+        aa = aa + shift
+        bb = bb + shift
+        plt.plot([aa[0], bb[0]], [aa[1], bb[1]], color=color)
+
+
 p = np.array([0.97021987, 0.082961])
 obstruction_pt = np.array([0.12157324, 0.40209816])
-#obstruction_pt = np.array([0.221157324, 0.40209816])
-#obstruction_pt = np.array([0.25, 0.40209816])
-#obstruction_pt = np.array([0.27, 0.40209816])
-#obstruction_pt = np.array([0.28, 0.40209816])
-#obstruction_pt = np.array([0.29, 0.40209816])
-#obstruction_pt = np.array([0.295, 0.40209816])
-p=np.array([.3,.3])
+# obstruction_pt = np.array([0.221157324, 0.40209816])
+# obstruction_pt = np.array([0.25, 0.40209816])
+# obstruction_pt = np.array([0.27, 0.40209816])
+# obstruction_pt = np.array([0.28, 0.40209816])
+# obstruction_pt = np.array([0.29, 0.40209816])
+# obstruction_pt = np.array([0.295, 0.40209816])
+p = np.array([.3, .3])
 obstruction_pt = np.array([0.5, 0.5])
 
+# obstruction_pt = np.array([0.52157324, 0.40209816])
+# p = np.array([0.2, 0.1])
+# obstruction_pt = np.array([0.2, 0.2])
 
-
-#obstruction_pt = np.array([0.52157324, 0.40209816])
-#p = np.array([0.2, 0.1])
-#obstruction_pt = np.array([0.2, 0.2])
-
-#p = np.random.random(2)
-#obstruction_pt = np.random.random(2)
+# p = np.random.random(2)
+# obstruction_pt = np.random.random(2)
 obstruction_r = .15
 while np.linalg.norm(obstruction_pt - p) < obstruction_r:
     obstruction_pt = np.random.random(2)
@@ -344,7 +349,7 @@ for k in range(2, largest + 1):
 plt.scatter(p[:1], p[1:], s=40, color='black')
 
 annoying_vals = vv[np.where(annoying_indices_bool)[0], :]
-max_geodesic=None
+max_geodesic = None
 if len(annoying_vals > 0):
     gg2 = geodesic_counts_complicated(annoying_vals, consider, consider_obs, obstruction_r)
     largest2 = np.max(gg2)
@@ -352,7 +357,7 @@ if len(annoying_vals > 0):
         vals = annoying_vals[np.where(gg2 == k)[0], :]
         if len(vals) > 0:
             label = None
-            max_geodesic=vals[0],k
+            max_geodesic = vals[0], k
             if not k in seen:
                 seen.append(k)
                 label = str(k) + ' geodesics'
@@ -362,7 +367,7 @@ if len(annoying_vals > 0):
 
 plot_bounds()
 plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=4, )
-plot_line(p,max_geodesic[0]-[1,0])
+plot_line(p, max_geodesic[0] - [1, 0])
 
-plt.savefig(os.path.join("images","hole_torus","pq.png"))
+plt.savefig(os.path.join("images", "hole_torus", "pq.png"))
 plt.show()

@@ -2,8 +2,9 @@ import numpy as np
 
 __all__ = ['voronoi_plot_2d']
 
+
 def _adjust_bounds(ax, points):
-    margin = 0.1 * points.ptp(axis=0)
+    margin = 0.1*points.ptp(axis=0)
     xy_min = points.min(axis=0) - margin
     xy_max = points.max(axis=0) + margin
     ax.set_xlim(xy_min[0], xy_max[0])
@@ -70,10 +71,10 @@ def voronoi_plot_2d(vor, ax=None, **kw):
             n = np.array([-t[1], t[0]])  # normal
 
             midpoint = vor.points[pointidx].mean(axis=0)
-            direction = np.sign(np.dot(midpoint - center, n)) * n
+            direction = np.sign(np.dot(midpoint - center, n))*n
             if (vor.furthest_site):
                 direction = -direction
-            far_point = vor.vertices[i] + direction * ptp_bound.max()
+            far_point = vor.vertices[i] + direction*ptp_bound.max()
 
             infinite_segments.append([vor.vertices[i], far_point])
 

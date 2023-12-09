@@ -9,7 +9,7 @@ if __name__ == "__main__":
     fn = 3
     p = np.array([[-.4], [-.6]])
 
-    cube.add_point_to_face(p, fn, {'color':'purple', 's':40})
+    cube.add_point_to_face(p, fn, {'color': 'purple', 's': 40})
 
     folder = os.path.join('images', 'tetrahedron')
     if not os.path.exists(folder):

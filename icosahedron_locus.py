@@ -15,11 +15,11 @@ if __name__ == "__main__":
     """
     p = np.array([[0.], [0.]])
     p = np.array([[0.], [0.2]])
-    p=.1*coltation(-np.pi/6)
-    p=.3*coltation(-np.pi/6)
+    p = .1*coltation(-np.pi/6)
+    p = .3*coltation(-np.pi/6)
     p = np.array([[0.], [0.2]])
-    p = np.array([[0.], [0.2]])+.125*coltation(-np.pi/6)
-    p = np.array([[0.], [0.2]])-.125*coltation(-np.pi/6)
+    p = np.array([[0.], [0.2]]) + .125*coltation(-np.pi/6)
+    p = np.array([[0.], [0.2]]) - .125*coltation(-np.pi/6)
 
     """
     now for each of these, we have two dimensions of freedom for q (vertex)
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     thus, we can embed these as 4-hypercubes, and we need at least 5 sets
     """
 
-    cube.add_point_to_face(p, fn, {'color':'purple', 's':40})
+    cube.add_point_to_face(p, fn, {'color': 'purple', 's': 40})
 
     folder = os.path.join('images', 'icosahedron')
     if not os.path.exists(folder):

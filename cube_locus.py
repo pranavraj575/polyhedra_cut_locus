@@ -12,7 +12,7 @@ if __name__ == "__main__":
     fn = 1
     p = np.array([[.8], [.2]])
 
-    cube.add_point_to_face(p, fn, {'color':'purple', 's':40})
+    cube.add_point_to_face(p, fn, {'color': 'purple', 's': 40})
 
     folder = os.path.join('images', 'cube')
     if not os.path.exists(folder):
