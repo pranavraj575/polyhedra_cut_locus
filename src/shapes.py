@@ -573,7 +573,7 @@ class Face:
             self._create_bound_arrays()
         n = len(self.bounds)
         if n < self.dimension:
-            print("WARNING: no vertices since not enough boundaries")
+            # print("WARNING: no vertices since not enough boundaries")
             return
         for rows in itertools.combinations(range(n), self.dimension):
             sub_M = self.bound_M[rows, :]
