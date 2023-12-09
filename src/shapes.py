@@ -580,6 +580,34 @@ class Face:
         """
         return self.vertices
 
+    def get_closest_point(self, p):
+        """
+        returns the closest point in the face to p
+        :param p: column vector (np array of dimension (self.dimension,1))
+        :return: column vector (np array of dimension (self.dimension,1))
+        """
+        if self.within_bounds(p):
+            return p
+        q = p.copy()
+        small_bound = None
+        for (bound, F) in self.bounds:
+            if not bound.within(q, tol=self.tol):
+                # goes from inside bound to outside bound
+                q = bound.grab_intersection(np.zeros(q.shape), q)
+                small_bound = bound
+        m = small_bound.m
+        mbar = m/np.linalg.norm(m)
+        center = m.T*small_bound.b/np.square(np.linalg.norm(m))
+
+        offset = p - mbar.T*np.dot(mbar, p)
+        proj = offset + center
+
+        exiting = self.get_exit_point(center, offset)
+
+        if exiting is None:
+            return proj
+        return exiting
+
     def get_exit_point(self, p, v):
         """
         returns the first point that a ray starting from p and going to v exits face
@@ -1109,15 +1137,14 @@ class Shape:
             fc: Face
             if fc is None:
                 return
-            if not fc.within_bounds(p):
-                return
+            p = fc.get_closest_point(p)
 
             self.plot_face_boundaries(axs, legend=legend)
             for i in range(n):
                 for j in range(m):
                     ploot(i, j).set_xticks([])
                     ploot(i, j).set_yticks([])
-            ax.scatter(event.xdata, event.ydata, color='purple')
+            ax.scatter(p[0, 0], p[1, 0], color='purple')
 
             source_fn = fc.name
 
