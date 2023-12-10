@@ -317,8 +317,8 @@ class Antiprism(Shape):
         super().__init__()
         assert n >= 2
         if n == 2:
-            print("WARNING: 2 antiprism will display/act weird because of the line face")
-        self.n_gon = n
+            print("WARNING: 2 antiprism will display/act weird because of the extra line face")
+        self.n = n
         for i in range(2*n + 2):
             self.add_face()
         dtheta = 2*np.pi/n
@@ -344,20 +344,26 @@ class Antiprism(Shape):
             ceil.add_boundary_paired(next_floor, rowtation(-np.pi/6), 1, -coltation(-np.pi/6), np.identity(2), coltation(np.pi*5/6))
 
     def faces_to_plot_n_m(self):
-        center = self.n_gon//2
+        center = self.n//2
 
-        def face_map(i, j):
+        def _face_map(i, j):
             if i == 0 and j == center:
                 return self.faces[0]
-            if i == 3 and j == center - ((self.n_gon + 1)%2):
+            if i == 3 and j == center - ((self.n + 1)%2):
                 return self.faces[1]
             if i == 1:
-                return self.faces[2 + (j + center)%self.n_gon]
+                return self.faces[2 + (j + center)%self.n]
             if i == 2:
-                return self.faces[self.n_gon + 2 + (j + center + 1)%self.n_gon]
+                return self.faces[self.n + 2 + (j + center + 1)%self.n]
             return None
 
-        return face_map, 4, self.n_gon
+        def face_map(i, j):
+            if self.n > 2:
+                return _face_map(i, j)
+            else:
+                return _face_map(i + 1, j)
+
+        return face_map, 4 if self.n > 2 else 2, self.n
 
 
 class ElongatedBipyramid(Shape):
