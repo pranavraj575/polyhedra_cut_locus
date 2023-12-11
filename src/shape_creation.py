@@ -380,7 +380,10 @@ class ElongatedBipyramid(Shape):
         thus, square side lengths are 2*sqrt(3)
         """
         super().__init__()
-        assert 2 <= n and n <= 6
+        if n == 6:
+            raise Exception("Use Prism(6) instead of ElongatedBipyramid(6)")
+        if n < 2 or n > 6 or type(n) is not int:
+            raise Exception("n=" + str(n) + " is not a valid Elongated Bipyramid")
         self.n = n
         for i in range(3*n):
             self.add_face()
@@ -434,7 +437,10 @@ class ElongatedPyramid(Shape):
         n-gon has a face with inscribed r = 1/tan(pi/n)
         """
         super().__init__()
-        assert 2 <= n and n <= 6
+        if n == 6:
+            raise Exception("Use Prism(6) instead of ElongatedPyramid(6)")
+        if n < 2 or n > 6 or type(n) is not int:
+            raise Exception("n=" + str(n) + " is not a valid Elongated Pyramid")
         self.n = n
         for i in range(2*n + 1):
             self.add_face()
