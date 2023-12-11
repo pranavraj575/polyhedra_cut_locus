@@ -304,7 +304,7 @@ class Arc:
 
 
 class Bound:
-    def __init__(self, m, b, s, T, si, dimension=None):
+    def __init__(self, m, b, s, T, si, dimension=None, name=None, identifier=''):
         """
         linear boundary of the form mx<=b
         s,T,si represent the linear transformation that puts a point in our face to the neighboring face
@@ -317,6 +317,8 @@ class Bound:
         :param T: rotation to shift bound to origin (for a point x, x' on new face is si+T(x+s))
         :param si: final translation to shift bound to origin (for a point x, x' on new face is si+T(x+s))
         :param dimension: dimension of bound, if none, it is set, if value inserted, it is checked
+        :param identifier: identifier of bound, should mention face names
+        :param name: identifier of bound, or the bound that it is paired with, specify if spawned by another bound
         """
         self.m = m
         self.b = b
@@ -324,6 +326,10 @@ class Bound:
         self.T = T
         self.si = si
         self.dimension = self.check_valid(dimension)
+        if name is None:
+            base_id = str(tuple(self.m.flatten())) + str(self.b) + str(tuple(self.s.flatten())) + str(tuple(self.T.flatten())) + str(tuple(self.si.flatten())) + str(self.dimension)
+            name = base_id + identifier
+        self.name = name
 
     def check_valid(self, dimension):
         """
@@ -431,7 +437,7 @@ class Bound:
         m = -self.m@Ti
         b = -self.b - np.dot(self.m, self.s) - np.dot(self.m@Ti, self.si)
         b = b.flatten()[0]
-        return Bound(m, b, -self.si, Ti, -self.s, self.dimension)
+        return Bound(m, b, -self.si, Ti, -self.s, self.dimension, name=self.name)
 
     def concatenate_with(self, T=None, s=None):
         """
@@ -466,6 +472,7 @@ class Face:
         self.dimension = None
         self.bound_M = None
         self.bound_b = None
+        self.double_face_edge = []
 
         if bounds_faces is not None:
             for (bound, F) in bounds_faces:
@@ -481,6 +488,8 @@ class Face:
         :param update: whether to update internal bound arrays and vertices
         :param F: Face
         """
+        if F in [Fp for (_, Fp) in self.bounds]:
+            self.double_face_edge.append(F)
         self.bounds.append((bound, F))
         self.dimension = bound.check_valid(self.dimension)
         if update:
@@ -517,7 +526,7 @@ class Face:
         """
         grabs path of vertices (v0,v1),(v1,v2),...,(vn,v0)
         takes order 'around' the face
-        :return: ((v,v'),Face) list with v,v' column vectors
+        :return: ((v,v'),(Bound, Face)) list with v,v' column vectors
         """
         if not self.dimension == 2:
             raise Exception("this will not work in !=2 dimensions")
@@ -530,7 +539,8 @@ class Face:
             for r in rows:
                 if r in rowsp:
                     row = r
-            out.append(((v1, v2), self.bounds[row][1]))
+            out.append(((v1, v2), self.bounds[row]))
+            # out.append(((v1, v2), self.bounds[row][1]))
         return out
 
     def within_bounds(self, p):
@@ -679,7 +689,7 @@ class Face:
         :param T: argument of Bound
         :param si: argument of Bound
         """
-        B1 = Bound(m, b, s, T, si, dimension=self.dimension)
+        B1 = Bound(m, b, s, T, si, dimension=self.dimension, identifier=str(self.name) + str(f2.name))
         self.add_boundary(B1, f2)
         f2.add_boundary(B1.get_inverse_bound(), self)
 
@@ -738,7 +748,7 @@ class Face:
         :return: list of (Face, Arc), list of resulting arcs and their home faces
         """
         arr = np.array([A])
-        for ((a, b), f) in self.get_path_and_faces():
+        for ((a, b), (bound, f)) in self.get_path_and_faces():
             arr = [B.break_arc(a, b) for B in arr]
             arr = flatten(arr)
         faces = (self.get_correct_next_face(B) for B in arr)
@@ -781,6 +791,8 @@ class Shape:
         self.points = {face.name: [] for face in self.faces}
         self.arcs = {face.name: [] for face in self.faces}
         self.memoized_face_translations = dict()
+        self.seen_bounds = []
+        self.extra_legend = None
 
     def _pick_new_face_name(self):
         """
@@ -955,7 +967,11 @@ class Shape:
         :return: whether we were successful
         """
         vp = self.get_voronoi_points_from_face_paths(p, source_fn, sink_fn, diameter=diameter)
-        if len(vp) >= 4:
+        if len(vp) >= 2:
+            if len(vp) < 4:
+                large = 69*sum(np.linalg.norm(p) for p in vp)
+                vp.append(np.ones(vp[0].shape)*large)
+                vp.append(-np.ones(vp[0].shape)*large)
             points = np.concatenate(vp, axis=1)
             points = points.T
             vor = Voronoi(points)
@@ -1076,17 +1092,29 @@ class Shape:
                 return axs
             return axs[m*i + j]
 
+        if self.extra_legend == None:
+            self.extra_legend = {fn: False for fn in self.faces}
+            for fn in self.faces:
+                for F in self.faces[fn].double_face_edge:
+                    self.extra_legend[fn] = True
+                    self.extra_legend[F.name] = True
+
         for i in range(n):
             for j in range(m):
                 face = face_map(i, j)
                 if face is not None:
                     ploot(i, j).set_title("FACE " + str(face.name))
-
                     path = face.get_path_and_faces()
-                    for ((p1, p2), f) in path:
+                    for ((p1, p2), (bound, f)) in path:
                         (x, y) = tuple(p1.flatten())
                         (xp, yp) = tuple(p2.flatten())
-                        ploot(i, j).plot([x, xp], [y, yp], label=f.name, alpha=.5)
+                        label = str(f.name)
+                        if self.extra_legend[face.name]:
+                            if bound.name not in self.seen_bounds:
+                                self.seen_bounds.append(bound.name)
+                            label += ' (id:' + str(self.seen_bounds.index(bound.name)) + ')'
+
+                        ploot(i, j).plot([x, xp], [y, yp], label=label, alpha=.5)
 
                     for (p, point_info) in self.points[face.name]:
                         x, y = tuple(np.array(p).flatten())

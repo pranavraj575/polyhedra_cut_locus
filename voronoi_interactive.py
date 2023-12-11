@@ -10,6 +10,7 @@ from src.shape_creation import (Tetrahedron,
                                 ElongatedPyramid,
                                 Bipyramid,
                                 ElongatedBipyramid,
+                                Mirror,
                                 Large2Torus
                                 )
 import argparse
@@ -26,9 +27,10 @@ mapping = {'tetrahedron': Tetrahedron,
            'longbipyramid': ElongatedBipyramid,
            'prism': Prism,
            'antiprism': Antiprism,
+           'mirror': Mirror,
            'torus': Large2Torus}
 
-arg_n = ('prism', 'antiprism', 'pyramid', 'longpyramid', 'bipyramid', 'longbipyramid')
+arg_n = ('prism', 'antiprism', 'pyramid', 'longpyramid', 'bipyramid', 'longbipyramid', 'mirror')
 # shapes that take n as an arg
 
 PARSER = argparse.ArgumentParser()

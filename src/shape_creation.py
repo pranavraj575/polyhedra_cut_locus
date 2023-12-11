@@ -11,7 +11,10 @@ class Prism(Shape):
         """
 
         super().__init__()
-        assert n > 1
+        if n == 2:
+            raise Exception("Use Mirror(4) instead of Prism(2)")
+        if n < 2 or type(n) is not int:
+            raise Exception("n=" + str(n) + " is not a valid Prism")
         self.n = n
         for i in range(n + 2):
             self.add_face()
@@ -62,7 +65,10 @@ class Pyramid(Shape):
         the top of face n borders the bottom of face 0
         """
         super().__init__()
-        assert 3 <= n and n <= 6
+        if n == 6:
+            raise Exception("Use Mirror(6) instead of Pyramid(6)")
+        if n <= 2 or n > 6 or type(n) is not int:
+            raise Exception("n=" + str(n) + " is not a valid Pyramid")
         self.n = n
         for i in range(n + 1):
             self.add_face()
@@ -116,7 +122,10 @@ class Bipyramid(Shape):
         face i is above face i+n
         """
         super().__init__()
-        assert 2 <= n and n <= 6
+        if n == 6:
+            raise Exception("Use Mirror(6) instead of Bipyramid(6)")
+        if n < 2 or n > 6 or type(n) is not int:
+            raise Exception("n=" + str(n) + " is not a valid Bipyramid")
         self.n = n
         for i in range(2*n):
             self.add_face()
@@ -315,9 +324,10 @@ class Antiprism(Shape):
         :param n: n-gon for root of antiprism
         """
         super().__init__()
-        assert n >= 2
         if n == 2:
             print("WARNING: 2 antiprism will display/act weird because of the extra line face")
+        if n < 2 or type(n) is not int:
+            raise Exception("n=" + str(n) + " is not a valid Antiprism")
         self.n = n
         for i in range(2*n + 2):
             self.add_face()
@@ -482,6 +492,30 @@ class ElongatedPyramid(Shape):
             return None
 
         return face_map, 3, self.n
+
+
+class Mirror(Shape):
+    def __init__(self, n):
+        """
+        makes n-gon 'mirror', two n-gons pasted to each other
+
+        :param n: n-gon
+        """
+        super().__init__()
+        if n <= 2 or type(n) is not int:
+            raise Exception("n=" + str(n) + " is not a valid Mirror")
+        self.n = n
+        for i in range(2):
+            self.add_face()
+        front = self.faces[0]
+        back = self.faces[1]
+
+        for i in range(n):
+            theta = -np.pi/2 + 2*np.pi*i/n
+            # "angle" of boundary of front face.
+            phi = -np.pi - theta
+            # "angle" of boundary of back face.
+            front.add_boundary_paired(back, rowtation(theta), 1, -coltation(theta), rotation_T(phi - theta + np.pi), coltation(phi))
 
 
 class NTorus(Shape):
