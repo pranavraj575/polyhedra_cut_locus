@@ -645,7 +645,20 @@ class Face:
             if bound.within(p, tol=self.tol) and not bound.within(q, tol=self.tol):
                 # goes from inside bound to outside bound
                 q = bound.grab_intersection(p, v)
+        if not self.within_bounds(q):
+            # in this case, we have a line that ends outside the face, and never enters the face
+            return None
         return q
+
+    def line_within_bounds(self, p, q):
+        """
+        returns if the line p->q is within the face
+        :param p: column vector (np array of dimension (self.dimension,1))
+        :param q: column vector (np array of dimension (self.dimension,1))
+        :return: boolean
+        """
+        # enough to test whether either of the endpoints are within the bounds or if the line exits the face
+        return self.within_bounds(p) or self.within_bounds(q) or (self.get_exit_point(p, q - p) is not None)
 
     def points_on_path(self, p, v):
         """
@@ -921,10 +934,12 @@ class Shape:
         translations = []
         for path in source.face_paths_to(sink_fn, diameter=diameter):
             T, s = np.identity(source.dimension), np.zeros((source.dimension, 1))
-            for (bound, _) in path:
+            bound_path = []
+            for (bound, F) in path:
                 bound: Bound
+                bound_path.append((bound,F))
                 T, s = bound.concatenate_with(T, s)
-            translations.append((T, s))
+            translations.append((T, s, bound_path))
         return translations
 
     def get_voronoi_translations(self, source_fn, sink_fn, diameter=None):
@@ -949,12 +964,101 @@ class Shape:
         :param source_fn: face name of source
         :param sink_fn: face name of sink
         :param diameter: cap on length of face path to consider, None if infinite
-        :return: list of column vector voronoi points
+        :return: list of column vector voronoi points, list of bounds that connect source to sink
         """
         points = []
-        for (T, s) in self.get_voronoi_translations(source_fn, sink_fn, diameter=diameter):
+        bound_paths = []
+        for (T, s, bound_path) in self.get_voronoi_translations(source_fn, sink_fn, diameter=diameter):
             points.append(T@p + s)
-        return points
+            bound_paths.append(bound_path)
+        return points, bound_paths
+
+    def plot_unwrapping(self, p, source_fn, sink_fn, diameter, ax):
+        """
+        plots an unwrapping of the cut locus on sink face from point p on source face
+        :param p: column vector (np array of dimension (self.dimension,1))
+        :param p: column vector (np array of dimension (self.dimension,1))
+        :param source_fn: face name of source
+        :param sink_fn: face name of sink
+        :param diameter: cap on length of face path to consider, None if infinite
+        :param ax: plot to plot on (pyplot, or ax object)
+        :return: whether we were successful
+        """
+        vp, bound_paths = self.get_voronoi_points_from_face_paths(p, source_fn, sink_fn, diameter=diameter)
+        source: Face = self.faces[source_fn]
+        sink:Face=self.faces[sink_fn]
+        def augment_point_paths(points,bound_paths):
+            """
+            adds to points and bound paths until length 4
+            :param points: array of column vector points (must be populated)
+            :param bound_paths: array of paths (will add 'None' to this)
+            """
+            large = 69*sum(np.linalg.norm(p) for p in points)
+            shape=points[0].shape
+            vs=[np.ones(shape)]
+            vs.append(vs[0].copy())
+            vs[1][0,0]=-vs[1][0,0]
+            vs.append(-vs[0])
+            vs.append(-vs[1])
+            for i in range(4):
+                if len(points)<4:
+                    points.append(large*vp[i])
+                    bound_paths.append(None)
+            return points,bound_paths
+
+        if len(vp) >= 2:
+            vp,bound_paths=augment_point_paths(vp,bound_paths)
+            points = np.concatenate(vp, axis=1)
+            points = points.T
+            vor = Voronoi(points)
+            fig, point_to_segments = voronoi_plot_2d(vor, ax=None)
+
+            relevant_points=[]
+            relevant_bound_paths=[]
+            for p_idx in point_to_segments:
+                point=points[p_idx,:] # row vector of point that created this
+                for a,b in point_to_segments[p_idx]:
+                    if sink.line_within_bounds(a.reshape((2,1)),b.reshape((2,1))):
+                        relevant_points.append(point.reshape((2,1)))
+                        relevant_bound_paths.append(bound_paths[p_idx])
+                        break
+            relevant_points,relevant_bound_paths=augment_point_paths(relevant_points,relevant_bound_paths)
+            for pt,path in zip(relevant_points,relevant_bound_paths):
+                # we can graph pt here
+                if path is not None:
+                    face_tracking=[[v.copy() for (v,_) in source.get_vertices()]] # tracking the vertices of each face and their eventual location
+                    center_tracking=[np.zeros((2,1))] # tracking the center of each face
+                    face_name_tracking=[source_fn]
+                    for (bound,F) in path:
+                        bound:Bound
+                        face_tracking=[[bound.shift_point(v) for v in vees]for vees in face_tracking]+[[v.copy() for (v,_) in F.get_vertices()]]
+                        center_tracking=[bound.shift_point(v) for v in center_tracking]+[np.zeros((2,1))]
+                        face_name_tracking=face_name_tracking+[F.name]
+                    for face,name,center in zip(face_tracking,face_name_tracking,center_tracking):
+                        for i in range(len(face)):
+                            v1=face[i]
+                            v2=face[(i+1)%len(face)]
+                            ax.plot([v1[0],v2[0]],[v1[1],v2[1]],color='blue',linewidth=1)
+                            ax.annotate(str(name), (center[0], center[1]))
+
+                pass
+            labeled=False
+            for pt in relevant_points:
+                label=None
+                if not labeled:
+                    label='pt copies'
+                    labeled=True
+                ax.scatter(pt[0],pt[1],color='purple',label=label,alpha=1,s=4)
+
+            ax.scatter([0],[0],label='center')
+            relevant_points=np.concatenate(relevant_points,axis=1)
+
+            vor=Voronoi(relevant_points.T)
+            voronoi_plot_2d(vor,ax=ax,show_points=False, show_vertices=False, line_colors='black',
+                                                     line_width=1, line_alpha=1)
+            ax.legend()
+            return True
+        return False
 
     def plot_voronoi(self, p, source_fn, sink_fn, diameter, ax):
         """
@@ -966,7 +1070,7 @@ class Shape:
         :param ax: plot to plot on (pyplot, or ax object)
         :return: whether we were successful
         """
-        vp = self.get_voronoi_points_from_face_paths(p, source_fn, sink_fn, diameter=diameter)
+        vp, _ = self.get_voronoi_points_from_face_paths(p, source_fn, sink_fn, diameter=diameter)
         if len(vp) >= 2:
             if len(vp) < 4:
                 large = 69*sum(np.linalg.norm(p) for p in vp)
@@ -975,8 +1079,8 @@ class Shape:
             points = np.concatenate(vp, axis=1)
             points = points.T
             vor = Voronoi(points)
-            fig = voronoi_plot_2d(vor, ax=ax, show_points=False, show_vertices=False, line_colors='black',
-                                  line_width=1, line_alpha=1)
+            fig, point_to_segments = voronoi_plot_2d(vor, ax=ax, show_points=False, show_vertices=False, line_colors='black',
+                                                     line_width=1, line_alpha=1)
             return True
         return False
 
