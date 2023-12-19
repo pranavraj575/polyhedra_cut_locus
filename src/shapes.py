@@ -1405,7 +1405,46 @@ class Shape:
                 plt.yticks([])
                 plt.show()
 
+        def mouse_event2(event):
+            if self.extra_data['unwrap_source_fn'] is not None:
+                return
+            ax = event.inaxes
+            if ax is None:
+                return
+            p = np.array([[event.xdata], [event.ydata]])
+            ij = ploot_inv(ax)
+            if ij is None:
+                return
+            i, j = ij
+            fc = face_map(i, j)
+            fc: Face
+            if fc is None:
+                return
+            p = fc.get_closest_point(p)
+            for i in range(n):
+                for j in range(m):
+                    ploot(i, j).cla()
+            self.plot_face_boundaries(axs, legend=legend)
+            for i in range(n):
+                for j in range(m):
+                    ploot(i, j).set_xticks([])
+                    ploot(i, j).set_yticks([])
+            ax.scatter(p[0, 0], p[1, 0], color='purple',alpha=.5)
+
+            source_fn = fc.name
+
+            for i in range(n):
+                for j in range(m):
+                    face = face_map(i, j)
+                    if face is not None:
+                        xlim, ylim = ploot(i, j).get_xlim(), ploot(i, j).get_ylim()
+                        self.plot_voronoi(p, source_fn, face.name, diameter=diameter, ax=ploot(i, j))
+                        ploot(i, j).set_xlim(xlim)
+                        ploot(i, j).set_ylim(ylim)
+            plt.show()
+
         cid = fig.canvas.mpl_connect('button_press_event', mouse_event)
+        cid2 = fig.canvas.mpl_connect('motion_notify_event', mouse_event2)
         self.plot_face_boundaries(axs, legend=legend)
         plt.suptitle("Click $p$")
 
