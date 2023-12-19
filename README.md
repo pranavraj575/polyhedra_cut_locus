@@ -7,11 +7,11 @@ Visualize the cut locus of points on a polytope consisting of 2-d faces
 
 |**TABLE OF CONTENTS**||
 | ------------- | ------------- |
-| [Installation Instructions]() | instructions for how to set up code |
-| [Installation Test]() | test example (tetrahedron cut locus) | 
-| [Cut Locus Visualization]() | Instructions for running interactive cut locus visualization |
-| [Unfolding Visualization]() | Instructions for running interactive unfolding visualization |
-| [Implemented Shapes]() | List of implemented polyhedra and examples of their cut loci |
+| [Installation Instructions](#installation-assuming-python-is-installed) | instructions for how to set up code |
+| [Installation Test](#installation-test) | test example (tetrahedron cut locus) | 
+| [Cut Locus Visualization](#cut-locus-visualization-1) | Instructions for running interactive cut locus visualization |
+| [Unfolding Visualization](#unfolding-visualization) | Instructions for running interactive unfolding visualization |
+| [Implemented Shapes](#implemented-shapes) | List of implemented polyhedra and examples of their cut loci |
 
 ## Installation (assuming [Python](https://www.python.org/downloads/release/python-3810/) is installed)
 * **Option 1**: [Download zip](https://github.com/pranavraj575/mitochondria/archive/refs/heads/main.zip), then extract all
