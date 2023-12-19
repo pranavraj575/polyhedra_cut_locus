@@ -983,13 +983,16 @@ class Shape:
         :param diameter: cap on length of face path to consider, None if infinite
         :param ax: plot to plot on (pyplot, or ax object)
         :param i_to_display: which path to display, if we are only showing one
-        :return: whether we were successful
+        :return: whether there is any more to show (i.e. i_to_display is None or larger than the number of paths)
+            returns none if not enough points
         """
         if ax is None:
             ax = plt.gca()
         vp, bound_paths = self.get_voronoi_points_from_face_paths(p, source_fn, sink_fn, diameter=diameter)
         source: Face = self.faces[source_fn]
         sink: Face = self.faces[sink_fn]
+
+        done = False
 
         def augment_point_paths(points, bound_paths):
             """
@@ -1033,17 +1036,18 @@ class Shape:
 
             labeled = False
             disp_i = -1
-            n = len(relevant_points)
+            n = len([pth for pth in relevant_bound_paths if pth is not None])
             if i_to_display is not None and i_to_display >= n:
                 i_to_display = None  # here, just show all
-
+            if i_to_display is None:
+                done = True
             for pt, path in zip(relevant_points, relevant_bound_paths):
-                disp_i += 1
-                if (i_to_display is not None) and (disp_i != i_to_display):
-                    # skip this if we are skipping, and the path is not the correct path
-                    continue
                 # we can graph pt here
                 if path is not None:
+                    disp_i += 1
+                    if (i_to_display is not None) and (disp_i != i_to_display):
+                        # skip this if we are skipping, and the path is not the correct path
+                        continue
                     face_tracking = [[v.copy() for (v, _) in source.get_vertices()]]  # tracking the vertices of each face and their eventual location
                     center_tracking = [np.zeros((2, 1))]  # tracking the center of each face
                     rot_tracking = [np.array([[1], [0]])]  # tracks the 0 angle of each face
@@ -1084,8 +1088,8 @@ class Shape:
             ax.set_xlim(xlim)
             ax.set_ylim(ylim)
             ax.legend()
-            return True
-        return False
+            return done
+        return None
 
     def plot_voronoi(self, p, source_fn, sink_fn, diameter, ax):
         """
@@ -1378,6 +1382,7 @@ class Shape:
         self.extra_data['p'] = None
         self.extra_data['unwrap_sink_fn'] = None
         self.extra_data['unwrap_counter'] = 0
+        self.extra_data['unwrap_finished'] = False
 
         def mouse_event(event):
 
@@ -1414,7 +1419,9 @@ class Shape:
                 plt.suptitle("Now click sink face")
                 ax.scatter(p[0, 0], p[1, 0], color='purple')
                 plt.show()
-            elif self.extra_data['unwrap_sink_fn'] is None and fc is not None:
+            elif (self.extra_data['unwrap_sink_fn'] is None and
+                  fc is not None and
+                  fc.name is not self.extra_data['unwrap_source_fn']):
                 self.extra_data['unwrap_sink_fn'] = fc.name
 
             if self.extra_data['unwrap_sink_fn'] is not None:
@@ -1422,14 +1429,17 @@ class Shape:
                 i_to_display = None
                 if single_display:
                     i_to_display = self.extra_data['unwrap_counter']
-                self.plot_unwrapping(self.extra_data['p'], self.extra_data['unwrap_source_fn'], self.extra_data['unwrap_sink_fn'],
-                                     diameter=diameter, ax=plt.gca(), i_to_display=i_to_display)
+                finished = self.plot_unwrapping(self.extra_data['p'], self.extra_data['unwrap_source_fn'], self.extra_data['unwrap_sink_fn'],
+                                                diameter=diameter, ax=plt.gca(), i_to_display=i_to_display)
                 plt.xticks([])
                 plt.yticks([])
-                if single_display:
+                if single_display and not finished:
                     plt.title("click to advance")
+                if not finished or (self.extra_data['unwrap_finished'] != finished):
+                    # if there is more, or if we have just finished
+                    plt.show()
                 self.extra_data['unwrap_counter'] += 1
-                plt.show()
+                self.extra_data['unwrap_finished'] = finished
 
         def mouse_event2(event):
             if self.extra_data['unwrap_source_fn'] is not None:
