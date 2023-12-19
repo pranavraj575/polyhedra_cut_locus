@@ -1060,9 +1060,9 @@ class Shape:
                         ax.annotate(str(name), (center[0], center[1]), rotation=np.degrees(theta))
                     label = None
                     if not labeled:
-                        label = 'pt copies'
+                        label = '$p$ copies'
                         labeled = True
-                    ax.scatter(pt[0], pt[1], color='purple', label=label, alpha=1, s=4)
+                    ax.scatter(pt[0], pt[1], color='purple', label=label, alpha=1, s=40)
 
             ax.scatter([0], [0], label='center')
             relevant_points = np.concatenate(relevant_points, axis=1)
