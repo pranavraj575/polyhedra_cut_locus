@@ -1036,24 +1036,28 @@ class Shape:
                 if path is not None:
                     face_tracking = [[v.copy() for (v, _) in source.get_vertices()]]  # tracking the vertices of each face and their eventual location
                     center_tracking = [np.zeros((2, 1))]  # tracking the center of each face
-                    face_name_tracking = [source_fn]
+                    rot_tracking = [np.array([[0],[1]])] # tracks the 0 angle of each face
+                    face_name_tracking = [source_fn] # tracks face names
                     for (bound, F) in path:
                         bound: Bound
                         face_tracking = [[bound.shift_point(v) for v in vees] for vees in face_tracking] + [[v.copy() for (v, _) in F.get_vertices()]]
                         center_tracking = [bound.shift_point(v) for v in center_tracking] + [np.zeros((2, 1))]
+                        rot_tracking=[bound.shift_vec(v) for v in rot_tracking]+[np.array([[0],[1]])]
                         face_name_tracking = face_name_tracking + [F.name]
-                    iteration = list(zip(face_tracking, face_name_tracking, center_tracking))
+                    iteration = list(zip(face_tracking, face_name_tracking, center_tracking,rot_tracking))
                     if our_face_plotted:
                         iteration = iteration[:-1]
                     else:
                         our_face_plotted = True
 
-                    for face, name, center in iteration:
+                    for face, name, center, rot_v in iteration:
+
+                        theta=np.arctan2(rot_v[1,0],rot_v[0,0])
                         for i in range(len(face)):
                             v1 = face[i]
                             v2 = face[(i + 1)%len(face)]
                             ax.plot([v1[0], v2[0]], [v1[1], v2[1]], color='blue', linewidth=1)
-                            ax.annotate(str(name), (center[0], center[1]))
+                        ax.annotate(str(name), (center[0], center[1]), rotation=np.degrees(theta)-90)
                     label = None
                     if not labeled:
                         label = 'pt copies'
