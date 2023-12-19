@@ -1,5 +1,8 @@
 from src.shape_argparser import *
 
+PARSER.add_argument("--single-display", action='store_true', required=False,
+                    help="toggle whether to display only one path at a time")
+
 PARSER.add_argument("--untrack", action='store_true', required=False,
                     help="toggle whether to track the cut locus as mouse moves")
 
@@ -12,7 +15,7 @@ if args.shape in arg_n:
 else:
     shape = SHAPE()
 
-shape.interactive_unwrap(track=not args.untrack)
+shape.interactive_unwrap(track=not args.untrack,single_display=args.single_display)
 # ax= plt.gca()
 # shape=Octahedron()
 # shape.plot_unwrapping(np.zeros((2,1))+.1,1,7,None,ax)

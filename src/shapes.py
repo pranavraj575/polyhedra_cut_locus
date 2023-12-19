@@ -974,7 +974,7 @@ class Shape:
             bound_paths.append(bound_path)
         return points, bound_paths
 
-    def plot_unwrapping(self, p, source_fn, sink_fn, diameter, ax):
+    def plot_unwrapping(self, p, source_fn, sink_fn, diameter, ax, i_to_display=None):
         """
         plots an unwrapping of the cut locus on sink face from point p on source face
         :param p: column vector (np array of dimension (self.dimension,1))
@@ -983,6 +983,7 @@ class Shape:
         :param sink_fn: face name of sink
         :param diameter: cap on length of face path to consider, None if infinite
         :param ax: plot to plot on (pyplot, or ax object)
+        :param i_to_display: which path to display, if we are only showing one
         :return: whether we were successful
         """
         if ax is None:
@@ -1030,8 +1031,16 @@ class Shape:
             our_face_plotted = False
 
             labeled = False
+            disp_i = -1
+            n = len(relevant_points)
+            if i_to_display is not None and i_to_display >= n:
+                i_to_display = None  # here, just show all
 
             for pt, path in zip(relevant_points, relevant_bound_paths):
+                disp_i += 1
+                if (i_to_display is not None) and (disp_i != i_to_display):
+                    # skip this if we are skipping, and the path is not the correct path
+                    continue
                 # we can graph pt here
                 if path is not None:
                     face_tracking = [[v.copy() for (v, _) in source.get_vertices()]]  # tracking the vertices of each face and their eventual location
@@ -1333,13 +1342,14 @@ class Shape:
                 ploot(i, j).set_yticks([])
         plt.show()
 
-    def interactive_unwrap(self, figsize=None, legend=lambda i, j: False, diameter=None, track=True):
+    def interactive_unwrap(self, figsize=None, legend=lambda i, j: False, diameter=None, track=True, single_display=True):
         """
         :param figsize: initial figure size (inches)
         :param legend: (i,j)-> whether to put a legend on plot (i,j)
         :param diameter: longest path of faces to consider when creating paths for vornoi plot
             (None if infinite)
         :param track: whether to track cut locus of cursor on movement
+        :param single_display: whether to only display one path at once
         """
         plt.rcParams["figure.autolayout"] = True
         face_map, n, m = self.faces_to_plot_n_m()
@@ -1366,22 +1376,27 @@ class Shape:
         self.extra_data['unwrap_source_fn'] = None
         self.extra_data['p'] = None
         self.extra_data['unwrap_sink_fn'] = None
+        self.extra_data['unwrap_counter'] = 0
 
         def mouse_event(event):
 
             ax = event.inaxes
-            if ax is None:
-                return
             p = np.array([[event.xdata], [event.ydata]])
-            ij = ploot_inv(ax)
-            if ij is None:
-                return
-            i, j = ij
-            fc = face_map(i, j)
-            fc: Face
-            if fc is None:
-                return
+            ij = ploot_inv(ax) if ax is not None else None
+            fc = face_map(ij[0], ij[1]) if ij is not None else None
+
             if self.extra_data['unwrap_source_fn'] is None:
+                if fc is None: return
+
+                for i in range(n):
+                    for j in range(m):
+                        ploot(i, j).cla()
+                self.plot_face_boundaries(axs, legend=legend)
+                for i in range(n):
+                    for j in range(m):
+                        ploot(i, j).set_xticks([])
+                        ploot(i, j).set_yticks([])
+
                 p = fc.get_closest_point(p)
 
                 for i in range(n):
@@ -1398,12 +1413,21 @@ class Shape:
                 plt.suptitle("Now click sink face")
                 ax.scatter(p[0, 0], p[1, 0], color='purple')
                 plt.show()
-            else:
+            elif self.extra_data['unwrap_sink_fn'] is None and fc is not None:
                 self.extra_data['unwrap_sink_fn'] = fc.name
+
+            if self.extra_data['unwrap_sink_fn'] is not None:
                 plt.clf()
-                self.plot_unwrapping(self.extra_data['p'], self.extra_data['unwrap_source_fn'], self.extra_data['unwrap_sink_fn'], diameter=diameter, ax=plt.gca())
+                i_to_display = None
+                if single_display:
+                    i_to_display = self.extra_data['unwrap_counter']
+                self.plot_unwrapping(self.extra_data['p'], self.extra_data['unwrap_source_fn'], self.extra_data['unwrap_sink_fn'],
+                                     diameter=diameter, ax=plt.gca(), i_to_display=i_to_display)
                 plt.xticks([])
                 plt.yticks([])
+                if single_display:
+                    plt.title("click to advance")
+                self.extra_data['unwrap_counter'] += 1
                 plt.show()
 
         def mouse_event2(event):
