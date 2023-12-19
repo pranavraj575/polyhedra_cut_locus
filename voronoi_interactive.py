@@ -2,8 +2,8 @@ import numpy as np
 
 from src.shape_argparser import *
 
-PARSER.add_argument("--center_pt", action='store_true', required=False,
-                    help="toggle whether to add center point to faces")
+PARSER.add_argument("--center-pt", action='store_true', required=False,
+                    help="add center point to faces")
 
 args = PARSER.parse_args()
 if args.shape not in mapping:

@@ -978,7 +978,6 @@ class Shape:
         """
         plots an unwrapping of the cut locus on sink face from point p on source face
         :param p: column vector (np array of dimension (self.dimension,1))
-        :param p: column vector (np array of dimension (self.dimension,1))
         :param source_fn: face name of source
         :param sink_fn: face name of sink
         :param diameter: cap on length of face path to consider, None if infinite
@@ -994,7 +993,7 @@ class Shape:
 
         def augment_point_paths(points, bound_paths):
             """
-            adds to points and bound paths until length 4
+            adds to points and bound paths until length 4 and also sorts them by angle
             :param points: array of column vector points (must be populated)
             :param bound_paths: array of paths (will add 'None' to this)
             """
@@ -1009,7 +1008,9 @@ class Shape:
                 if len(points) < 4:
                     points.append(large*vp[i])
                     bound_paths.append(None)
-            return points, bound_paths
+            together = list(zip(points, bound_paths))
+            together.sort(key=lambda x: np.arctan2(x[0][1, 0], x[0][0, 0])%(2*np.pi))
+            return [p for (p, _) in together], [pth for (_, pth) in together]
 
         if len(vp) >= 2:
             vp, bound_paths = augment_point_paths(vp, bound_paths)

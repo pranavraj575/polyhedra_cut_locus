@@ -38,8 +38,8 @@ PARSER.add_argument("--n", type=int, required=False, default=3,
                     help="additional argument to specify n, used for " + str(arg_n))
 
 PARSER.add_argument("--click", action='store_true', required=False,
-                    help="toggle whether to click to update point or have point update with mouse")
+                    help="click to update point instead of updating with movement")
 PARSER.add_argument("--legend", action='store_true', required=False,
-                    help="toggle whether to put legend on plot")
+                    help="put legend on plot")
 PARSER.add_argument("--diameter", type=int, required=False, default=-1,
                     help="Specify diameter of search graph (longest possible sequence of faces on a geodesic)")
