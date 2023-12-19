@@ -1,5 +1,8 @@
 from src.shape_argparser import *
 
+PARSER.add_argument("--untrack", action='store_true', required=False,
+                    help="toggle whether to track the cut locus as mouse moves")
+
 args = PARSER.parse_args()
 if args.shape not in mapping:
     raise Exception("ERROR: haven't made shape '" + args.shape + "' yet, valid arguments are " + str(tuple(s for s in mapping)))
@@ -9,7 +12,7 @@ if args.shape in arg_n:
 else:
     shape = SHAPE()
 
-shape.interactive_unwrap()
+shape.interactive_unwrap(track=not args.untrack)
 # ax= plt.gca()
 # shape=Octahedron()
 # shape.plot_unwrapping(np.zeros((2,1))+.1,1,7,None,ax)

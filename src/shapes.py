@@ -1333,12 +1333,13 @@ class Shape:
                 ploot(i, j).set_yticks([])
         plt.show()
 
-    def interactive_unwrap(self, figsize=None, legend=lambda i, j: False, diameter=None):
+    def interactive_unwrap(self, figsize=None, legend=lambda i, j: False, diameter=None, track=True):
         """
         :param figsize: initial figure size (inches)
         :param legend: (i,j)-> whether to put a legend on plot (i,j)
         :param diameter: longest path of faces to consider when creating paths for vornoi plot
             (None if infinite)
+        :param track: whether to track cut locus of cursor on movement
         """
         plt.rcParams["figure.autolayout"] = True
         face_map, n, m = self.faces_to_plot_n_m()
@@ -1429,7 +1430,7 @@ class Shape:
                 for j in range(m):
                     ploot(i, j).set_xticks([])
                     ploot(i, j).set_yticks([])
-            ax.scatter(p[0, 0], p[1, 0], color='purple',alpha=.5)
+            ax.scatter(p[0, 0], p[1, 0], color='purple', alpha=.5)
 
             source_fn = fc.name
 
@@ -1444,7 +1445,8 @@ class Shape:
             plt.show()
 
         cid = fig.canvas.mpl_connect('button_press_event', mouse_event)
-        cid2 = fig.canvas.mpl_connect('motion_notify_event', mouse_event2)
+        if track:
+            cid2 = fig.canvas.mpl_connect('motion_notify_event', mouse_event2)
         self.plot_face_boundaries(axs, legend=legend)
         plt.suptitle("Click $p$")
 
