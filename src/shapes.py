@@ -1401,6 +1401,8 @@ class Shape:
                 self.extra_data['unwrap_sink_fn'] = fc.name
                 plt.clf()
                 self.plot_unwrapping(self.extra_data['p'], self.extra_data['unwrap_source_fn'], self.extra_data['unwrap_sink_fn'], diameter=diameter, ax=plt.gca())
+                plt.xticks([])
+                plt.yticks([])
                 plt.show()
 
         cid = fig.canvas.mpl_connect('button_press_event', mouse_event)
