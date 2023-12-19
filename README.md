@@ -1,15 +1,21 @@
-# Cut Locus Visualization
-Visualize the cut locus of points on a polytope consisting of 2-d faces
+# Geodesic Complexity Visualizations
+Visualize relevant features of a polytope consisting of 2-d faces
 (tested with [Python 3.8.10](https://www.python.org/downloads/release/python-3810/))
 
-![](https://github.com/pranavraj575/mitochondria/blob/main/images/tetrahedron/demo.gif)
+* **Interactive Cut Locus Visualization:**
+  
+  ![](https://github.com/pranavraj575/mitochondria/blob/main/images/tetrahedron/demo_cut_locus.gif)
+  
+* **Unfolding Visualization:**
+  
+  ![](https://github.com/pranavraj575/mitochondria/blob/main/images/cube/demo_unwrap.gif)
 
 
 |**TABLE OF CONTENTS**||
 | ------------- | ------------- |
 | [Installation Instructions](#installation-assuming-python-is-installed) | instructions for how to set up code |
 | [Installation Test](#installation-test) | test example (tetrahedron cut locus) | 
-| [Cut Locus Visualization](#cut-locus-visualization-1) | Instructions for running interactive cut locus visualization |
+| [Cut Locus Visualization](#cut-locus-visualization) | Instructions for running interactive cut locus visualization |
 | [Unfolding Visualization](#unfolding-visualization) | Instructions for running interactive unfolding visualization |
 | [Implemented Shapes](#implemented-shapes) | List of implemented polyhedra and examples of their cut loci |
 
