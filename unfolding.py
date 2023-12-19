@@ -15,7 +15,9 @@ if args.shape in arg_n:
 else:
     shape = SHAPE()
 
-shape.interactive_unwrap(track=not args.no_tracking, single_display=args.single_display)
+shape.interactive_unwrap(track=not args.no_tracking,
+                         single_display=args.single_display,
+                         legend=lambda i, j: args.legend)
 # ax= plt.gca()
 # shape=Octahedron()
 # shape.plot_unwrapping(np.zeros((2,1))+.1,1,7,None,ax)

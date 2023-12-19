@@ -2,6 +2,9 @@ import numpy as np
 
 from src.shape_argparser import *
 
+PARSER.add_argument("--click", action='store_true', required=False,
+                    help="click to update point instead of updating with movement")
+
 PARSER.add_argument("--center-pt", action='store_true', required=False,
                     help="add center point to faces")
 
