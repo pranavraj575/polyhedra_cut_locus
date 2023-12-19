@@ -1,4 +1,3 @@
-
 from src.shape_argparser import *
 
 args = PARSER.parse_args()
@@ -11,8 +10,8 @@ else:
     shape = SHAPE()
 
 shape.interactive_unwrap()
-#ax= plt.gca()
-#shape=Octahedron()
-#shape.plot_unwrapping(np.zeros((2,1))+.1,1,7,None,ax)
-#shape.plot_unwrapping(np.array([[-.4], [-.6]]),3,0,None,ax)
-#plt.show()
+# ax= plt.gca()
+# shape=Octahedron()
+# shape.plot_unwrapping(np.zeros((2,1))+.1,1,7,None,ax)
+# shape.plot_unwrapping(np.array([[-.4], [-.6]]),3,0,None,ax)
+# plt.show()
