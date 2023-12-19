@@ -105,42 +105,48 @@ python3 unfolding.py --shape tetrahedron
     ![](https://github.com/pranavraj575/mitochondria/blob/main/images/icosahedron/p_(0.10825317547305484%2C%200.1375)_face_1.png)
     
   * **Prism**:
-    (replace `<n>` with the n-gon you want
+    
+    replace `<n>` with the n-gon you want (`3<=n`)
     ```bash
     python3 voronoi_interactive.py --shape prism --n <n>
     ```
     ![](https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/pentagonal_prism.png)
     
   * **Antiprism**:
-    (replace `<n>` with the n-gon you want
+    
+    replace `<n>` with the n-gon you want (`2<=n`)
     ```bash
     python3 voronoi_interactive.py --shape antiprism --n <n>
     ```
     ![](https://github.com/pranavraj575/mitochondria/blob/main/images/antiprisms/5/p_(-0.21650635094610957%2C%20-1.034680636892047)_face_0.png)
     
   * **Pyramid**:
-    (replace `<n>` with the n-gon you want (`3<=n<=6`)
+    
+    replace `<n>` with the n-gon you want (`3<=n<=5`)
     ```bash
     python3 voronoi_interactive.py --shape pyramid --n <n>
     ```
     ![](https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/pentagonal_pyramid.png)
     
   * **Elongated Pyramid**:
-    (replace `<n>` with the n-gon you want (`3<=n<=6`)
+    
+    replace `<n>` with the n-gon you want (`2<=n<=5`)
     ```bash
     python3 voronoi_interactive.py --shape longpyramid --n <n>
     ```
     ![](https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/elongated_pentagonal_pyramid.png)
     
   * **Bipyramid**:
-    (replace `<n>` with the n-gon you want (`3<=n<=6`)
+    
+    replace `<n>` with the n-gon you want (`2<=n<=5`)
     ```bash
     python3 voronoi_interactive.py --shape bipyramid --n <n>
     ```
     ![](https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/pentagonal_bipyramid.png)
     
   * **Elongated Bipyramid**:
-    (replace `<n>` with the n-gon you want (`3<=n<=6`)
+    
+    replace `<n>` with the n-gon you want (`3<=n<=5`)
     ```bash
     python3 voronoi_interactive.py --shape longbipyramid --n <n>
     ```
@@ -151,3 +157,12 @@ python3 unfolding.py --shape tetrahedron
     python3 voronoi_interactive.py --shape torus
     ```
     ![](https://github.com/pranavraj575/mitochondria/blob/main/images/2torus/sample.png)
+  
+  * **Mirror** (two n-gons glued to each other):
+    
+
+    replace `<n>` with the n-gon you want (`3<=n`)
+    ```bash
+    python3 voronoi_interactive.py --shape mirror --n <n>
+    ```
+    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/hexagonal_mirror.png)
