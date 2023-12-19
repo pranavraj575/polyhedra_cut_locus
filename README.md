@@ -70,7 +70,7 @@ Run `unfolding.py` from terminal/command prompt in the mitochondria folder
 
 **Example**: 
 ```bash
-python3 unfolding.py --shape tetrahedron
+python3 unfolding.py --shape cube
 ```
 
 ## Implemented shapes:
