@@ -806,6 +806,7 @@ class Shape:
         self.memoized_face_translations = dict()
         self.seen_bounds = []
         self.extra_legend = None
+        self.extra_data = dict()
 
     def _pick_new_face_name(self):
         """
@@ -937,7 +938,7 @@ class Shape:
             bound_path = []
             for (bound, F) in path:
                 bound: Bound
-                bound_path.append((bound,F))
+                bound_path.append((bound, F))
                 T, s = bound.concatenate_with(T, s)
             translations.append((T, s, bound_path))
         return translations
@@ -984,78 +985,91 @@ class Shape:
         :param ax: plot to plot on (pyplot, or ax object)
         :return: whether we were successful
         """
+        if ax is None:
+            ax = plt.gca()
         vp, bound_paths = self.get_voronoi_points_from_face_paths(p, source_fn, sink_fn, diameter=diameter)
         source: Face = self.faces[source_fn]
-        sink:Face=self.faces[sink_fn]
-        def augment_point_paths(points,bound_paths):
+        sink: Face = self.faces[sink_fn]
+
+        def augment_point_paths(points, bound_paths):
             """
             adds to points and bound paths until length 4
             :param points: array of column vector points (must be populated)
             :param bound_paths: array of paths (will add 'None' to this)
             """
             large = 69*sum(np.linalg.norm(p) for p in points)
-            shape=points[0].shape
-            vs=[np.ones(shape)]
+            shape = points[0].shape
+            vs = [np.ones(shape)]
             vs.append(vs[0].copy())
-            vs[1][0,0]=-vs[1][0,0]
+            vs[1][0, 0] = -vs[1][0, 0]
             vs.append(-vs[0])
             vs.append(-vs[1])
             for i in range(4):
-                if len(points)<4:
+                if len(points) < 4:
                     points.append(large*vp[i])
                     bound_paths.append(None)
-            return points,bound_paths
+            return points, bound_paths
 
         if len(vp) >= 2:
-            vp,bound_paths=augment_point_paths(vp,bound_paths)
+            vp, bound_paths = augment_point_paths(vp, bound_paths)
             points = np.concatenate(vp, axis=1)
             points = points.T
             vor = Voronoi(points)
             fig, point_to_segments = voronoi_plot_2d(vor, ax=None)
 
-            relevant_points=[]
-            relevant_bound_paths=[]
+            relevant_points = []
+            relevant_bound_paths = []
             for p_idx in point_to_segments:
-                point=points[p_idx,:] # row vector of point that created this
-                for a,b in point_to_segments[p_idx]:
-                    if sink.line_within_bounds(a.reshape((2,1)),b.reshape((2,1))):
-                        relevant_points.append(point.reshape((2,1)))
+                point = points[p_idx, :]  # row vector of point that created this
+                for a, b in point_to_segments[p_idx]:
+                    if sink.line_within_bounds(a.reshape((2, 1)), b.reshape((2, 1))):
+                        relevant_points.append(point.reshape((2, 1)))
                         relevant_bound_paths.append(bound_paths[p_idx])
                         break
-            relevant_points,relevant_bound_paths=augment_point_paths(relevant_points,relevant_bound_paths)
-            for pt,path in zip(relevant_points,relevant_bound_paths):
+            relevant_points, relevant_bound_paths = augment_point_paths(relevant_points, relevant_bound_paths)
+            our_face_plotted = False
+
+            labeled = False
+
+            for pt, path in zip(relevant_points, relevant_bound_paths):
                 # we can graph pt here
                 if path is not None:
-                    face_tracking=[[v.copy() for (v,_) in source.get_vertices()]] # tracking the vertices of each face and their eventual location
-                    center_tracking=[np.zeros((2,1))] # tracking the center of each face
-                    face_name_tracking=[source_fn]
-                    for (bound,F) in path:
-                        bound:Bound
-                        face_tracking=[[bound.shift_point(v) for v in vees]for vees in face_tracking]+[[v.copy() for (v,_) in F.get_vertices()]]
-                        center_tracking=[bound.shift_point(v) for v in center_tracking]+[np.zeros((2,1))]
-                        face_name_tracking=face_name_tracking+[F.name]
-                    for face,name,center in zip(face_tracking,face_name_tracking,center_tracking):
+                    face_tracking = [[v.copy() for (v, _) in source.get_vertices()]]  # tracking the vertices of each face and their eventual location
+                    center_tracking = [np.zeros((2, 1))]  # tracking the center of each face
+                    face_name_tracking = [source_fn]
+                    for (bound, F) in path:
+                        bound: Bound
+                        face_tracking = [[bound.shift_point(v) for v in vees] for vees in face_tracking] + [[v.copy() for (v, _) in F.get_vertices()]]
+                        center_tracking = [bound.shift_point(v) for v in center_tracking] + [np.zeros((2, 1))]
+                        face_name_tracking = face_name_tracking + [F.name]
+                    iteration = list(zip(face_tracking, face_name_tracking, center_tracking))
+                    if our_face_plotted:
+                        iteration = iteration[:-1]
+                    else:
+                        our_face_plotted = True
+
+                    for face, name, center in iteration:
                         for i in range(len(face)):
-                            v1=face[i]
-                            v2=face[(i+1)%len(face)]
-                            ax.plot([v1[0],v2[0]],[v1[1],v2[1]],color='blue',linewidth=1)
+                            v1 = face[i]
+                            v2 = face[(i + 1)%len(face)]
+                            ax.plot([v1[0], v2[0]], [v1[1], v2[1]], color='blue', linewidth=1)
                             ax.annotate(str(name), (center[0], center[1]))
+                    label = None
+                    if not labeled:
+                        label = 'pt copies'
+                        labeled = True
+                    ax.scatter(pt[0], pt[1], color='purple', label=label, alpha=1, s=4)
 
-                pass
-            labeled=False
-            for pt in relevant_points:
-                label=None
-                if not labeled:
-                    label='pt copies'
-                    labeled=True
-                ax.scatter(pt[0],pt[1],color='purple',label=label,alpha=1,s=4)
 
-            ax.scatter([0],[0],label='center')
-            relevant_points=np.concatenate(relevant_points,axis=1)
+            ax.scatter([0], [0], label='center')
+            relevant_points = np.concatenate(relevant_points, axis=1)
 
-            vor=Voronoi(relevant_points.T)
-            voronoi_plot_2d(vor,ax=ax,show_points=False, show_vertices=False, line_colors='black',
-                                                     line_width=1, line_alpha=1)
+            vor = Voronoi(relevant_points.T)
+            xlim, ylim = ax.get_xlim(), ax.get_ylim()
+            voronoi_plot_2d(vor, ax=ax, show_points=False, show_vertices=False, line_colors='black',
+                            line_width=2, line_alpha=1)
+            ax.set_xlim(xlim)
+            ax.set_ylim(ylim)
             ax.legend()
             return True
         return False
@@ -1309,6 +1323,76 @@ class Shape:
 
         cid = fig.canvas.mpl_connect(event_key, mouse_event)
         self.plot_face_boundaries(axs, legend=legend)
+
+        for i in range(n):
+            for j in range(m):
+                ploot(i, j).set_xticks([])
+                ploot(i, j).set_yticks([])
+        plt.show()
+
+    def interactive_unwrap(self, figsize=None, legend=lambda i, j: False, diameter=None):
+        """
+        :param figsize: initial figure size (inches)
+        :param legend: (i,j)-> whether to put a legend on plot (i,j)
+        :param diameter: longest path of faces to consider when creating paths for vornoi plot
+            (None if infinite)
+        """
+        plt.rcParams["figure.autolayout"] = True
+        face_map, n, m = self.faces_to_plot_n_m()
+        fig, axs = plt.subplots(n, m, figsize=figsize)
+
+        def ploot(i, j):
+            if m > 1 and n > 1:
+                return axs[i, j]
+            if m == 1 and n == 1:
+                return axs
+            return axs[m*i + j]
+
+        list_axes = []
+        for i in range(n):
+            for j in range(m):
+                list_axes.append((ploot(i, j), (i, j)))
+
+        def ploot_inv(ax):
+            for (x, (i, j)) in list_axes:
+                if x == ax:
+                    return (i, j)
+            return None
+
+        self.extra_data['unwrap_source_fn'] = None
+        self.extra_data['p'] = None
+        self.extra_data['unwrap_sink_fn'] = None
+
+        def mouse_event(event):
+
+            ax = event.inaxes
+            if ax is None:
+                return
+            p = np.array([[event.xdata], [event.ydata]])
+            ij = ploot_inv(ax)
+            if ij is None:
+                return
+            i, j = ij
+            fc = face_map(i, j)
+            fc: Face
+            if fc is None:
+                return
+            if self.extra_data['unwrap_source_fn'] is None:
+                p = fc.get_closest_point(p)
+                self.extra_data['unwrap_source_fn'] = fc.name
+                self.extra_data['p'] = p
+                plt.suptitle("Now click sink face")
+                ax.scatter(p[0, 0], p[1, 0], color='purple')
+                plt.show()
+            else:
+                self.extra_data['unwrap_sink_fn'] = fc.name
+                plt.clf()
+                self.plot_unwrapping(self.extra_data['p'], self.extra_data['unwrap_source_fn'], self.extra_data['unwrap_sink_fn'], diameter=diameter, ax=plt.gca())
+                plt.show()
+
+        cid = fig.canvas.mpl_connect('button_press_event', mouse_event)
+        self.plot_face_boundaries(axs, legend=legend)
+        plt.suptitle("Click $p$")
 
         for i in range(n):
             for j in range(m):
