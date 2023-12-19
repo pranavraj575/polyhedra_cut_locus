@@ -8,7 +8,7 @@ Visualize relevant features of a polytope consisting of 2-d faces
   
 * **Unfolding Visualization:**
   
-  ![](https://github.com/pranavraj575/mitochondria/blob/main/images/cube/demo_unwrap.gif)
+  ![](https://github.com/pranavraj575/mitochondria/blob/main/images/cube/demo_unfold.gif)
 
 
 |**TABLE OF CONTENTS**||
