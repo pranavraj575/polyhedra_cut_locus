@@ -3,6 +3,16 @@ Visualize the cut locus of points on a polytope consisting of 2-d faces
 (tested with [Python 3.8.10](https://www.python.org/downloads/release/python-3810/))
 
 ![](https://github.com/pranavraj575/mitochondria/blob/main/images/tetrahedron/demo.gif)
+
+
+|**TABLE OF CONTENTS**||
+| ------------- | ------------- |
+| [Installation Instructions]() | instructions for how to set up code |
+| [Installation Test]() | test example (tetrahedron cut locus) | 
+| [Cut Locus Visualization]() | Instructions for running interactive cut locus visualization |
+| [Unfolding Visualization]() | Instructions for running interactive unfolding visualization |
+| [Implemented Shapes]() | List of implemented polyhedra and examples of their cut loci |
+
 ## Installation (assuming [Python](https://www.python.org/downloads/release/python-3810/) is installed)
 * **Option 1**: [Download zip](https://github.com/pranavraj575/mitochondria/archive/refs/heads/main.zip), then extract all
   
@@ -18,8 +28,8 @@ Visualize the cut locus of points on a polytope consisting of 2-d faces
   git clone https://github.com/pranavraj575/mitochondria
   pip3 install -e mitochondria
   ```
-  
-## Run Cut Locus visualization
+
+## Installation Test
 
 Run `voronoi_interactive.py` from terminal/command prompt in the mitochondria folder 
   
@@ -35,7 +45,29 @@ python3 voronoi_interactive.py -h
 ```
 **Note**: try replacing `python3` with `python` if you get error "Python was not found"
 
-### Implemented shapes:
+## Cut Locus Visualization:
+
+Run `voronoi_interactive.py` from terminal/command prompt in the mitochondria folder 
+  
+  (move to correct folder with ```cd <name of folder>```)
+
+**Example**: 
+```bash
+python3 voronoi_interactive.py --shape tetrahedron --center_pt --legend 
+```
+
+## Unfolding Visualization:
+
+Run `unfolding.py` from terminal/command prompt in the mitochondria folder 
+  
+  (move to correct folder with ```cd <name of folder>```)
+
+**Example**: 
+```bash
+python3 unfolding.py --shape tetrahedron
+```
+
+## Implemented shapes:
   * **Tetrahedron**:
     ```bash
     python3 voronoi_interactive.py --shape tetrahedron
