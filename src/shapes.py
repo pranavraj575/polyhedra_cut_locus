@@ -1237,6 +1237,8 @@ class Shape:
         for i in range(n):
             for j in range(m):
                 face = face_map(i, j)
+                ploot(i, j).set_xticks([])
+                ploot(i, j).set_yticks([])
                 if face is not None:
                     ploot(i, j).set_title("FACE " + str(face.name))
                     path = face.get_path_and_faces()
@@ -1272,7 +1274,7 @@ class Shape:
                     if legend(i, j):
                         ploot(i, j).legend()
 
-    def interactive_vornoi_plot(self, figsize=None, legend=lambda i, j: False, diameter=None, event_key='button_press_event'):
+    def interactive_vornoi_plot(self, figsize=None, legend=lambda i, j: False, diameter=None, event_key='button_press_event', source_fn_p=None):
         """
         :param figsize: initial figure size (inches)
         :param legend: (i,j)-> whether to put a legend on plot (i,j)
@@ -1281,6 +1283,8 @@ class Shape:
         :param event_key: when to update special point
             'motion_notify_event' or 'button_press_event' are tested
             https://matplotlib.org/stable/users/explain/figure/event_handling.html
+        :param source_fn_p: if specified, use this face and point as the source
+            (face name, column vector)
         """
         plt.rcParams["figure.autolayout"] = True
         face_map, n, m = self.faces_to_plot_n_m()
@@ -1304,26 +1308,13 @@ class Shape:
                     return (i, j)
             return None
 
-        def mouse_event(event):
-            ax = event.inaxes
-            if ax is None:
-                return
-            for i in range(n):
-                for j in range(m):
-                    ploot(i, j).cla()
-            p = np.array([[event.xdata], [event.ydata]])
+        def full_v_plot_from_point_axis(p, ax):
             (i, j) = ploot_inv(ax)
             fc = face_map(i, j)
             fc: Face
             if fc is None:
                 return
-            p = fc.get_closest_point(p)
-
             self.plot_face_boundaries(axs, legend=legend)
-            for i in range(n):
-                for j in range(m):
-                    ploot(i, j).set_xticks([])
-                    ploot(i, j).set_yticks([])
             ax.scatter(p[0, 0], p[1, 0], color='purple')
 
             source_fn = fc.name
@@ -1336,18 +1327,45 @@ class Shape:
                         self.plot_voronoi(p, source_fn, face.name, diameter=diameter, ax=ploot(i, j))
                         ploot(i, j).set_xlim(xlim)
                         ploot(i, j).set_ylim(ylim)
+
+        def mouse_event(event):
+            ax = event.inaxes
+            if ax is None:
+                return
+            p = np.array([[event.xdata], [event.ydata]])
+            (i, j) = ploot_inv(ax)
+            fc = face_map(i, j)
+            fc: Face
+            if fc is None:
+                return
+            for i in range(n):
+                for j in range(m):
+                    ploot(i, j).cla()
+            p = fc.get_closest_point(p)
+            full_v_plot_from_point_axis(p, ax)
             plt.show()
 
-        cid = fig.canvas.mpl_connect(event_key, mouse_event)
-        self.plot_face_boundaries(axs, legend=legend)
+        if event_key is not None:
+            cid = fig.canvas.mpl_connect(event_key, mouse_event)
+            self.plot_face_boundaries(axs, legend=legend)
+        else:
+            fn, p = source_fn_p
+            if fn not in self.faces:
+                raise Exception("invalid file name specified: " + str(fn))
+            if not self.faces[fn].within_bounds(p):
+                raise Exception("point " + str(tuple(p.flatten())) + ' not in face')
+            I, J = None, None
+            for i in range(n):
+                for j in range(m):
+                    face = face_map(i, j)
+                    if face is not None:
+                        if face.name == fn:
+                            I, J = i, j
+            full_v_plot_from_point_axis(p, ploot(I, J))
 
-        for i in range(n):
-            for j in range(m):
-                ploot(i, j).set_xticks([])
-                ploot(i, j).set_yticks([])
         plt.show()
 
-    def interactive_unwrap(self, figsize=None, legend=lambda i, j: False, diameter=None, track=True, single_display=True):
+    def interactive_unwrap(self, figsize=None, legend=lambda i, j: False, diameter=None, track=True, single_display=True, source_fn_p=None, sink_fn=None):
         """
         :param figsize: initial figure size (inches)
         :param legend: (i,j)-> whether to put a legend on plot (i,j)
@@ -1355,6 +1373,9 @@ class Shape:
             (None if infinite)
         :param track: whether to track cut locus of cursor on movement
         :param single_display: whether to only display one path at once
+        :param source_fn_p: if specified, use this face and point as the source
+            (face name, column vector)
+        :param sink_fn: if specified, use this face as the sink
         """
         plt.rcParams["figure.autolayout"] = True
         face_map, n, m = self.faces_to_plot_n_m()
@@ -1381,50 +1402,40 @@ class Shape:
         self.extra_data['unwrap_source_fn'] = None
         self.extra_data['p'] = None
         self.extra_data['unwrap_sink_fn'] = None
+        if source_fn_p is not None:
+            self.extra_data['unwrap_source_fn'], self.extra_data['p'] = source_fn_p
+            if not self.faces[self.extra_data['unwrap_source_fn']].within_bounds(self.extra_data['p']):
+                raise Exception("point " + str(tuple(self.extra_data['p'].flatten())) + ' not in face')
+        if sink_fn is not None:
+            self.extra_data['unwrap_sink_fn'] = sink_fn
         self.extra_data['unwrap_counter'] = 0
-        self.extra_data['unwrap_finished'] = False
+        self.extra_data['unwrap_source_plotted'] = False
 
-        def mouse_event(event):
-
-            ax = event.inaxes
-            p = np.array([[event.xdata], [event.ydata]])
-            ij = ploot_inv(ax) if ax is not None else None
-            fc = face_map(ij[0], ij[1]) if ij is not None else None
-
-            if self.extra_data['unwrap_source_fn'] is None:
-                if fc is None: return
-
+        def spin():
+            if not self.extra_data['unwrap_source_plotted'] and self.extra_data['unwrap_source_fn'] is not None:
+                # if we picked a point and havent yet plotted vornoulli
                 for i in range(n):
                     for j in range(m):
                         ploot(i, j).cla()
                 self.plot_face_boundaries(axs, legend=legend)
                 for i in range(n):
                     for j in range(m):
-                        ploot(i, j).set_xticks([])
-                        ploot(i, j).set_yticks([])
-
-                p = fc.get_closest_point(p)
-
-                for i in range(n):
-                    for j in range(m):
                         face = face_map(i, j)
                         if face is not None:
                             xlim, ylim = ploot(i, j).get_xlim(), ploot(i, j).get_ylim()
-                            self.plot_voronoi(p, fc.name, face.name, diameter=diameter, ax=ploot(i, j))
+                            self.plot_voronoi(self.extra_data['p'], self.extra_data['unwrap_source_fn'], face.name, diameter=diameter, ax=ploot(i, j))
                             ploot(i, j).set_xlim(xlim)
                             ploot(i, j).set_ylim(ylim)
+                            if self.extra_data['unwrap_source_fn'] == face.name:
+                                ploot(i, j).scatter(self.extra_data['p'][0, 0], self.extra_data['p'][1, 0], color='purple')
 
-                self.extra_data['unwrap_source_fn'] = fc.name
-                self.extra_data['p'] = p
+                self.extra_data['unwrap_source_plotted'] = True
+            if not self.extra_data['unwrap_source_plotted']:
+                plt.suptitle("Click $p$")
+            elif self.extra_data['unwrap_sink_fn'] is None:
                 plt.suptitle("Now click sink face")
-                ax.scatter(p[0, 0], p[1, 0], color='purple')
-                plt.show()
-            elif (self.extra_data['unwrap_sink_fn'] is None and
-                  fc is not None and
-                  fc.name is not self.extra_data['unwrap_source_fn']):
-                self.extra_data['unwrap_sink_fn'] = fc.name
-
-            if self.extra_data['unwrap_sink_fn'] is not None:
+            if self.extra_data['unwrap_source_fn'] is not None and self.extra_data['unwrap_sink_fn'] is not None:
+                # if we have finished both
                 plt.clf()
                 i_to_display = None
                 if single_display:
@@ -1435,13 +1446,25 @@ class Shape:
                 plt.yticks([])
                 if single_display and not finished:
                     plt.title("click to advance")
-                if not finished or (self.extra_data['unwrap_finished'] != finished):
-                    # if there is more, or if we have just finished
-                    plt.show()
                 self.extra_data['unwrap_counter'] += 1
-                self.extra_data['unwrap_finished'] = finished
 
-        def mouse_event2(event):
+        def clicked_mouse(event):
+            ax = event.inaxes
+            p = np.array([[event.xdata], [event.ydata]])
+            ij = ploot_inv(ax) if ax is not None else None
+            fc = face_map(ij[0], ij[1]) if ij is not None else None
+            if self.extra_data['unwrap_source_fn'] is None:
+                if fc is None: return
+                self.extra_data['unwrap_source_fn'] = fc.name
+                self.extra_data['p'] = p
+            elif (self.extra_data['unwrap_sink_fn'] is None and
+                  fc is not None and
+                  fc.name is not self.extra_data['unwrap_source_fn']):
+                self.extra_data['unwrap_sink_fn'] = fc.name
+            spin()
+            plt.show()
+
+        def moved_mouse(event):
             if self.extra_data['unwrap_source_fn'] is not None:
                 return
             ax = event.inaxes
@@ -1453,7 +1476,6 @@ class Shape:
                 return
             i, j = ij
             fc = face_map(i, j)
-            fc: Face
             if fc is None:
                 return
             p = fc.get_closest_point(p)
@@ -1461,10 +1483,6 @@ class Shape:
                 for j in range(m):
                     ploot(i, j).cla()
             self.plot_face_boundaries(axs, legend=legend)
-            for i in range(n):
-                for j in range(m):
-                    ploot(i, j).set_xticks([])
-                    ploot(i, j).set_yticks([])
             ax.scatter(p[0, 0], p[1, 0], color='purple', alpha=.5)
 
             source_fn = fc.name
@@ -1479,16 +1497,12 @@ class Shape:
                         ploot(i, j).set_ylim(ylim)
             plt.show()
 
-        cid = fig.canvas.mpl_connect('button_press_event', mouse_event)
+        cid = fig.canvas.mpl_connect('button_press_event', clicked_mouse)
         if track:
-            cid2 = fig.canvas.mpl_connect('motion_notify_event', mouse_event2)
+            cid2 = fig.canvas.mpl_connect('motion_notify_event', moved_mouse)
         self.plot_face_boundaries(axs, legend=legend)
         plt.suptitle("Click $p$")
-
-        for i in range(n):
-            for j in range(m):
-                ploot(i, j).set_xticks([])
-                ploot(i, j).set_yticks([])
+        spin()
         plt.show()
 
     def plot_faces(self, save_image=None, show=False, figsize=None, legend=lambda i, j: True, voronoi=None):
