@@ -65,7 +65,8 @@ def figsize_from_args(args):
             figsize = (args.width_display, args.height_display)
     return figsize
 
-def get_source_fn_p_from_args(args,shape):
+
+def get_source_fn_p_from_args(args, shape):
     """
     gets (source face name, point) from args
     :param args: args object

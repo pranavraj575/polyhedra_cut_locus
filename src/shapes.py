@@ -996,9 +996,11 @@ class Shape:
 
         def augment_point_paths(points, bound_paths):
             """
-            adds to points and bound paths until length 4 and also sorts them by angle
+            adds 4 large points so that the vornoi diagram is always defined
+                puts them in corners of extremely large bounding box
             :param points: array of column vector points (must be populated)
             :param bound_paths: array of paths (will add 'None' to this)
+            :return (points, bound_paths), both sorted by angle of point
             """
             large = 69*sum(np.linalg.norm(p) for p in points)
             shape = points[0].shape
@@ -1008,9 +1010,8 @@ class Shape:
             vs.append(-vs[0])
             vs.append(-vs[1])
             for i in range(4):
-                if len(points) < 4:
-                    points.append(large*vp[i])
-                    bound_paths.append(None)
+                points.append(large*vs[i])
+                bound_paths.append(None)
             together = list(zip(points, bound_paths))
             together.sort(key=lambda x: np.arctan2(x[0][1, 0], x[0][0, 0])%(2*np.pi))
             return [p for (p, _) in together], [pth for (_, pth) in together]
