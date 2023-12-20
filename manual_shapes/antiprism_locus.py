@@ -8,7 +8,7 @@ for n in range(3, 10):
     r = np.sqrt(3)/np.tan(np.pi/n)
     R = r/np.cos(np.pi/n)
     fn = 0
-    folder = os.path.join('images', 'antiprisms', str(n))
+    folder = os.path.join('../images', 'antiprisms', str(n))
     if not os.path.exists(folder):
         os.makedirs(folder)
 

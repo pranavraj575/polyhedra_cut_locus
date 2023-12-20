@@ -1,17 +1,20 @@
 from src.shapes import *
-from src.shape_creation import Tetrahedron
+from src.shape_creation import Cube
 import os
 
 if __name__ == "__main__":
 
-    cube = Tetrahedron()
+    cube = Cube()
 
-    fn = 3
-    p = np.array([[-.4], [-.6]])
+    fn = 2
+    p = np.array([[-1], [0]])
+
+    fn = 1
+    p = np.array([[.8], [.2]])
 
     cube.add_point_to_face(p, fn, {'color': 'purple', 's': 40})
 
-    folder = os.path.join('images', 'tetrahedron')
+    folder = os.path.join('../images', 'cube')
     if not os.path.exists(folder):
         os.makedirs(folder)
     name = 'p_' + str(tuple(p.flatten())) + '_face_' + str(fn) + '.png'

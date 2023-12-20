@@ -13,6 +13,7 @@ from src.shape_creation import (Tetrahedron,
                                 Large2Torus
                                 )
 import argparse
+import numpy as np
 
 mapping = {'tetrahedron': Tetrahedron,
            'cube': Cube,
@@ -45,6 +46,45 @@ def check_face_name(proposed_name, shape):
     return output
 
 
+def figsize_from_args(args):
+    """
+    gets figsize from args
+    :param args: args object
+    :return: (width,height) or None
+    """
+    figsize = None
+    if args.height_display is not None:
+        if args.width_display is None:
+            figsize = (args.height_display, args.height_display)
+        else:
+            figsize = (args.width_display, args.height_display)
+    if args.width_display is not None:
+        if args.height_display is None:
+            figsize = (args.width_display, args.width_display)
+        else:
+            figsize = (args.width_display, args.height_display)
+    return figsize
+
+def get_source_fn_p_from_args(args,shape):
+    """
+    gets (source face name, point) from args
+    :param args: args object
+    :param shape: Shape
+    :return: (source face name, column vector) or None
+    """
+
+    face_name = args.face_name
+    p = np.array([[args.point_x], [args.point_y]])
+    source_fn_p = None
+    if face_name is not None:
+        temp = face_name
+        face_name = check_face_name(face_name, shape)
+        if face_name is None:
+            raise Exception("invalid file name specified: " + str(temp))
+        source_fn_p = (face_name, p)
+    return source_fn_p
+
+
 arg_n = ('prism', 'antiprism', 'pyramid', 'longpyramid', 'bipyramid', 'longbipyramid', 'mirror')
 # shapes that take n as an arg
 
@@ -58,6 +98,16 @@ PARSER.add_argument("--legend", action='store_true', required=False,
                     help="put legend on plot")
 PARSER.add_argument("--diameter", type=int, required=False, default=-1,
                     help="Specify diameter of search graph (longest possible sequence of faces on a geodesic)")
+
+PARSER.add_argument("--no-show", action='store_true', required=False,
+                    help="don't show the plot")
+
+PARSER.add_argument("--save-file", action='store', required=False, default=None,
+                    help="save initial image as specified file")
+PARSER.add_argument("--width-display", type=float, required=False, default=None,
+                    help="width of display in inches")
+PARSER.add_argument("--height-display", type=float, required=False, default=None,
+                    help="height of display in inches")
 
 PARSER.add_argument("--face-name", action='store', required=False, default=None,
                     help="Specify face name if inputting a specific point")

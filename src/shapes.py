@@ -1274,7 +1274,7 @@ class Shape:
                     if legend(i, j):
                         ploot(i, j).legend()
 
-    def interactive_vornoi_plot(self, figsize=None, legend=lambda i, j: False, diameter=None, event_key='button_press_event', source_fn_p=None):
+    def interactive_vornoi_plot(self, figsize=None, legend=lambda i, j: False, diameter=None, event_key='button_press_event', source_fn_p=None, show=True, save=None):
         """
         :param figsize: initial figure size (inches)
         :param legend: (i,j)-> whether to put a legend on plot (i,j)
@@ -1285,6 +1285,9 @@ class Shape:
             https://matplotlib.org/stable/users/explain/figure/event_handling.html
         :param source_fn_p: if specified, use this face and point as the source
             (face name, column vector)
+        :param show: whether to display plot
+        :param save: file name to save initial image to
+            (none if not saved)
         """
         plt.rcParams["figure.autolayout"] = True
         face_map, n, m = self.faces_to_plot_n_m()
@@ -1362,10 +1365,12 @@ class Shape:
                         if face.name == fn:
                             I, J = i, j
             full_v_plot_from_point_axis(p, ploot(I, J))
+        if save is not None:
+            plt.savefig(save)
+        if show:
+            plt.show()
 
-        plt.show()
-
-    def interactive_unwrap(self, figsize=None, legend=lambda i, j: False, diameter=None, track=True, single_display=True, source_fn_p=None, sink_fn=None):
+    def interactive_unwrap(self, figsize=None, legend=lambda i, j: False, diameter=None, track=True, single_display=True, source_fn_p=None, sink_fn=None, show=True, save=None):
         """
         :param figsize: initial figure size (inches)
         :param legend: (i,j)-> whether to put a legend on plot (i,j)
@@ -1376,6 +1381,9 @@ class Shape:
         :param source_fn_p: if specified, use this face and point as the source
             (face name, column vector)
         :param sink_fn: if specified, use this face as the sink
+        :param show: whether to display plot
+        :param save: file name to save initial image to
+            (none if not saved)
         """
         plt.rcParams["figure.autolayout"] = True
         face_map, n, m = self.faces_to_plot_n_m()
@@ -1503,7 +1511,10 @@ class Shape:
         self.plot_face_boundaries(axs, legend=legend)
         plt.suptitle("Click $p$")
         spin()
-        plt.show()
+        if save is not None:
+            plt.savefig(save)
+        if show:
+            plt.show()
 
     def plot_faces(self, save_image=None, show=False, figsize=None, legend=lambda i, j: True, voronoi=None):
         """

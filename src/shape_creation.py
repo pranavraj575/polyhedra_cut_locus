@@ -1,4 +1,3 @@
-import numpy as np
 from src.shapes import *
 
 
@@ -581,7 +580,6 @@ class Large2Torus(LargeNTorus):
 
 
 if __name__ == "__main__":
-    from display_utils import *
 
     cube = Pyramid(5)
     p = np.array([[0.0], [0.0]])
