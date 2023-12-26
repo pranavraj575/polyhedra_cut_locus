@@ -345,21 +345,21 @@ class Bound:
                 np.shape(self.s)[1] != 1 or
                 np.shape(self.si)[1] != 1
         ):
-            raise Exception("ERROR: tried putting in bounds of incorrect dimensions")
+            raise Exception("tried putting in bounds of incorrect dimensions")
         if (np.shape(self.T)[0] != np.shape(self.T)[1] or
                 np.shape(self.m)[1] != np.shape(self.s)[0] or
                 np.shape(self.s)[0] != np.shape(self.si)[0] or
                 np.shape(self.si)[0] != np.shape(self.m)[1] or
                 np.shape(self.m)[1] != np.shape(self.T)[0]
         ):
-            raise Exception("ERROR: tried putting in bounds of inconsistent dimensions")
+            raise Exception("tried putting in bounds of inconsistent dimensions")
         if dimension is None:
             dimension = np.shape(self.T)[0]
         else:
             if dimension != np.shape(self.T)[0]:
-                raise Exception("ERROR: inconsistent dimensions")
+                raise Exception("inconsistent dimensions")
         if not self.within(np.zeros(dimension)):
-            raise Exception("ERROR: zero point needs to be within the face")
+            raise Exception("zero point needs to be within the face")
         return dimension
 
     def get_shift(self):
@@ -511,7 +511,7 @@ class Face:
         :return: (xlim, ylim)
         """
         if self.dimension != 2:
-            raise Exception("ERROR: cannot graph a non-2d face")
+            raise Exception("cannot graph a non-2d face")
         xmin, xmax = np.inf, -np.inf
         ymin, ymax = np.inf, -np.inf
         for (v, _) in self.get_vertices():
@@ -683,7 +683,7 @@ class Face:
                 q_ = bound.grab_intersection(p, v)
                 closest_bound = (bound, F)
         if closest_bound is None:
-            raise Exception("ERROR: line passes outside of face")
+            raise Exception("line passes outside of face")
         # now we move to the new face with starting point q_ and vector (q-q_)
         # however, we need to translate this into new face coords
         (bound, F) = closest_bound
@@ -747,7 +747,7 @@ class Face:
             if F.name == fn:
                 row = i
         if row is None:
-            raise Exception("ERROR: face " + str(fn) + " not a neighbor")
+            raise Exception("face " + str(fn) + " not a neighbor")
         out = []
         for v, rows in self.get_vertices():
             if row in rows:
@@ -1465,7 +1465,7 @@ class Shape:
             if self.extra_data['unwrap_source_fn'] is None:
                 if fc is None: return
                 self.extra_data['unwrap_source_fn'] = fc.name
-                self.extra_data['p'] = p
+                self.extra_data['p'] = fc.get_closest_point(p)
             elif (self.extra_data['unwrap_sink_fn'] is None and
                   fc is not None and
                   fc.name is not self.extra_data['unwrap_source_fn']):
@@ -1477,16 +1477,10 @@ class Shape:
             if self.extra_data['unwrap_source_fn'] is not None:
                 return
             ax = event.inaxes
-            if ax is None:
-                return
             p = np.array([[event.xdata], [event.ydata]])
-            ij = ploot_inv(ax)
-            if ij is None:
-                return
-            i, j = ij
-            fc = face_map(i, j)
-            if fc is None:
-                return
+            ij = ploot_inv(ax) if ax is not None else None
+            fc = face_map(ij[0], ij[1]) if ij is not None else None
+            if fc is None: return
             p = fc.get_closest_point(p)
             for i in range(n):
                 for j in range(m):

@@ -29,6 +29,10 @@ mapping = {'tetrahedron': Tetrahedron,
            'mirror': Mirror,
            'torus': Large2Torus}
 
+arg_n = ('prism', 'antiprism', 'pyramid', 'longpyramid', 'bipyramid', 'longbipyramid', 'mirror')
+
+
+# shapes that take n as an arg
 
 def check_face_name(proposed_name, shape):
     """
@@ -81,18 +85,43 @@ def get_source_fn_p_from_args(args, shape):
         temp = face_name
         face_name = check_face_name(face_name, shape)
         if face_name is None:
-            raise Exception("invalid file name specified: " + str(temp))
+            raise Exception("invalid face name specified: " + str(temp))
         source_fn_p = (face_name, p)
     return source_fn_p
 
 
-arg_n = ('prism', 'antiprism', 'pyramid', 'longpyramid', 'bipyramid', 'longbipyramid', 'mirror')
-# shapes that take n as an arg
+def shape_from_args(args):
+    """
+    gets the shape object from args
+    :param args: args object
+    :return: Shape
+    """
+    possible = []
+    if args.shape in mapping:
+        possible = [args.shape]
+    else:
+        for name in mapping:
+            if name.startswith(args.shape):
+                possible.append(name)
+    if len(possible) > 1:
+        raise Exception("shape '" + args.shape + "' is ambiguous, could be " + str(tuple(possible)))
+    if len(possible) == 0:
+        raise Exception("shape '" + args.shape + "' does not exist, valid arguments are " + str(tuple(s for s in mapping)))
+    name = possible[0]
+    SHAPE = mapping[name]
+    if name in arg_n:
+        n = args.n
+        if n is None:
+            raise Exception("shape '" + name + "' requires argument: [--n N]")
+        return SHAPE(n)
+    else:
+        return SHAPE()
+
 
 PARSER = argparse.ArgumentParser()
 PARSER.add_argument("-s", "--shape", action='store', required=True,
                     help="Specify which face to display, options are " + str(tuple(s for s in mapping)))
-PARSER.add_argument("--n", type=int, required=False, default=3,
+PARSER.add_argument("-n", "--n", type=int, required=False, default=None,
                     help="additional argument to specify n, used for " + str(arg_n))
 
 PARSER.add_argument("--legend", action='store_true', required=False,
