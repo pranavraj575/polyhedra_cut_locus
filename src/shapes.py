@@ -1357,7 +1357,9 @@ class Shape:
             if fn not in self.faces:
                 raise Exception("invalid file name specified: " + str(fn))
             if not self.faces[fn].within_bounds(p):
-                raise Exception("point " + str(tuple(p.flatten())) + ' not in face')
+                temp = str(tuple(p.flatten()))
+                p = self.faces[fn].get_closest_point(p)
+                print("WARNING: point " + temp + ' not in face, taking closest point: ' + str(tuple(p.flatten())))
             I, J = None, None
             for i in range(n):
                 for j in range(m):
@@ -1414,7 +1416,9 @@ class Shape:
         if source_fn_p is not None:
             self.extra_data['unwrap_source_fn'], self.extra_data['p'] = source_fn_p
             if not self.faces[self.extra_data['unwrap_source_fn']].within_bounds(self.extra_data['p']):
-                raise Exception("point " + str(tuple(self.extra_data['p'].flatten())) + ' not in face')
+                temp = str(tuple(self.extra_data['p'].flatten()))
+                self.extra_data['p'] = self.faces[self.extra_data['unwrap_source_fn']].get_closest_point(self.extra_data['p'])
+                print("WARNING: point " + temp + ' not in face, taking closest point: ' + str(tuple(self.extra_data['p'].flatten())))
         if sink_fn is not None:
             self.extra_data['unwrap_sink_fn'] = sink_fn
         self.extra_data['unwrap_counter'] = 0
