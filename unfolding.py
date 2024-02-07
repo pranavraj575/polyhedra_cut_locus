@@ -9,6 +9,9 @@ PARSER.add_argument("--single-display", action='store_true', required=False,
 PARSER.add_argument("--no-tracking", action='store_true', required=False,
                     help="stop tracking the cut locus as mouse moves")
 
+PARSER.add_argument("--orient", action='store', required=False, default='',
+                    help="Specify a string to append onto face name to help with orientation ('_' usually works well)")
+
 args = PARSER.parse_args()
 shape = shape_from_args(args)
 
@@ -30,4 +33,5 @@ shape.interactive_unwrap(track=not args.no_tracking,
                          sink_fn=sink_face_name,
                          show=not args.no_show,
                          save=args.save_file,
+                         orient_string=args.orient,
                          )

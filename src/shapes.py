@@ -58,6 +58,19 @@ def flatten(L):
     return out
 
 
+def project_p_onto_line(p, a, v):
+    """
+    gets the projection point of p onto a line starting at a and going towards vector v
+    :param p: column vector (np array of dimension (self.dimension,1))
+    :param a: column vector (np array of dimension (self.dimension,1))
+    :param v: column vector (np array of dimension (self.dimension,1))
+    :return: column vector (np array of dimension (self.dimension,1))
+    """
+    # v_norm=v/np.linalg.norm(v)
+    # return a+v_norm*(np.dot(v_norm.T,p-a))
+    return a + v*(np.dot(v.T, p - a))/np.square(np.linalg.norm(v))
+
+
 class Arc:
     def __init__(self, p, low, high, r, distance=None, tolerance=TOL):
         """
@@ -456,14 +469,15 @@ class Bound:
 
 
 class Face:
-    def __init__(self, name, bounds_faces=None, tolerance=TOL):
+    def __init__(self, name, bounds_faces=None, tolerance=TOL, basepoint=None):
         """
         Creates a face
-        Note: the point 0 should be inside the face
         :param name: name of face
         :param bounds_faces: list of (Bound,Face) to initialize boundaries
             Note: usually start with an empty face, then create bounds later
         :param tolerance: tolerance for methods like 'within'
+        :param basepoint: point inside face, if None, uses 0
+            this is basically only used for ordering vertices
         """
         self.name = name
         self.bounds = []
@@ -477,6 +491,7 @@ class Face:
         if bounds_faces is not None:
             for (bound, F) in bounds_faces:
                 self.add_boundary(bound, F)
+        self.basepoint = basepoint  # if None, will update this when the dimension is set by adding a bound
 
     def __str__(self):
         return '(Face ' + str(self.name) + ': connected to faces ' + str([F.name for (_, _, F, _) in self.bounds]) + ')'
@@ -492,6 +507,8 @@ class Face:
             self.double_face_edge.append(F)
         self.bounds.append((bound, F))
         self.dimension = bound.check_valid(self.dimension)
+        if self.basepoint is None:
+            self.basepoint = np.zeros((self.dimension, 1))
         if update:
             self._create_bound_arrays()
             self._create_vertices()
@@ -503,7 +520,7 @@ class Face:
         """
         if self.dimension != 2:
             return
-        self.vertices.sort(key=lambda v: (2*np.pi + np.arctan2(v[0][1][0], v[0][0][0]))%(2*np.pi))
+        self.vertices.sort(key=lambda v: (2*np.pi + np.arctan2((v[0] - self.basepoint)[1][0], (v[0] - self.basepoint)[0][0]))%(2*np.pi))
 
     def get_plot_bounds(self):
         """
@@ -610,11 +627,11 @@ class Face:
         if self.within_bounds(p):
             return p
         q = p.copy()
-        small_bound = None
+        small_bound = None  # first bound to p from basepoint
         for (bound, F) in self.bounds:
             if not bound.within(q, tol=self.tol):
                 # goes from inside bound to outside bound
-                q = bound.grab_intersection(np.zeros(q.shape), q)
+                q = bound.grab_intersection(self.basepoint, q)
                 small_bound = bound
         m = small_bound.m
         mbar = m/np.linalg.norm(m)
@@ -974,7 +991,231 @@ class Shape:
             bound_paths.append(bound_path)
         return points, bound_paths
 
-    def plot_unwrapping(self, p, source_fn, sink_fn, diameter, ax, i_to_display=None):
+    def check_if_valid(self, p, source, bound_path, segments):
+        """
+        pick a face F and p have vornonoi cell C,
+            this method returns true if all paths p to (C intersect F) are 'correct'
+                correct meaning there is actually a line using faces on bound_path that goes from p to q for all q in F
+        we use that being 'correct' in this sense is a convex property wrt the location of q
+            shown in the paper, but basically, the average q of any 2 'correct' q1 and q2 must have a path pq that lies between pq1 and pq2
+                thus, since we have a path of faces, the path pq must also lie in that path
+        because of this convexity, we only need to check a finite set of points whose convex hull contains (C intersect F)
+            the specific points we need are all vertices of C in F, all vertices of F in C,
+                and all intersections of boundary lines of C and F
+
+        :param p: column vector (np array of dimension (self.dimension,1))
+            Note that p's coordinates should be with the sink face as the origin,
+        :param source: source face, p's original face
+            (p is written from the POV of the sink face so p will need to be transformed before it literally is in source face)
+        :param bound_path: list of (bound, F) representing the path of bounds from source face (with p on it) to sink face
+            Must have at least one element, this doesnt make sense if the source is the sink face
+        :param segments: list of (a,b) line segments making up voronoi cell of p
+        :return: list of points that are relevant on intersection of C and F
+        """
+
+        checking_pts = []  # points to check
+        (_, sink) = bound_path[-1]
+        sink: Face
+        source: Face
+
+        # all vertices of C that are in F
+        # also all boundary intersections
+        for (a, b) in segments:
+            a = a.reshape((len(a), 1))
+            b = b.reshape((len(b), 1))
+
+            # check if a or b is within F, and add them to points to check
+            for q in (a, b):
+                if sink.within_bounds(q) and not any(np.array_equal(q, q1) for q1 in checking_pts):
+                    checking_pts.append(q)
+            # check if either the line ab or ba exits F, and add them to points to check
+            for q in (sink.get_exit_point(a, b - a), sink.get_exit_point(b, a - b)):
+                if q is not None and not any(np.array_equal(q, q1) for q1 in checking_pts):
+                    checking_pts.append(q)
+        # all vertices of F that are in C
+        for (v, _) in sink.get_vertices():
+            keep = True
+            for (a, b) in segments:
+                a = a.reshape((len(a), 1))
+                b = b.reshape((len(b), 1))
+                outside_dir = project_p_onto_line(p, a, b - a) - p
+                # this is a vector pointing 'outside' segment (a,b)
+                # uses the fact that (a,b) bounds a cell containing p, and that p*-p points out of the cell
+                #   (where p* is p's projection onto line extending (a,b))
+                vertex_dir = project_p_onto_line(v, a, b - a) - v
+                # this is a vector pointing from vertex v to its projection on line extending (a,b)
+                if np.dot(outside_dir.T, vertex_dir) >= -self.tol:
+                    # if this is nonnegative then they point the same direction and v is inside this bound
+                    continue
+                else:
+                    keep = False
+                    break
+            if keep:
+                checking_pts.append(v)
+
+        # now go through and check each point
+        for q in checking_pts:
+            p_temp = p.copy()
+            # this is a little annoying since bound path goes from p to q,
+            #   but it is much easier to check in the opposite direction
+            for (inv_bound, face) in bound_path[::-1]:
+                face: Face
+                # since bound goes from p to q, we need to invert it to go the other way
+                inv_bound: Bound
+                bound = inv_bound.get_inverse_bound()
+                if not face.within_bounds(q):
+                    # if the end that we check is outside of the face, we fail
+                    return False
+
+                # set new q to the point where qp exits the current face
+                q_temp = face.get_exit_point(q, p_temp - q)
+                # now update p and q for the next face
+                if q_temp is None:
+                    # EDGE CASE: p is on the same face as q
+                    # this is a literal edge case, as p is on the boundary of the face
+                    # then we can simply set p and q to the same value and continue to the next step
+                    # the next check will make sure the boundary that p sits on is actually the correct boundary
+                    q_temp = p_temp
+                q = bound.shift_point(q_temp)
+                p_temp = bound.shift_point(p_temp)
+            # here, we do one last check to see if our last q is actually in the source face
+            if not source.within_bounds(q):
+                return False
+        return True
+
+    def filter_out_points(self, points, bound_paths, source, sink):
+        """
+        repeatedly makes voronoi complices, looks at relevant points, then filters out points that do not pass through correct faces
+        Note: this augments points by placing 4 very distant points that do not affect the relevant section of the complex
+            (artifact of voronoi complex implementation)
+        :param points: list of column vectors
+        :param bound_paths: list of (list of (bound, F) representing the path of bounds from source face (with p on it) to sink face)
+        :param source: source face
+        :param sink: sink face
+        :return: list of points and bound paths that are relevant, augmented by four bounding points that are very far away
+        """
+
+        def augment_point_paths(pts, bnd_paths):
+            """
+            adds 4 large points so that the vornoi diagram is always defined
+                puts them in corners of extremely large bounding box
+            :param pts: array of column vector points (must be populated)
+            :param bnd_paths: array of paths (will add 'None' to this)
+            :return (points, bound_paths), both sorted by angle of point
+            """
+            large = 69*(sum(np.linalg.norm(p) for p in pts) + 1)
+            shape = pts[0].shape
+            vs = [np.ones(shape)]
+            vs.append(vs[0].copy())
+            vs[1][0, 0] = -vs[1][0, 0]
+            vs.append(-vs[0])
+            vs.append(-vs[1])
+            for i in range(4):
+                pts.append(large*vs[i])
+                bnd_paths.append(None)
+            together = list(zip(pts, bnd_paths))
+            together.sort(key=lambda x: np.arctan2(x[0][1, 0], x[0][0, 0])%(2*np.pi))
+            return [p for (p, _) in together], [pth for (_, pth) in together]
+
+        bad_point_found = True
+        while bad_point_found:
+            bad_point_found = False
+            # start with set of points, augment them
+            if len(points) == 0:
+                # here, we return, as this means we have run out of points to check
+                return None, None, None
+            vp, bound_paths = augment_point_paths(points, bound_paths)
+            points = np.concatenate(vp, axis=1)
+            points = points.T
+            # find the cell complex of them
+            vor = Voronoi(points)
+            fig, point_to_segments = voronoi_plot_2d(vor, ax=None)
+
+            # gather the relevant points: the ones whose cells intersect the sink face
+            # to check this, we can split into two cases
+            #  (1): a line from the vornoi cell lies within the face
+            #  (2): the face lies completely within the voronoi cell
+            # there are no other ways for this intersection to happen
+            relevant_points = []
+            relevant_bound_paths = []
+            relevant_cells = []
+
+            duplicates = []
+            for p_idx in point_to_segments:
+                point = points[(p_idx,), :]  # row vector of point that created this
+                point_included = False
+                if len(point_to_segments[p_idx]) == 0:
+                    # edge case: point does not have a voronoi cell
+                    # this happens with duplicate or very close points
+                    # need to be careful here
+                    # if the duplicate is not a 'bad point' then we are fine, as any of them would have the same voronoi complex
+                    # (i.e. now there are just more possible face paths to get the same cell)
+                    # if the duplicate is a 'bad point', we need to remove just that point and start over
+                    # its possible that the duplicates have different face paths,
+                    #   and in this case we need to just remove the one that we confirm is bad
+                    duplicates.append((point.T, bound_paths[p_idx], point_to_segments[p_idx]))
+                    # we will save all duplicates, and if we fail anything, we will add back all of them
+                    continue
+                for a, b in point_to_segments[p_idx]:
+                    # if any line of the point's voronoi cell is in face F, we call this point relevant and continue
+                    if sink.line_within_bounds(a.reshape((2, 1)), b.reshape((2, 1))):
+                        relevant_points.append(point.T)
+                        relevant_bound_paths.append(bound_paths[p_idx])
+                        relevant_cells.append(point_to_segments[p_idx])
+                        point_included = True
+                        break
+                if not point_included:
+                    # check edge case:
+                    # the sink face F is completely within cell C
+                    # if this is true, we also add the point
+                    # to check this, we only need to test if an arbitrary vertex of F is in C
+                    (v, _) = sink.get_vertices()[0]
+                    point_included = True
+                    for a, b in point_to_segments[p_idx]:
+                        # using the same trick as in filter_out_points,
+                        # we check if v is on the same side of (a,b) as 'point', which is within the cell
+                        a = a.reshape((len(a), 1))
+                        b = b.reshape((len(b), 1))
+                        outside_dir = project_p_onto_line(point.T, a, b - a) - point.T
+                        vertex_dir = project_p_onto_line(v, a, b - a) - v
+                        if np.dot(outside_dir.T, vertex_dir) >= -self.tol:
+                            # here they point the same direction, so v is inside cell
+                            continue
+                        else:
+                            point_included = False
+                            break
+
+                    if point_included:
+                        # if this is actually what is happening, we consider this relevant and continue
+                        relevant_points.append(point.reshape((2, 1)))
+                        relevant_bound_paths.append(bound_paths[p_idx])
+                        relevant_cells.append(point_to_segments[p_idx])
+            if not relevant_points:
+                print("ERROR NO RELEVANT POINTS")
+                # this should not happen as we only fully skip repeats
+                return None, None, None
+            # now iterate through relevant points and see if they actually have the property we want
+            # i.e. points on their voronoi cell intersect the sink face are actually in the path of faces we say they are
+            # if any fail, we remove it and restart loop
+            # if all succeed, we return the relevant points, bound paths, and segments
+            for idx, (pt, bound_path, cell_segment) in enumerate(zip(relevant_points, relevant_bound_paths, relevant_cells)):
+                if not self.check_if_valid(pt, source, bound_path, cell_segment):
+                    bad_point_found = True
+
+                    # remove this point and continue the loop
+                    relevant_points.pop(idx)
+                    relevant_bound_paths.pop(idx)
+
+                    points = relevant_points + [dup_pt for (dup_pt, _, _) in duplicates]
+                    bound_paths = relevant_bound_paths + [dup_pth for (_, dup_pth, _) in duplicates]
+                    break
+            if bad_point_found:
+                continue
+            # otherwise, no bad point is found, we can just augment and return here
+            points, bound_paths = augment_point_paths(relevant_points, relevant_bound_paths)
+            return points, bound_paths, relevant_cells
+
+    def plot_unwrapping(self, p, source_fn, sink_fn, diameter, ax, i_to_display=None, orient_string=''):
         """
         plots an unwrapping of the cut locus on sink face from point p on source face
         :param p: column vector (np array of dimension (self.dimension,1))
@@ -983,6 +1224,7 @@ class Shape:
         :param diameter: cap on length of face path to consider, None if infinite
         :param ax: plot to plot on (pyplot, or ax object)
         :param i_to_display: which path to display, if we are only showing one
+        :param orient_string: string to add to face annotation to show orientation
         :return: whether there is any more to show (i.e. i_to_display is None or larger than the number of paths)
             returns none if not enough points
         """
@@ -994,45 +1236,11 @@ class Shape:
 
         done = False
 
-        def augment_point_paths(points, bound_paths):
-            """
-            adds 4 large points so that the vornoi diagram is always defined
-                puts them in corners of extremely large bounding box
-            :param points: array of column vector points (must be populated)
-            :param bound_paths: array of paths (will add 'None' to this)
-            :return (points, bound_paths), both sorted by angle of point
-            """
-            large = 69*sum(np.linalg.norm(p) for p in points)
-            shape = points[0].shape
-            vs = [np.ones(shape)]
-            vs.append(vs[0].copy())
-            vs[1][0, 0] = -vs[1][0, 0]
-            vs.append(-vs[0])
-            vs.append(-vs[1])
-            for i in range(4):
-                points.append(large*vs[i])
-                bound_paths.append(None)
-            together = list(zip(points, bound_paths))
-            together.sort(key=lambda x: np.arctan2(x[0][1, 0], x[0][0, 0])%(2*np.pi))
-            return [p for (p, _) in together], [pth for (_, pth) in together]
+        if len(vp) >= 2:  # if there is only one, the cut locus does not exist on this face
+            relevant_points, relevant_bound_paths, relevant_cells = self.filter_out_points(vp, bound_paths, source, sink)
+            if relevant_points is None:
+                return None
 
-        if len(vp) >= 2:
-            vp, bound_paths = augment_point_paths(vp, bound_paths)
-            points = np.concatenate(vp, axis=1)
-            points = points.T
-            vor = Voronoi(points)
-            fig, point_to_segments = voronoi_plot_2d(vor, ax=None)
-
-            relevant_points = []
-            relevant_bound_paths = []
-            for p_idx in point_to_segments:
-                point = points[p_idx, :]  # row vector of point that created this
-                for a, b in point_to_segments[p_idx]:
-                    if sink.line_within_bounds(a.reshape((2, 1)), b.reshape((2, 1))):
-                        relevant_points.append(point.reshape((2, 1)))
-                        relevant_bound_paths.append(bound_paths[p_idx])
-                        break
-            relevant_points, relevant_bound_paths = augment_point_paths(relevant_points, relevant_bound_paths)
             our_face_plotted = False
 
             labeled = False
@@ -1042,7 +1250,7 @@ class Shape:
                 i_to_display = None  # here, just show all
             if i_to_display is None:
                 done = True
-            for pt, path in zip(relevant_points, relevant_bound_paths):
+            for pt_idx, (pt, path) in enumerate(zip(relevant_points, relevant_bound_paths)):
                 # we can graph pt here
                 if path is not None:
                     disp_i += 1
@@ -1072,7 +1280,7 @@ class Shape:
                             v1 = face[i]
                             v2 = face[(i + 1)%len(face)]
                             ax.plot([v1[0], v2[0]], [v1[1], v2[1]], color='blue', linewidth=1)
-                        ax.annotate(str(name), (center[0], center[1]), rotation=np.degrees(theta))
+                        ax.annotate(str(name) + orient_string, (center[0], center[1]), rotation=np.degrees(theta))
                     label = None
                     if not labeled:
                         label = '$p$ copies'
@@ -1102,13 +1310,14 @@ class Shape:
         :param ax: plot to plot on (pyplot, or ax object)
         :return: whether we were successful
         """
-        vp, _ = self.get_voronoi_points_from_face_paths(p, source_fn, sink_fn, diameter=diameter)
-        if len(vp) >= 2:
-            if len(vp) < 4:
-                large = 69*sum(np.linalg.norm(p) for p in vp)
-                vp.append(np.ones(vp[0].shape)*large)
-                vp.append(-np.ones(vp[0].shape)*large)
-            points = np.concatenate(vp, axis=1)
+        vp, bound_paths = self.get_voronoi_points_from_face_paths(p, source_fn, sink_fn, diameter=diameter)
+
+        if len(vp) >= 2:  # if there is only one point, the cut locus does not exist on this face
+            relevant_points, relevant_bound_paths, relevant_cells = self.filter_out_points(vp, bound_paths, self.faces[source_fn], self.faces[sink_fn])
+            if relevant_points is None:
+                return False
+            points = np.concatenate(relevant_points, axis=1)
+
             points = points.T
             vor = Voronoi(points)
             fig, point_to_segments = voronoi_plot_2d(vor, ax=ax, show_points=False, show_vertices=False, line_colors='black',
@@ -1373,7 +1582,18 @@ class Shape:
         if show:
             plt.show()
 
-    def interactive_unwrap(self, figsize=None, legend=lambda i, j: False, diameter=None, track=True, single_display=True, source_fn_p=None, sink_fn=None, show=True, save=None):
+    def interactive_unwrap(self,
+                           figsize=None,
+                           legend=lambda i, j: False,
+                           diameter=None,
+                           track=True,
+                           single_display=True,
+                           source_fn_p=None,
+                           sink_fn=None,
+                           show=True,
+                           save=None,
+                           orient_string='',
+                           ):
         """
         :param figsize: initial figure size (inches)
         :param legend: (i,j)-> whether to put a legend on plot (i,j)
@@ -1387,6 +1607,7 @@ class Shape:
         :param show: whether to display plot
         :param save: file name to save initial image to
             (none if not saved)
+        :param orient_string: string to add onto face annotation to show orientation
         """
         plt.rcParams["figure.autolayout"] = True
         face_map, n, m = self.faces_to_plot_n_m()
@@ -1454,7 +1675,7 @@ class Shape:
                 if single_display:
                     i_to_display = self.extra_data['unwrap_counter']
                 finished = self.plot_unwrapping(self.extra_data['p'], self.extra_data['unwrap_source_fn'], self.extra_data['unwrap_sink_fn'],
-                                                diameter=diameter, ax=plt.gca(), i_to_display=i_to_display)
+                                                diameter=diameter, ax=plt.gca(), i_to_display=i_to_display, orient_string=orient_string)
                 plt.xticks([])
                 plt.yticks([])
                 if single_display and not finished:

@@ -501,6 +501,7 @@ class Mirror(Shape):
         :param n: n-gon
         """
         super().__init__()
+        print("WARNING: SHAPE IS NOT BOUNDARY OF POLYHEDRON, CUT LOCUS MAY NOT BE MATHEMATICALLY SOUND")
         if n <= 2 or type(n) is not int:
             raise Exception("n=" + str(n) + " is not a valid Mirror")
         self.n = n
@@ -540,7 +541,7 @@ class LargeNTorus(Shape):
         makes n-torus, 2^n faces, each dimension is 2 faces long
         """
         super().__init__()
-
+        print("WARNING: SHAPE IS NOT BOUNDARY OF POLYHEDRON, CUT LOCUS MAY NOT BE MATHEMATICALLY SOUND")
         def name(i):
             """
             binary name of face i

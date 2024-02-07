@@ -43,7 +43,7 @@ Run `voronoi_interactive.py` from terminal/command prompt in the mitochondria fo
 
 **Example**: 
 ```bash
-python3 voronoi_interactive.py --shape tetrahedron --center_pt --legend 
+python3 voronoi_interactive.py --shape tetrahedron --center-pt --legend 
 ```
 To see the possible arguments, run the following:
 ```bash

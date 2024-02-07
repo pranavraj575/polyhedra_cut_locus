@@ -14,9 +14,9 @@ if __name__ == "__main__":
     two dimensions of freedom for (p,q)
     """
     p = np.array([[0.], [0.]])
-    # p = np.array([[0.], [0.2]])
-    # p = .2*coltation(np.pi/2 - np.pi*2/5)
-    # p = .2*coltation(np.pi/2 - np.pi*2/5) + .075*coltation(np.pi/2)
+    p = np.array([[0.], [0.2]])
+    p = .2*coltation(np.pi/2 - np.pi*2/5)
+    p = .2*coltation(np.pi/2 - np.pi*2/5) + .075*coltation(np.pi/2)
 
     """
     now for each of these, we have two dimensions of freedom for q (vertex)
