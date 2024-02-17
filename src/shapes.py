@@ -824,6 +824,8 @@ class Shape:
         self.seen_bounds = []
         self.extra_legend = None
         self.extra_data = dict()
+        if not self.is_polyhedra():
+            print("WARNING: SHAPE IS NOT BOUNDARY OF POLYHEDRON, CUT LOCUS MAY NOT BE MATHEMATICALLY SOUND")
 
     def _pick_new_face_name(self):
         """
@@ -842,6 +844,9 @@ class Shape:
         :return: boolean
         """
         return all(fn in dic for dic in (self.faces, self.points, self.arcs))
+
+    def is_polyhedra(self):
+        return True
 
     def add_face(self, face=None):
         """
@@ -1083,7 +1088,7 @@ class Shape:
                 return False
         return True
 
-    def filter_out_points(self, points, bound_paths, source, sink):
+    def filter_out_points(self, points, bound_paths, source, sink, do_filter=True):
         """
         repeatedly makes voronoi complices, looks at relevant points, then filters out points that do not pass through correct faces
         Note: this augments points by placing 4 very distant points that do not affect the relevant section of the complex
@@ -1092,6 +1097,8 @@ class Shape:
         :param bound_paths: list of (list of (bound, F) representing the path of bounds from source face (with p on it) to sink face)
         :param source: source face
         :param sink: sink face
+        :param do_filter: whether to filter the points
+                    probably only set to false when surface is not polyhedra (i.e. torus or mirror)
         :return: list of points and bound paths that are relevant, augmented by four bounding points that are very far away
         """
 
@@ -1194,6 +1201,10 @@ class Shape:
                 print("ERROR NO RELEVANT POINTS")
                 # this should not happen as we only fully skip repeats
                 return None, None, None
+            if not do_filter:
+                points, bound_paths = augment_point_paths(relevant_points, relevant_bound_paths)
+                return points, bound_paths, relevant_cells
+
             # now iterate through relevant points and see if they actually have the property we want
             # i.e. points on their voronoi cell intersect the sink face are actually in the path of faces we say they are
             # if any fail, we remove it and restart loop
@@ -1215,7 +1226,7 @@ class Shape:
             points, bound_paths = augment_point_paths(relevant_points, relevant_bound_paths)
             return points, bound_paths, relevant_cells
 
-    def plot_unwrapping(self, p, source_fn, sink_fn, diameter, ax, i_to_display=None, orient_string=''):
+    def plot_unwrapping(self, p, source_fn, sink_fn, diameter, ax, i_to_display=None, orient_string='', do_filter=True):
         """
         plots an unwrapping of the cut locus on sink face from point p on source face
         :param p: column vector (np array of dimension (self.dimension,1))
@@ -1225,6 +1236,8 @@ class Shape:
         :param ax: plot to plot on (pyplot, or ax object)
         :param i_to_display: which path to display, if we are only showing one
         :param orient_string: string to add to face annotation to show orientation
+        :param do_filter: Whether to filter voronoi cell points based on correctness of paths
+                should probably always be true, unless we are not looking at polyhedra
         :return: whether there is any more to show (i.e. i_to_display is None or larger than the number of paths)
             returns none if not enough points
         """
@@ -1236,12 +1249,21 @@ class Shape:
 
         done = False
 
+        def plot_label_face(ax, face, name, center, rot_v, color, linewidth):
+            """
+            plots and labels face on ax
+            """
+            theta = np.arctan2(rot_v[1, 0], rot_v[0, 0])
+            for i in range(len(face)):
+                v1 = face[i]
+                v2 = face[(i + 1)%len(face)]
+                ax.plot([v1[0], v2[0]], [v1[1], v2[1]], color=color, linewidth=linewidth)
+            ax.annotate(str(name) + orient_string, (center[0], center[1]), rotation=np.degrees(theta))
+
         if len(vp) >= 2:  # if there is only one, the cut locus does not exist on this face
-            relevant_points, relevant_bound_paths, relevant_cells = self.filter_out_points(vp, bound_paths, source, sink)
+            relevant_points, relevant_bound_paths, relevant_cells = self.filter_out_points(vp, bound_paths, source, sink, do_filter=do_filter)
             if relevant_points is None:
                 return None
-
-            our_face_plotted = False
 
             labeled = False
             disp_i = -1
@@ -1250,6 +1272,7 @@ class Shape:
                 i_to_display = None  # here, just show all
             if i_to_display is None:
                 done = True
+            special_face = None
             for pt_idx, (pt, path) in enumerate(zip(relevant_points, relevant_bound_paths)):
                 # we can graph pt here
                 if path is not None:
@@ -1268,26 +1291,18 @@ class Shape:
                         rot_tracking = [bound.shift_vec(v) for v in rot_tracking] + [np.array([[1], [0]])]
                         face_name_tracking = face_name_tracking + [F.name]
                     iteration = list(zip(face_tracking, face_name_tracking, center_tracking, rot_tracking))
-                    if our_face_plotted:
-                        iteration = iteration[:-1]
-                    else:
-                        our_face_plotted = True
+                    special_face = iteration[-1]
 
-                    for face, name, center, rot_v in iteration:
-
-                        theta = np.arctan2(rot_v[1, 0], rot_v[0, 0])
-                        for i in range(len(face)):
-                            v1 = face[i]
-                            v2 = face[(i + 1)%len(face)]
-                            ax.plot([v1[0], v2[0]], [v1[1], v2[1]], color='blue', linewidth=1)
-                        ax.annotate(str(name) + orient_string, (center[0], center[1]), rotation=np.degrees(theta))
+                    for face, name, center, rot_v in iteration[:-1]:
+                        plot_label_face(ax=ax, face=face, name=name, center=center, rot_v=rot_v, color='blue', linewidth=1)
                     label = None
                     if not labeled:
                         label = '$p$ copies'
                         labeled = True
                     ax.scatter(pt[0], pt[1], color='purple', label=label, alpha=1, s=40)
-
-            ax.scatter([0], [0], label='center')
+            (face, name, center, rot_v) = special_face
+            plot_label_face(ax=ax, face=face, name=name, center=center, rot_v=rot_v, color='red', linewidth=2)
+            # ax.scatter([0], [0], label='center', alpha=.5, s=80)
             relevant_points = np.concatenate(relevant_points, axis=1)
 
             vor = Voronoi(relevant_points.T)
@@ -1300,7 +1315,7 @@ class Shape:
             return done
         return None
 
-    def plot_voronoi(self, p, source_fn, sink_fn, diameter, ax):
+    def plot_voronoi(self, p, source_fn, sink_fn, diameter, ax, do_filter=True):
         """
         creates a voronoi plot for the sink face from p on a souce face
         :param p: column vector (np array of dimension (self.dimension,1))
@@ -1308,12 +1323,16 @@ class Shape:
         :param sink_fn: face name of sink
         :param diameter: cap on length of face path to consider, None if infinite
         :param ax: plot to plot on (pyplot, or ax object)
+        :param do_filter: Whether to filter voronoi cell points based on correctness of paths
+                should probably always be true, unless we are not looking at polyhedra
         :return: whether we were successful
         """
         vp, bound_paths = self.get_voronoi_points_from_face_paths(p, source_fn, sink_fn, diameter=diameter)
 
         if len(vp) >= 2:  # if there is only one point, the cut locus does not exist on this face
-            relevant_points, relevant_bound_paths, relevant_cells = self.filter_out_points(vp, bound_paths, self.faces[source_fn], self.faces[sink_fn])
+            relevant_points, relevant_bound_paths, relevant_cells = self.filter_out_points(vp, bound_paths,
+                                                                                           self.faces[source_fn], self.faces[sink_fn],
+                                                                                           do_filter=do_filter)
             if relevant_points is None:
                 return False
             points = np.concatenate(relevant_points, axis=1)
@@ -1484,7 +1503,16 @@ class Shape:
                     if legend(i, j):
                         ploot(i, j).legend()
 
-    def interactive_vornoi_plot(self, figsize=None, legend=lambda i, j: False, diameter=None, event_key='button_press_event', source_fn_p=None, show=True, save=None):
+    def interactive_vornoi_plot(self,
+                                figsize=None,
+                                legend=lambda i, j: False,
+                                diameter=None,
+                                event_key='button_press_event',
+                                source_fn_p=None,
+                                show=True,
+                                save=None,
+                                do_filter=True,
+                                ):
         """
         :param figsize: initial figure size (inches)
         :param legend: (i,j)-> whether to put a legend on plot (i,j)
@@ -1498,6 +1526,8 @@ class Shape:
         :param show: whether to display plot
         :param save: file name to save initial image to
             (none if not saved)
+        :param do_filter: Whether to filter voronoi cell points based on correctness of paths
+                should probably always be true, unless we are not looking at polyhedra
         """
         plt.rcParams["figure.autolayout"] = True
         face_map, n, m = self.faces_to_plot_n_m()
@@ -1537,7 +1567,7 @@ class Shape:
                     face = face_map(i, j)
                     if face is not None:
                         xlim, ylim = ploot(i, j).get_xlim(), ploot(i, j).get_ylim()
-                        self.plot_voronoi(p, source_fn, face.name, diameter=diameter, ax=ploot(i, j))
+                        self.plot_voronoi(p, source_fn, face.name, diameter=diameter, ax=ploot(i, j), do_filter=do_filter)
                         ploot(i, j).set_xlim(xlim)
                         ploot(i, j).set_ylim(ylim)
 
@@ -1593,6 +1623,7 @@ class Shape:
                            show=True,
                            save=None,
                            orient_string='',
+                           do_filter=True,
                            ):
         """
         :param figsize: initial figure size (inches)
@@ -1608,6 +1639,8 @@ class Shape:
         :param save: file name to save initial image to
             (none if not saved)
         :param orient_string: string to add onto face annotation to show orientation
+        :param do_filter: Whether to filter voronoi cell points based on correctness of paths
+                should probably always be true, unless we are not looking at polyhedra
         """
         plt.rcParams["figure.autolayout"] = True
         face_map, n, m = self.faces_to_plot_n_m()
@@ -1657,7 +1690,7 @@ class Shape:
                         face = face_map(i, j)
                         if face is not None:
                             xlim, ylim = ploot(i, j).get_xlim(), ploot(i, j).get_ylim()
-                            self.plot_voronoi(self.extra_data['p'], self.extra_data['unwrap_source_fn'], face.name, diameter=diameter, ax=ploot(i, j))
+                            self.plot_voronoi(self.extra_data['p'], self.extra_data['unwrap_source_fn'], face.name, diameter=diameter, ax=ploot(i, j), do_filter=do_filter)
                             ploot(i, j).set_xlim(xlim)
                             ploot(i, j).set_ylim(ylim)
                             if self.extra_data['unwrap_source_fn'] == face.name:
@@ -1675,7 +1708,7 @@ class Shape:
                 if single_display:
                     i_to_display = self.extra_data['unwrap_counter']
                 finished = self.plot_unwrapping(self.extra_data['p'], self.extra_data['unwrap_source_fn'], self.extra_data['unwrap_sink_fn'],
-                                                diameter=diameter, ax=plt.gca(), i_to_display=i_to_display, orient_string=orient_string)
+                                                diameter=diameter, ax=plt.gca(), i_to_display=i_to_display, orient_string=orient_string, do_filter=do_filter)
                 plt.xticks([])
                 plt.yticks([])
                 if single_display and not finished:
@@ -1720,7 +1753,7 @@ class Shape:
                     face = face_map(i, j)
                     if face is not None:
                         xlim, ylim = ploot(i, j).get_xlim(), ploot(i, j).get_ylim()
-                        self.plot_voronoi(p, source_fn, face.name, diameter=diameter, ax=ploot(i, j))
+                        self.plot_voronoi(p, source_fn, face.name, diameter=diameter, ax=ploot(i, j), do_filter=do_filter)
                         ploot(i, j).set_xlim(xlim)
                         ploot(i, j).set_ylim(ylim)
             plt.show()
@@ -1736,7 +1769,7 @@ class Shape:
         if show:
             plt.show()
 
-    def plot_faces(self, save_image=None, show=False, figsize=None, legend=lambda i, j: True, voronoi=None):
+    def plot_faces(self, save_image=None, show=False, figsize=None, legend=lambda i, j: True, voronoi=None, do_filter=True):
         """
         plots all faces of graph
         :param save_image: whether to save the image
@@ -1744,7 +1777,8 @@ class Shape:
         :param figsize: size of figure (inches)
         :param legend: (i,j)-> whether to put a legend on plot (i,j)
         :param voronoi: list of (p, source face, diameter) points to use in the vornoi plot
-
+        :param do_filter: Whether to filter voronoi cell points based on correctness of paths
+                should probably always be true, unless we are not looking at polyhedra
         """
         face_map, n, m = self.faces_to_plot_n_m()
 
@@ -1770,7 +1804,7 @@ class Shape:
                     if voronoi is not None:
                         # ignore_locus_points = self.plot_voronoi(face.name, ploot(i, j))
                         (p, source_fn, diameter) = voronoi
-                        ignore_locus_points = self.plot_voronoi(p, source_fn, face.name, diameter=diameter, ax=ploot(i, j))
+                        ignore_locus_points = self.plot_voronoi(p, source_fn, face.name, diameter=diameter, ax=ploot(i, j), do_filter=do_filter)
                         ploot(i, j).set_xlim(xlim)
                         ploot(i, j).set_ylim(ylim)
 

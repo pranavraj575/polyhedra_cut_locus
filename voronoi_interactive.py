@@ -26,4 +26,5 @@ shape.interactive_vornoi_plot(diameter=args.diameter if args.diameter > 0 else N
                               source_fn_p=source_fn_p,
                               show=not args.no_show,
                               save=args.save_file,
+                              do_filter=shape.is_polyhedra(),
                               )

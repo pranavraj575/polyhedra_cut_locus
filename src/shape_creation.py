@@ -501,7 +501,6 @@ class Mirror(Shape):
         :param n: n-gon
         """
         super().__init__()
-        print("WARNING: SHAPE IS NOT BOUNDARY OF POLYHEDRON, CUT LOCUS MAY NOT BE MATHEMATICALLY SOUND")
         if n <= 2 or type(n) is not int:
             raise Exception("n=" + str(n) + " is not a valid Mirror")
         self.n = n
@@ -516,6 +515,9 @@ class Mirror(Shape):
             phi = -np.pi - theta
             # "angle" of boundary of back face.
             front.add_boundary_paired(back, rowtation(theta), 1, -coltation(theta), rotation_T(phi - theta + np.pi), coltation(phi))
+
+    def is_polyhedra(self):
+        return False
 
 
 class NTorus(Shape):
@@ -534,6 +536,9 @@ class NTorus(Shape):
             ei[i, 0] = 1
             face.add_boundary_paired(face, ei.T, 1, -ei, np.identity(n), -ei)
 
+    def is_polyhedra(self):
+        return False
+
 
 class LargeNTorus(Shape):
     def __init__(self, n):
@@ -541,7 +546,7 @@ class LargeNTorus(Shape):
         makes n-torus, 2^n faces, each dimension is 2 faces long
         """
         super().__init__()
-        print("WARNING: SHAPE IS NOT BOUNDARY OF POLYHEDRON, CUT LOCUS MAY NOT BE MATHEMATICALLY SOUND")
+
         def name(i):
             """
             binary name of face i
@@ -561,6 +566,9 @@ class LargeNTorus(Shape):
                 ek[k][0] = 1
 
                 self.faces[nm].add_boundary_paired(self.faces[neigh_nm], ek.T, 1, -ek, np.identity(n), -ek)
+
+    def is_polyhedra(self):
+        return False
 
 
 class Large2Torus(LargeNTorus):
