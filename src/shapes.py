@@ -1264,6 +1264,7 @@ class Shape:
             relevant_points, relevant_bound_paths, relevant_cells = self.filter_out_points(vp, bound_paths, source, sink, do_filter=do_filter)
             if relevant_points is None:
                 return None
+            all_trans_shown=[]
 
             labeled = False
             disp_i = -1
@@ -1275,6 +1276,7 @@ class Shape:
             special_face = None
             for pt_idx, (pt, path) in enumerate(zip(relevant_points, relevant_bound_paths)):
                 # we can graph pt here
+                tracker_points=[np.zeros((2,1)),coltation(0),coltation(np.pi/2)] # 0, x, y
                 if path is not None:
                     disp_i += 1
                     if (i_to_display is not None) and (disp_i != i_to_display):
@@ -1284,14 +1286,17 @@ class Shape:
                     center_tracking = [np.zeros((2, 1))]  # tracking the center of each face
                     rot_tracking = [np.array([[1], [0]])]  # tracks the 0 angle of each face
                     face_name_tracking = [source_fn]  # tracks face names
+
                     for (bound, F) in path:
                         bound: Bound
                         face_tracking = [[bound.shift_point(v) for v in vees] for vees in face_tracking] + [[v.copy() for (v, _) in F.get_vertices()]]
                         center_tracking = [bound.shift_point(v) for v in center_tracking] + [np.zeros((2, 1))]
                         rot_tracking = [bound.shift_vec(v) for v in rot_tracking] + [np.array([[1], [0]])]
                         face_name_tracking = face_name_tracking + [F.name]
+                        tracker_points=[bound.shift_point(track) for track in tracker_points]
                     iteration = list(zip(face_tracking, face_name_tracking, center_tracking, rot_tracking))
                     special_face = iteration[-1]
+                    all_trans_shown.append(tracker_points+[pt])
 
                     for face, name, center, rot_v in iteration[:-1]:
                         plot_label_face(ax=ax, face=face, name=name, center=center, rot_v=rot_v, color='blue', linewidth=1)
@@ -1312,7 +1317,7 @@ class Shape:
             ax.set_xlim(xlim)
             ax.set_ylim(ylim)
             ax.legend()
-            return done
+            return all_trans_shown
         return None
 
     def plot_voronoi(self, p, source_fn, sink_fn, diameter, ax, do_filter=True):
@@ -1673,6 +1678,8 @@ class Shape:
                 temp = str(tuple(self.extra_data['p'].flatten()))
                 self.extra_data['p'] = self.faces[self.extra_data['unwrap_source_fn']].get_closest_point(self.extra_data['p'])
                 print("WARNING: point " + temp + ' not in face, taking closest point: ' + str(tuple(self.extra_data['p'].flatten())))
+            print('source face:',self.extra_data['unwrap_source_fn'])
+            print('p:', self.extra_data['p'].flatten())
         if sink_fn is not None:
             self.extra_data['unwrap_sink_fn'] = sink_fn
         self.extra_data['unwrap_counter'] = 0
@@ -1707,11 +1714,18 @@ class Shape:
                 i_to_display = None
                 if single_display:
                     i_to_display = self.extra_data['unwrap_counter']
-                finished = self.plot_unwrapping(self.extra_data['p'], self.extra_data['unwrap_source_fn'], self.extra_data['unwrap_sink_fn'],
+                all_trans_shown = self.plot_unwrapping(self.extra_data['p'], self.extra_data['unwrap_source_fn'], self.extra_data['unwrap_sink_fn'],
                                                 diameter=diameter, ax=plt.gca(), i_to_display=i_to_display, orient_string=orient_string, do_filter=do_filter)
+                print('point locations:')
+                for zero,xvec,yvec,p in all_trans_shown:
+                    print('p copy:',p.flatten())
+                    print('\tshift:',zero.flatten())
+                    print("\tx vec:",(xvec-zero).flatten())
+                    print("\ty vec:",(yvec-zero).flatten())
+
                 plt.xticks([])
                 plt.yticks([])
-                if single_display and not finished:
+                if single_display and (all_trans_shown is not None):
                     plt.title("click to advance")
                 self.extra_data['unwrap_counter'] += 1
 
@@ -1724,6 +1738,8 @@ class Shape:
                 if fc is None: return
                 self.extra_data['unwrap_source_fn'] = fc.name
                 self.extra_data['p'] = fc.get_closest_point(p)
+                print('source face:', self.extra_data['unwrap_source_fn'])
+                print('p:', self.extra_data['p'].flatten())
             elif (self.extra_data['unwrap_sink_fn'] is None and
                   fc is not None and
                   fc.name is not self.extra_data['unwrap_source_fn']):
