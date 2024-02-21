@@ -1247,8 +1247,6 @@ class Shape:
         source: Face = self.faces[source_fn]
         sink: Face = self.faces[sink_fn]
 
-        done = False
-
         def plot_label_face(ax, face, name, center, rot_v, color, linewidth):
             """
             plots and labels face on ax
@@ -1264,19 +1262,17 @@ class Shape:
             relevant_points, relevant_bound_paths, relevant_cells = self.filter_out_points(vp, bound_paths, source, sink, do_filter=do_filter)
             if relevant_points is None:
                 return None
-            all_trans_shown=[]
+            all_trans_shown = []
 
             labeled = False
             disp_i = -1
             n = len([pth for pth in relevant_bound_paths if pth is not None])
             if i_to_display is not None and i_to_display >= n:
                 i_to_display = None  # here, just show all
-            if i_to_display is None:
-                done = True
             special_face = None
             for pt_idx, (pt, path) in enumerate(zip(relevant_points, relevant_bound_paths)):
                 # we can graph pt here
-                tracker_points=[np.zeros((2,1)),coltation(0),coltation(np.pi/2)] # 0, x, y
+                tracker_points = [np.zeros((2, 1)), coltation(0), coltation(np.pi/2)]  # 0, x, y
                 if path is not None:
                     disp_i += 1
                     if (i_to_display is not None) and (disp_i != i_to_display):
@@ -1293,10 +1289,10 @@ class Shape:
                         center_tracking = [bound.shift_point(v) for v in center_tracking] + [np.zeros((2, 1))]
                         rot_tracking = [bound.shift_vec(v) for v in rot_tracking] + [np.array([[1], [0]])]
                         face_name_tracking = face_name_tracking + [F.name]
-                        tracker_points=[bound.shift_point(track) for track in tracker_points]
+                        tracker_points = [bound.shift_point(track) for track in tracker_points]
                     iteration = list(zip(face_tracking, face_name_tracking, center_tracking, rot_tracking))
                     special_face = iteration[-1]
-                    all_trans_shown.append(tracker_points+[pt])
+                    all_trans_shown.append(tracker_points + [pt])
 
                     for face, name, center, rot_v in iteration[:-1]:
                         plot_label_face(ax=ax, face=face, name=name, center=center, rot_v=rot_v, color='blue', linewidth=1)
@@ -1678,7 +1674,7 @@ class Shape:
                 temp = str(tuple(self.extra_data['p'].flatten()))
                 self.extra_data['p'] = self.faces[self.extra_data['unwrap_source_fn']].get_closest_point(self.extra_data['p'])
                 print("WARNING: point " + temp + ' not in face, taking closest point: ' + str(tuple(self.extra_data['p'].flatten())))
-            print('source face:',self.extra_data['unwrap_source_fn'])
+            print('source face:', self.extra_data['unwrap_source_fn'])
             print('p:', self.extra_data['p'].flatten())
         if sink_fn is not None:
             self.extra_data['unwrap_sink_fn'] = sink_fn
@@ -1715,13 +1711,13 @@ class Shape:
                 if single_display:
                     i_to_display = self.extra_data['unwrap_counter']
                 all_trans_shown = self.plot_unwrapping(self.extra_data['p'], self.extra_data['unwrap_source_fn'], self.extra_data['unwrap_sink_fn'],
-                                                diameter=diameter, ax=plt.gca(), i_to_display=i_to_display, orient_string=orient_string, do_filter=do_filter)
+                                                       diameter=diameter, ax=plt.gca(), i_to_display=i_to_display, orient_string=orient_string, do_filter=do_filter)
                 print('point locations:')
-                for zero,xvec,yvec,p in all_trans_shown:
-                    print('p copy:',p.flatten())
-                    print('\tshift:',zero.flatten())
-                    print("\tx vec:",(xvec-zero).flatten())
-                    print("\ty vec:",(yvec-zero).flatten())
+                for zero, xvec, yvec, p in all_trans_shown:
+                    print('p copy:', p.flatten())
+                    print('\tshift:', zero.flatten())
+                    print("\tx vec:", (xvec - zero).flatten())
+                    print("\ty vec:", (yvec - zero).flatten())
 
                 plt.xticks([])
                 plt.yticks([])
