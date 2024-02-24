@@ -1513,6 +1513,7 @@ class Shape:
                                 show=True,
                                 save=None,
                                 do_filter=True,
+                                font_size=None,
                                 ):
         """
         :param figsize: initial figure size (inches)
@@ -1529,10 +1530,13 @@ class Shape:
             (none if not saved)
         :param do_filter: Whether to filter voronoi cell points based on correctness of paths
                 should probably always be true, unless we are not looking at polyhedra
+        :param font_size: font size to use for plot (default if None)
         """
         plt.rcParams["figure.autolayout"] = True
         face_map, n, m = self.faces_to_plot_n_m()
         fig, axs = plt.subplots(n, m, figsize=figsize)
+        if font_size is not None:
+            plt.rcParams.update({'font.size': font_size})
 
         def ploot(i, j):
             if m > 1 and n > 1:
@@ -1625,6 +1629,7 @@ class Shape:
                            save=None,
                            orient_string='',
                            do_filter=True,
+                           font_size=None,
                            ):
         """
         :param figsize: initial figure size (inches)
@@ -1642,8 +1647,11 @@ class Shape:
         :param orient_string: string to add onto face annotation to show orientation
         :param do_filter: Whether to filter voronoi cell points based on correctness of paths
                 should probably always be true, unless we are not looking at polyhedra
+        :param font_size: font size to use for plot (default if None)
         """
         plt.rcParams["figure.autolayout"] = True
+        if font_size is not None:
+            plt.rcParams.update({'font.size': font_size})
         face_map, n, m = self.faces_to_plot_n_m()
         fig, axs = plt.subplots(n, m, figsize=figsize)
 

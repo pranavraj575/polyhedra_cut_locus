@@ -6,9 +6,6 @@ PARSER.add_argument("--sink-face-name", action='store', required=False, default=
 PARSER.add_argument("--single-display", action='store_true', required=False,
                     help="display only one path at a time")
 
-PARSER.add_argument("--no-tracking", action='store_true', required=False,
-                    help="stop tracking the cut locus as mouse moves")
-
 PARSER.add_argument("--orient", action='store', required=False, default='',
                     help="Specify a string to append onto face name to help with orientation ('_' usually works well)")
 
@@ -35,4 +32,5 @@ shape.interactive_unwrap(track=not args.no_tracking,
                          save=args.save_file,
                          orient_string=args.orient,
                          do_filter=shape.is_polyhedra(),
+                         font_size=args.font_size,
                          )

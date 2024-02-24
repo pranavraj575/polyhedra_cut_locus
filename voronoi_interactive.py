@@ -1,8 +1,5 @@
 from utils.shape_argparser import *
 
-PARSER.add_argument("--click", action='store_true', required=False,
-                    help="click to update point instead of updating with movement")
-
 PARSER.add_argument("--center-pt", action='store_true', required=False,
                     help="add center point to faces")
 
@@ -17,7 +14,7 @@ source_fn_p = get_source_fn_p_from_args(args, shape)
 event_key = None
 
 if source_fn_p is None:
-    event_key = 'button_press_event' if args.click else 'motion_notify_event'
+    event_key = 'button_press_event' if args.no_tracking else 'motion_notify_event'
 
 shape.interactive_vornoi_plot(diameter=args.diameter if args.diameter > 0 else None,
                               figsize=figsize_from_args(args),
@@ -27,4 +24,5 @@ shape.interactive_vornoi_plot(diameter=args.diameter if args.diameter > 0 else N
                               show=not args.no_show,
                               save=args.save_file,
                               do_filter=shape.is_polyhedra(),
+                              font_size=args.font_size,
                               )

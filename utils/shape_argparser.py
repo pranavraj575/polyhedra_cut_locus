@@ -78,7 +78,7 @@ def get_source_fn_p_from_args(args, shape):
     :return: (source face name, column vector) or None
     """
 
-    face_name = args.face_name
+    face_name = args.source_face
     p = np.array([[args.point_x], [args.point_y]])
     source_fn_p = None
     if face_name is not None:
@@ -138,10 +138,15 @@ PARSER.add_argument("--width-display", type=float, required=False, default=None,
                     help="width of display in inches")
 PARSER.add_argument("--height-display", type=float, required=False, default=None,
                     help="height of display in inches")
+PARSER.add_argument("--font-size", type=int, required=False, default=None,
+                    help="font size for plotting")
 
-PARSER.add_argument("--face-name", action='store', required=False, default=None,
-                    help="Specify face name if inputting a specific point")
+PARSER.add_argument("--source-face", action='store', required=False, default=None,
+                    help="Specify the face name if inputting a specific point")
 PARSER.add_argument("--point-x", type=float, required=False, default=0.,
                     help="Specify point x if inputting a specific point (defaults to 0)")
 PARSER.add_argument("--point-y", type=float, required=False, default=0.,
                     help="Specify point y if inputting a specific point (defaults to 0)")
+
+PARSER.add_argument("--no-tracking", action='store_true', required=False,
+                    help="Click to interact instead of tracking the cut locus as mouse moves")
