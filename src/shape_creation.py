@@ -2,14 +2,14 @@ from src.shapes import *
 
 
 class Prism(Shape):
-    def __init__(self, n):
+    def __init__(self, n, tolerance=.001):
         """
         makes n-gon prism where faces 0 to (n-1) are the 'sides' in order (1 is to the right of 0)
         n is the top, aligned with 0 on the bottom
         (n+1) is the bottom, aligned with 0 on the top
         """
 
-        super().__init__()
+        super().__init__(tolerance=tolerance)
         if n == 2:
             raise Exception("Use Mirror(4) instead of Prism(2)")
         if n < 2 or type(n) is not int:
@@ -55,7 +55,7 @@ class Prism(Shape):
 
 
 class Pyramid(Shape):
-    def __init__(self, n):
+    def __init__(self, n, tolerance=.001):
         """
         makes pyramid with an n-gon base (3<=n<=6)
         face n is the bottom
@@ -63,7 +63,7 @@ class Pyramid(Shape):
 
         the top of face n borders the bottom of face 0
         """
-        super().__init__()
+        super().__init__(tolerance=tolerance)
         if n == 6:
             raise Exception("Use Mirror(6) instead of Pyramid(6)")
         if n <= 2 or n > 6 or type(n) is not int:
@@ -112,7 +112,7 @@ class Pyramid(Shape):
 
 
 class Bipyramid(Shape):
-    def __init__(self, n):
+    def __init__(self, n, tolerance=.001):
         """
         makes bipyramid with 2n triangles(3<=n<=6)
         faces 0 to (n-1) are on the top (1 to the right of 0)
@@ -120,7 +120,7 @@ class Bipyramid(Shape):
 
         face i is above face i+n
         """
-        super().__init__()
+        super().__init__(tolerance=tolerance)
         if n == 6:
             raise Exception("Use Mirror(6) instead of Bipyramid(6)")
         if n < 2 or n > 6 or type(n) is not int:
@@ -152,18 +152,18 @@ class Bipyramid(Shape):
 
 
 class Tetrahedron(Pyramid):
-    def __init__(self):
+    def __init__(self, tolerance=.001):
         """
         special case of pyramid
         makes tetrahedron where face 0 borders face 1 on the right, 2 on the left and 3 on the bottom
         3 is upside down triangle for display purposes
         each face has a circumcenter of radius 1
         """
-        super().__init__(3)
+        super().__init__(3, tolerance=tolerance)
 
 
 class Cube(Prism):
-    def __init__(self):
+    def __init__(self, tolerance=.001):
         """
         special case, square prism
         makes cube where faces 0,1,2,3 are the 'sides' in order (1 is to the right of 0)
@@ -171,11 +171,11 @@ class Cube(Prism):
         5 is the bottom, aligned with 0 on the top
         """
 
-        super().__init__(4)
+        super().__init__(4, tolerance=tolerance)
 
 
 class Octahedron(Bipyramid):
-    def __init__(self):
+    def __init__(self, tolerance=.001):
         """
         special case of bipyramid
         makes octahedron where the top half are faces 0,1,2,3 (1 is to the right of 0)
@@ -183,11 +183,11 @@ class Octahedron(Bipyramid):
         each face has a circumcenter of radius 1
         we will make 0,1,2,3 normal triangles and 4,5,6,7 upside down triangles for visualization purposes
         """
-        super().__init__(4)
+        super().__init__(4, tolerance=tolerance)
 
 
 class Icosahedron(Shape):
-    def __init__(self):
+    def __init__(self, tolerance=.001):
         """
         makes icosahedron
         top 5 are faces 0-4 (1 to the right of 0)
@@ -196,7 +196,7 @@ class Icosahedron(Shape):
         (0,1,2,3,4) is above (5,7,9,11,13). (also 5,7,9,11,13 are all down)
         (6,8,10,12,14) is above (15,16,17,18,19)
         """
-        super().__init__()
+        super().__init__(tolerance=tolerance)
 
         for i in range(20):
             self.add_face()
@@ -247,7 +247,7 @@ class Icosahedron(Shape):
 
 
 class Dodecahedron(Shape):
-    def __init__(self):
+    def __init__(self, tolerance=.05):
         """
         makes dodecahedron
         0 on the top
@@ -258,7 +258,7 @@ class Dodecahedron(Shape):
          1 2 3 4  5
         6 7 8 9 10
         """
-        super().__init__()
+        super().__init__(tolerance=tolerance)
         for i in range(12):
             self.add_face()
         tau = 2*np.pi
@@ -307,7 +307,7 @@ class Dodecahedron(Shape):
 
 
 class Antiprism(Shape):
-    def __init__(self, n):
+    def __init__(self, n, tolerance=.001):
         """
         makes uniform antiprism with n-gon (2n+2 faces)
         0 on the top
@@ -322,7 +322,7 @@ class Antiprism(Shape):
 
         :param n: n-gon for root of antiprism
         """
-        super().__init__()
+        super().__init__(tolerance=tolerance)
         if n == 2:
             print("WARNING: 2 antiprism will display/act weird because of the extra line face")
         if n < 2 or type(n) is not int:
@@ -376,7 +376,7 @@ class Antiprism(Shape):
 
 
 class ElongatedBipyramid(Shape):
-    def __init__(self, n):
+    def __init__(self, n, tolerance=.001):
         """
         makes elongated bipyramid with 2n triangles(3<=n<=6) and n squares
         triangle faces 0 to (n-1) are on the top (1 to the right of 0)
@@ -388,7 +388,7 @@ class ElongatedBipyramid(Shape):
         triangle faces have an inscribed circle radius 1
         thus, square side lengths are 2*sqrt(3)
         """
-        super().__init__()
+        super().__init__(tolerance=tolerance)
         if n == 6:
             raise Exception("Use Prism(6) instead of ElongatedBipyramid(6)")
         if n < 2 or n > 6 or type(n) is not int:
@@ -432,7 +432,7 @@ class ElongatedBipyramid(Shape):
 
 
 class ElongatedPyramid(Shape):
-    def __init__(self, n):
+    def __init__(self, n, tolerance=.001):
         """
         makes elongated pyramid with n triangles(3<=n<=6), n squares, and one n-gon
         triangle faces 0 to (n-1) are on the top (1 to the right of 0)
@@ -445,7 +445,7 @@ class ElongatedPyramid(Shape):
         thus, triangle faces have an inscribed circle of 1/sqrt(3)
         n-gon has a face with inscribed r = 1/tan(pi/n)
         """
-        super().__init__()
+        super().__init__(tolerance=tolerance)
         if n == 6:
             raise Exception("Use Prism(6) instead of ElongatedPyramid(6)")
         if n < 2 or n > 6 or type(n) is not int:
@@ -494,13 +494,13 @@ class ElongatedPyramid(Shape):
 
 
 class Mirror(Shape):
-    def __init__(self, n):
+    def __init__(self, n, tolerance=.001):
         """
         makes n-gon 'mirror', two n-gons pasted to each other
 
         :param n: n-gon
         """
-        super().__init__()
+        super().__init__(tolerance=tolerance)
         if n <= 2 or type(n) is not int:
             raise Exception("n=" + str(n) + " is not a valid Mirror")
         self.n = n
@@ -521,13 +521,13 @@ class Mirror(Shape):
 
 
 class NTorus(Shape):
-    def __init__(self, n):
+    def __init__(self, n, tolerance=.001):
         """
         makes n-torus, single face
 
         :param n: dimension of torus
         """
-        super().__init__()
+        super().__init__(tolerance=tolerance)
         self.add_face()
         face = self.faces[0]
         face: Face
@@ -541,11 +541,11 @@ class NTorus(Shape):
 
 
 class LargeNTorus(Shape):
-    def __init__(self, n):
+    def __init__(self, n, tolerance=.001):
         """
         makes n-torus, 2^n faces, each dimension is 2 faces long
         """
-        super().__init__()
+        super().__init__(tolerance=tolerance)
 
         def name(i):
             """
@@ -557,7 +557,7 @@ class LargeNTorus(Shape):
             return name[::-1]
 
         for i in range(int(2**n)):
-            self.add_face(Face(name=name(i)))
+            self.add_face(Face(name=name(i), tolerance=self.tol))
         for i in range(int(2**n)):
             nm = name(i)
             for k in range(n):
@@ -572,14 +572,14 @@ class LargeNTorus(Shape):
 
 
 class Large2Torus(LargeNTorus):
-    def __init__(self):
+    def __init__(self, tolerance=.001):
         """
         makes 2-torus, 4 faces for plotting reasons
 
         0 1
         2 3
         """
-        super().__init__(2)
+        super().__init__(2, tolerance=tolerance)
 
     def faces_to_plot_n_m(self):
         def face_map(i, j):

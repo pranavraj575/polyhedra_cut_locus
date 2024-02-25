@@ -21,6 +21,8 @@ if sink_face_name is not None:
     if sink_face_name is None:
         raise Exception("invalid face name specified: " + str(temp))
 
+do_filter=shape.is_polyhedra() and not args.no_filter
+
 shape.interactive_unwrap(track=not args.no_tracking,
                          figsize=figsize_from_args(args),
                          single_display=args.single_display,
@@ -31,6 +33,6 @@ shape.interactive_unwrap(track=not args.no_tracking,
                          show=not args.no_show,
                          save=args.save_file,
                          orient_string=args.orient,
-                         do_filter=shape.is_polyhedra(),
+                         do_filter=do_filter,
                          font_size=args.font_size,
                          )

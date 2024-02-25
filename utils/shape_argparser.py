@@ -113,9 +113,16 @@ def shape_from_args(args):
         n = args.n
         if n is None:
             raise Exception("shape '" + name + "' requires argument: [--n N]")
-        return SHAPE(n)
+
+        if args.tolerance is None:
+            return SHAPE(n)
+        else:
+            return SHAPE(n, tolerance=args.tolerance)
     else:
-        return SHAPE()
+        if args.tolerance is None:
+            return SHAPE()
+        else:
+            return SHAPE(tolerance=args.tolerance)
 
 
 PARSER = argparse.ArgumentParser()
@@ -128,6 +135,11 @@ PARSER.add_argument("--legend", action='store_true', required=False,
                     help="put legend on plot")
 PARSER.add_argument("--diameter", type=int, required=False, default=-1,
                     help="Specify diameter of search graph (longest possible sequence of faces on a geodesic)")
+PARSER.add_argument("--no-filter", action='store_true', required=False,
+                    help="Turn off filter on points of voronoi complex. " +
+                         "This should fix tolerance errors, but may result in invalid points (might want to check with --single-display)")
+PARSER.add_argument("--tolerance", type=float, required=False, default=None,
+                    help="tolerance for things like intersection and containment, default differs for each shape")
 
 PARSER.add_argument("--no-show", action='store_true', required=False,
                     help="don't show the plot")

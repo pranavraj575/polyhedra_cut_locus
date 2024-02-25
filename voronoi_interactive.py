@@ -16,6 +16,8 @@ event_key = None
 if source_fn_p is None:
     event_key = 'button_press_event' if args.no_tracking else 'motion_notify_event'
 
+do_filter=shape.is_polyhedra() and not args.no_filter
+
 shape.interactive_vornoi_plot(diameter=args.diameter if args.diameter > 0 else None,
                               figsize=figsize_from_args(args),
                               event_key=event_key,
@@ -23,6 +25,6 @@ shape.interactive_vornoi_plot(diameter=args.diameter if args.diameter > 0 else N
                               source_fn_p=source_fn_p,
                               show=not args.no_show,
                               save=args.save_file,
-                              do_filter=shape.is_polyhedra(),
+                              do_filter=do_filter,
                               font_size=args.font_size,
                               )

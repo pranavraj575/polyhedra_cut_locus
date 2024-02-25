@@ -2,9 +2,7 @@ import numpy as np, itertools
 from matplotlib import pyplot as plt
 from scipy.spatial import Voronoi
 from src.my_vornoi import voronoi_plot_2d
-
-TOL = .001
-
+import fractions
 
 # rotation matrices
 def rotation_T(theta):
@@ -72,15 +70,15 @@ def project_p_onto_line(p, a, v):
 
 
 class Arc:
-    def __init__(self, p, low, high, r, distance=None, tolerance=TOL):
+    def __init__(self, p, low, high, r, tolerance, distance):
         """
         Defines an arc in 2d space
         :param p: point of origin, column vector (np array of dimension (self.dimension,1))
         :param low: low angle in radians
         :param high: high angle in radians (must be >= low)
         :param r: radius, scalar
-        :param distance: original distance, or used to keep track of arbitrary data (can be different if we 'diffract')
         :param tolerance: tolerance for intersection and containment
+        :param distance: original distance, or used to keep track of arbitrary data (can be different if we 'diffract')
         """
         assert p.shape == (2, 1)
         assert low <= high
@@ -187,8 +185,8 @@ class Arc:
         theta = self.angle_of(q)
         if self.low > theta:
             theta = theta + 2*np.pi
-        return (Arc(self.p, self.low, theta, self.r, distance=self.dist, tolerance=self.tol),
-                Arc(self.p, theta, self.high, self.r, distance=self.dist, tolerance=self.tol))
+        return (Arc(self.p, self.low, theta, self.r, tolerance=self.tol, distance=self.dist),
+                Arc(self.p, theta, self.high, self.r, tolerance=self.tol, distance=self.dist))
 
     def _break_arc(self, a, b):
         """
@@ -333,8 +331,11 @@ class Bound:
         :param identifier: identifier of bound, should mention face names
         :param name: identifier of bound, or the bound that it is paired with, specify if spawned by another bound
         """
-        self.m = m
-        self.b = b
+        # rescale so that |m|=1
+        # dividing both m and b by |m| yields this with the same bound (mx<=b iff mx/|m|<=b/|m|)
+        scale = np.linalg.norm(m)
+        self.m = m/scale
+        self.b = b/scale
         self.s = s
         self.T = T
         self.si = si
@@ -439,7 +440,7 @@ class Bound:
         #
         diff = A.high - A.low
         angle = self.shift_angle(A.low)
-        return Arc(self.shift_point(A.p), angle, angle + diff, A.r, distance=A.dist, tolerance=A.tol)
+        return Arc(self.shift_point(A.p), angle, angle + diff, A.r, tolerance=A.tol, distance=A.dist)
 
     def get_inverse_bound(self):
         """
@@ -469,13 +470,13 @@ class Bound:
 
 
 class Face:
-    def __init__(self, name, bounds_faces=None, tolerance=TOL, basepoint=None):
+    def __init__(self, name, tolerance, bounds_faces=None, basepoint=None):
         """
         Creates a face
         :param name: name of face
+        :param tolerance: tolerance for methods like 'within'
         :param bounds_faces: list of (Bound,Face) to initialize boundaries
             Note: usually start with an empty face, then create bounds later
-        :param tolerance: tolerance for methods like 'within'
         :param basepoint: point inside face, if None, uses 0
             this is basically only used for ordering vertices
         """
@@ -806,13 +807,13 @@ class Face:
 
 
 class Shape:
-    def __init__(self, faces=None, tolerance=TOL):
+    def __init__(self, tolerance, faces=None):
         """
         A set of faces, representing a shape
-        :param faces: initial set of faces
-            Note: usually start empty and add faces as we go
         :param tolerance: tolerance for within_face and such
             adds this to autogenreated faces
+        :param faces: initial set of faces
+            Note: usually start empty and add faces as we go
         """
         if faces is None:
             faces = dict()
@@ -996,6 +997,40 @@ class Shape:
             bound_paths.append(bound_path)
         return points, bound_paths
 
+    def point_within_cell(self, v, segments, p=None):
+        """
+        checks whether v is within the cell bounded by segments
+            takes an interior point and checking whether v is on the same side of each bound as this point
+        :param v: column vector (np array of dimension (self.dimension,1))
+        :param segments: list of (a,b) line segments making up cell
+        :param p: interior point to check, if None, just takes average of vertices in segments
+        :return: whether v is within cell
+        """
+        if p is None:
+            p = np.zeros(2)  # point that is in center of C
+            for a, b in segments:
+                p += a + b
+            p = p.reshape((2, 1))/(2*len(segments))
+
+        for (a, b) in segments:
+            a = a.reshape((len(a), 1))
+            b = b.reshape((len(b), 1))
+
+            outside_dir = project_p_onto_line(p, a, b - a) - p
+            # this is a vector pointing 'outside' segment (a,b)
+            # uses the fact that (a,b) bounds a cell containing p, and that p*-p points out of the cell
+            #   (where p* is p's projection onto line extending (a,b))
+            vertex_dir = project_p_onto_line(v, a, b - a) - v
+            # this is a vector pointing from vertex v to its projection on line extending (a,b)
+            if np.dot(outside_dir.T, vertex_dir) >= -self.tol*np.linalg.norm(vertex_dir)*np.linalg.norm(outside_dir):
+                # equivalent to outside_dir*vertex_dir/(|outside_dir||vertex_dir|)>=-tol
+                # we multiply since vertex_dir may be 0 (outside_dir should not be 0)
+                # if this is nonnegative then they point the same direction and v is inside this bound
+                continue
+            else:
+                return False
+        return True
+
     def check_if_valid(self, p, source, bound_path, segments):
         """
         pick a face F and p have vornonoi cell C,
@@ -1017,11 +1052,14 @@ class Shape:
         :param segments: list of (a,b) line segments making up voronoi cell of p
         :return: list of points that are relevant on intersection of C and F
         """
-
         checking_pts = []  # points to check
         (_, sink) = bound_path[-1]
         sink: Face
         source: Face
+
+        DEBUG = np.linalg.norm(p.flatten() - np.array([5.84601932, 0.59591081])) < .001
+
+        QBUG = np.array([0.78747522, -1.18753154])
 
         # all vertices of C that are in F
         # also all boundary intersections
@@ -1039,27 +1077,13 @@ class Shape:
                     checking_pts.append(q)
         # all vertices of F that are in C
         for (v, _) in sink.get_vertices():
-            keep = True
-            for (a, b) in segments:
-                a = a.reshape((len(a), 1))
-                b = b.reshape((len(b), 1))
-                outside_dir = project_p_onto_line(p, a, b - a) - p
-                # this is a vector pointing 'outside' segment (a,b)
-                # uses the fact that (a,b) bounds a cell containing p, and that p*-p points out of the cell
-                #   (where p* is p's projection onto line extending (a,b))
-                vertex_dir = project_p_onto_line(v, a, b - a) - v
-                # this is a vector pointing from vertex v to its projection on line extending (a,b)
-                if np.dot(outside_dir.T, vertex_dir) >= -self.tol:
-                    # if this is nonnegative then they point the same direction and v is inside this bound
-                    continue
-                else:
-                    keep = False
-                    break
-            if keep:
+            # if self.point_within_cell(v, segments, p=p):
+            if self.point_within_cell(v, segments, p=None):
                 checking_pts.append(v)
 
         # now go through and check each point
         for q in checking_pts:
+            q_orig = q.copy()
             p_temp = p.copy()
             # this is a little annoying since bound path goes from p to q,
             #   but it is much easier to check in the opposite direction
@@ -1070,6 +1094,7 @@ class Shape:
                 bound = inv_bound.get_inverse_bound()
                 if not face.within_bounds(q):
                     # if the end that we check is outside of the face, we fail
+                    print(p.flatten(), 'invalid with point ', q_orig.flatten())
                     return False
 
                 # set new q to the point where qp exits the current face
@@ -1085,6 +1110,7 @@ class Shape:
                 p_temp = bound.shift_point(p_temp)
             # here, we do one last check to see if our last q is actually in the source face
             if not source.within_bounds(q):
+                print(p.flatten(), 'invalid with point ', q.flatten())
                 return False
         return True
 
@@ -1177,22 +1203,9 @@ class Shape:
                     # if this is true, we also add the point
                     # to check this, we only need to test if an arbitrary vertex of F is in C
                     (v, _) = sink.get_vertices()[0]
-                    point_included = True
-                    for a, b in point_to_segments[p_idx]:
-                        # using the same trick as in filter_out_points,
-                        # we check if v is on the same side of (a,b) as 'point', which is within the cell
-                        a = a.reshape((len(a), 1))
-                        b = b.reshape((len(b), 1))
-                        outside_dir = project_p_onto_line(point.T, a, b - a) - point.T
-                        vertex_dir = project_p_onto_line(v, a, b - a) - v
-                        if np.dot(outside_dir.T, vertex_dir) >= -self.tol:
-                            # here they point the same direction, so v is inside cell
-                            continue
-                        else:
-                            point_included = False
-                            break
 
-                    if point_included:
+                    # if self.point_within_cell(v,point_to_segments[p_idx],p=point.T):
+                    if self.point_within_cell(v, point_to_segments[p_idx], p=None):
                         # if this is actually what is happening, we consider this relevant and continue
                         relevant_points.append(point.reshape((2, 1)))
                         relevant_bound_paths.append(bound_paths[p_idx])
@@ -1690,28 +1703,7 @@ class Shape:
         self.extra_data['unwrap_source_plotted'] = False
 
         def spin():
-            if not self.extra_data['unwrap_source_plotted'] and self.extra_data['unwrap_source_fn'] is not None:
-                # if we picked a point and havent yet plotted vornoulli
-                for i in range(n):
-                    for j in range(m):
-                        ploot(i, j).cla()
-                self.plot_face_boundaries(axs, legend=legend)
-                for i in range(n):
-                    for j in range(m):
-                        face = face_map(i, j)
-                        if face is not None:
-                            xlim, ylim = ploot(i, j).get_xlim(), ploot(i, j).get_ylim()
-                            self.plot_voronoi(self.extra_data['p'], self.extra_data['unwrap_source_fn'], face.name, diameter=diameter, ax=ploot(i, j), do_filter=do_filter)
-                            ploot(i, j).set_xlim(xlim)
-                            ploot(i, j).set_ylim(ylim)
-                            if self.extra_data['unwrap_source_fn'] == face.name:
-                                ploot(i, j).scatter(self.extra_data['p'][0, 0], self.extra_data['p'][1, 0], color='purple')
 
-                self.extra_data['unwrap_source_plotted'] = True
-            if not self.extra_data['unwrap_source_plotted']:
-                plt.suptitle("Click $p$")
-            elif self.extra_data['unwrap_sink_fn'] is None:
-                plt.suptitle("Now click sink face")
             if self.extra_data['unwrap_source_fn'] is not None and self.extra_data['unwrap_sink_fn'] is not None:
                 # if we have finished both
                 plt.clf()
@@ -1724,6 +1716,9 @@ class Shape:
                 for zero, xvec, yvec, p in all_trans_shown:
                     print('p copy:', p.flatten())
                     print('\tshift:', zero.flatten())
+                    rot_frac=fractions.Fraction(np.arctan2((xvec - zero)[1],(xvec - zero)[0])[0]/np.pi).limit_denominator(1000)
+                    print("\trotation:",rot_frac,'pi')
+
                     print("\tx vec:", (xvec - zero).flatten())
                     print("\ty vec:", (yvec - zero).flatten())
 
@@ -1732,6 +1727,28 @@ class Shape:
                 if single_display and (all_trans_shown is not None):
                     plt.title("click to advance")
                 self.extra_data['unwrap_counter'] += 1
+            else:
+                if not self.extra_data['unwrap_source_plotted'] and self.extra_data['unwrap_source_fn'] is not None:
+                    # if we picked a point and havent yet created a plot
+                    for i in range(n):
+                        for j in range(m):
+                            ploot(i, j).cla()
+                    self.plot_face_boundaries(axs, legend=legend)
+                    for i in range(n):
+                        for j in range(m):
+                            face = face_map(i, j)
+                            if face is not None:
+                                xlim, ylim = ploot(i, j).get_xlim(), ploot(i, j).get_ylim()
+                                self.plot_voronoi(self.extra_data['p'], self.extra_data['unwrap_source_fn'], face.name, diameter=diameter, ax=ploot(i, j), do_filter=do_filter)
+                                ploot(i, j).set_xlim(xlim)
+                                ploot(i, j).set_ylim(ylim)
+                                if self.extra_data['unwrap_source_fn'] == face.name:
+                                    ploot(i, j).scatter(self.extra_data['p'][0, 0], self.extra_data['p'][1, 0], color='purple')
+                    self.extra_data['unwrap_source_plotted'] = True
+                if not self.extra_data['unwrap_source_plotted']:
+                    plt.suptitle("Click $p$")
+                elif self.extra_data['unwrap_sink_fn'] is None:
+                    plt.suptitle("Now click sink face")
 
         def clicked_mouse(event):
             ax = event.inaxes
