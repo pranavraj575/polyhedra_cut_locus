@@ -4,6 +4,7 @@ from scipy.spatial import Voronoi
 from src.my_vornoi import voronoi_plot_2d
 import fractions
 
+
 # rotation matrices
 def rotation_T(theta):
     """
@@ -263,9 +264,11 @@ class Arc:
                  cy + (-big_d*dx + sign*abs(dy)*discriminant**.5)/dr**2)
                 for sign in ((1, -1) if dy < 0 else (-1, 1))]  # This makes sure the order along the segment is correct
             if not full_line:  # If only considering the segment, filter out intersections that do not fall within the segment
-                fraction_along_segment = [(xi - p1x)/dx if abs(dx) > abs(dy) else (yi - p1y)/dy for xi, yi in intersections]
+                fraction_along_segment = [(xi - p1x)/dx if abs(dx) > abs(dy) else (yi - p1y)/dy for xi, yi in
+                                          intersections]
                 intersections = [pt for pt, frac in zip(intersections, fraction_along_segment) if 0 <= frac <= 1]
-            if len(intersections) == 2 and abs(discriminant) <= self.tol:  # If line is tangent to circle, return just one point (as both intersections have same location)
+            if len(intersections) == 2 and abs(
+                    discriminant) <= self.tol:  # If line is tangent to circle, return just one point (as both intersections have same location)
                 (x, y) = intersections[0]
                 return [np.array([[x], [y]])]
             else:
@@ -311,7 +314,8 @@ class Arc:
         return [pt for pt in points if self.within_arc(pt) and A.within_arc(pt)]
 
     def __str__(self):
-        return "ARC:{p:" + str(tuple(self.p.flatten())) + "; r:" + str(self.r) + "; dist:" + str(self.dist) + "; range:" + str((self.low, self.high)) + "}"
+        return "ARC:{p:" + str(tuple(self.p.flatten())) + "; r:" + str(self.r) + "; dist:" + str(
+            self.dist) + "; range:" + str((self.low, self.high)) + "}"
 
 
 class Bound:
@@ -341,7 +345,8 @@ class Bound:
         self.si = si
         self.dimension = self.check_valid(dimension)
         if name is None:
-            base_id = str(tuple(self.m.flatten())) + str(self.b) + str(tuple(self.s.flatten())) + str(tuple(self.T.flatten())) + str(tuple(self.si.flatten())) + str(self.dimension)
+            base_id = str(tuple(self.m.flatten())) + str(self.b) + str(tuple(self.s.flatten())) + str(
+                tuple(self.T.flatten())) + str(tuple(self.si.flatten())) + str(self.dimension)
             name = base_id + identifier
         self.name = name
 
@@ -521,7 +526,9 @@ class Face:
         """
         if self.dimension != 2:
             return
-        self.vertices.sort(key=lambda v: (2*np.pi + np.arctan2((v[0] - self.basepoint)[1][0], (v[0] - self.basepoint)[0][0]))%(2*np.pi))
+        self.vertices.sort(
+            key=lambda v: (2*np.pi + np.arctan2((v[0] - self.basepoint)[1][0], (v[0] - self.basepoint)[0][0]))%(
+                    2*np.pi))
 
     def get_plot_bounds(self):
         """
@@ -750,7 +757,8 @@ class Face:
         else:
             for (bound, f) in self.bounds:
                 if not f.name in visited_names:
-                    for path in f.face_paths_to(fn, visited_names=visited_names.copy(), diameter=None if diameter is None else diameter - 1):
+                    for path in f.face_paths_to(fn, visited_names=visited_names.copy(),
+                                                diameter=None if diameter is None else diameter - 1):
                         yield [(bound, f)] + path
 
     def get_vertices_of_face_bound(self, fn):
@@ -784,7 +792,8 @@ class Face:
             arr = flatten(arr)
         faces = (self.get_correct_next_face(B) for B in arr)
 
-        arr = [[(B, self)] if F is None else F.push_arc_to_faces(self.bound_of_face(F).shift_arc(B)) for (B, F) in zip(tuple(arr), faces)]
+        arr = [[(B, self)] if F is None else F.push_arc_to_faces(self.bound_of_face(F).shift_arc(B)) for (B, F) in
+               zip(tuple(arr), faces)]
         out = []
         for t in arr:
             out += t
@@ -977,7 +986,9 @@ class Shape:
         :return: list of (T,s) translation matrix and shift such that each Tp+s translates p to sink face
         """
         if (source_fn, sink_fn, diameter) not in self.memoized_face_translations:
-            self.memoized_face_translations[(source_fn, sink_fn, diameter)] = self._get_voronoi_translations(source_fn, sink_fn, diameter=diameter)
+            self.memoized_face_translations[(source_fn, sink_fn, diameter)] = self._get_voronoi_translations(source_fn,
+                                                                                                             sink_fn,
+                                                                                                             diameter=diameter)
         return self.memoized_face_translations[(source_fn, sink_fn, diameter)]
 
     def get_voronoi_points_from_face_paths(self, p, source_fn, sink_fn, diameter=None):
@@ -1134,7 +1145,7 @@ class Shape:
                 puts them in corners of extremely large bounding box
             :param pts: array of column vector points (must be populated)
             :param bnd_paths: array of paths (will add 'None' to this)
-            :return (points, bound_paths), both sorted by angle of point
+            :return (points, bound_paths), both sorted by angle of point for non-augmented points, and augmented at end
             """
             large = 69*(sum(np.linalg.norm(p) for p in pts) + 1)
             shape = pts[0].shape
@@ -1143,11 +1154,16 @@ class Shape:
             vs[1][0, 0] = -vs[1][0, 0]
             vs.append(-vs[0])
             vs.append(-vs[1])
-            for i in range(4):
-                pts.append(large*vs[i])
-                bnd_paths.append(None)
+
             together = list(zip(pts, bnd_paths))
             together.sort(key=lambda x: np.arctan2(x[0][1, 0], x[0][0, 0])%(2*np.pi))
+            for i in range(4):
+                large_pt = large*vs[i]
+                # pts.append(large_pt)
+                # bnd_paths.append(None)
+                together.append((large_pt, None))
+            # together = list(zip(pts, bnd_paths))
+            # together.sort(key=lambda x: np.arctan2(x[0][1, 0], x[0][0, 0])%(2*np.pi))
             return [p for (p, _) in together], [pth for (_, pth) in together]
 
         bad_point_found = True
@@ -1222,7 +1238,8 @@ class Shape:
             # i.e. points on their voronoi cell intersect the sink face are actually in the path of faces we say they are
             # if any fail, we remove it and restart loop
             # if all succeed, we return the relevant points, bound paths, and segments
-            for idx, (pt, bound_path, cell_segment) in enumerate(zip(relevant_points, relevant_bound_paths, relevant_cells)):
+            for idx, (pt, bound_path, cell_segment) in enumerate(
+                    zip(relevant_points, relevant_bound_paths, relevant_cells)):
                 if not self.check_if_valid(pt, source, bound_path, cell_segment):
                     bad_point_found = True
 
@@ -1239,7 +1256,11 @@ class Shape:
             points, bound_paths = augment_point_paths(relevant_points, relevant_bound_paths)
             return points, bound_paths, relevant_cells
 
-    def plot_unwrapping(self, p, source_fn, sink_fn, diameter, ax, i_to_display=None, orient_string='', do_filter=True):
+    def plot_unwrapping(self, p, source_fn, sink_fn, diameter, ax,
+                        i_to_display=None,
+                        orient_string='',
+                        do_filter=True,
+                        label_diagram=False):
         """
         plots an unwrapping of the cut locus on sink face from point p on source face
         :param p: column vector (np array of dimension (self.dimension,1))
@@ -1251,6 +1272,7 @@ class Shape:
         :param orient_string: string to add to face annotation to show orientation
         :param do_filter: Whether to filter voronoi cell points based on correctness of paths
                 should probably always be true, unless we are not looking at polyhedra
+        :param label_diagram: whether to label points and lines
         :return: whether there is any more to show (i.e. i_to_display is None or larger than the number of paths)
             returns none if not enough points
         """
@@ -1272,7 +1294,9 @@ class Shape:
             ax.annotate(str(name) + orient_string, (center[0], center[1]), rotation=np.degrees(theta))
 
         if len(vp) >= 2:  # if there is only one, the cut locus does not exist on this face
-            relevant_points, relevant_bound_paths, relevant_cells = self.filter_out_points(vp, bound_paths, source, sink, do_filter=do_filter)
+            relevant_points, relevant_bound_paths, relevant_cells = self.filter_out_points(vp, bound_paths, source,
+                                                                                           sink, do_filter=do_filter)
+
             if relevant_points is None:
                 return None
             all_trans_shown = []
@@ -1291,14 +1315,16 @@ class Shape:
                     if (i_to_display is not None) and (disp_i != i_to_display):
                         # skip this if we are skipping, and the path is not the correct path
                         continue
-                    face_tracking = [[v.copy() for (v, _) in source.get_vertices()]]  # tracking the vertices of each face and their eventual location
+                    face_tracking = [[v.copy() for (v, _) in
+                                      source.get_vertices()]]  # tracking the vertices of each face and their eventual location
                     center_tracking = [np.zeros((2, 1))]  # tracking the center of each face
                     rot_tracking = [np.array([[1], [0]])]  # tracks the 0 angle of each face
                     face_name_tracking = [source_fn]  # tracks face names
 
                     for (bound, F) in path:
                         bound: Bound
-                        face_tracking = [[bound.shift_point(v) for v in vees] for vees in face_tracking] + [[v.copy() for (v, _) in F.get_vertices()]]
+                        face_tracking = [[bound.shift_point(v) for v in vees] for vees in face_tracking] + [
+                            [v.copy() for (v, _) in F.get_vertices()]]
                         center_tracking = [bound.shift_point(v) for v in center_tracking] + [np.zeros((2, 1))]
                         rot_tracking = [bound.shift_vec(v) for v in rot_tracking] + [np.array([[1], [0]])]
                         face_name_tracking = face_name_tracking + [F.name]
@@ -1308,12 +1334,16 @@ class Shape:
                     all_trans_shown.append(tracker_points + [pt])
 
                     for face, name, center, rot_v in iteration[:-1]:
-                        plot_label_face(ax=ax, face=face, name=name, center=center, rot_v=rot_v, color='blue', linewidth=1)
+                        plot_label_face(ax=ax, face=face, name=name, center=center, rot_v=rot_v, color='blue',
+                                        linewidth=1)
                     label = None
                     if not labeled:
                         label = '$p$ copies'
                         labeled = True
                     ax.scatter(pt[0], pt[1], color='purple', label=label, alpha=1, s=40)
+                    if label_diagram:
+                        label_pt = pt + [[.1], [.1]]
+                        ax.annotate('$p^{(' + str(pt_idx) + ')}$', (label_pt[0], label_pt[1]), rotation=0)
             (face, name, center, rot_v) = special_face
             plot_label_face(ax=ax, face=face, name=name, center=center, rot_v=rot_v, color='red', linewidth=2)
             # ax.scatter([0], [0], label='center', alpha=.5, s=80)
@@ -1322,7 +1352,7 @@ class Shape:
             vor = Voronoi(relevant_points.T)
             xlim, ylim = ax.get_xlim(), ax.get_ylim()
             voronoi_plot_2d(vor, ax=ax, show_points=False, show_vertices=False, line_colors='black',
-                            line_width=2, line_alpha=1)
+                            line_width=2, line_alpha=1, label_lines=label_diagram)
             ax.set_xlim(xlim)
             ax.set_ylim(ylim)
             ax.legend()
@@ -1345,7 +1375,8 @@ class Shape:
 
         if len(vp) >= 2:  # if there is only one point, the cut locus does not exist on this face
             relevant_points, relevant_bound_paths, relevant_cells = self.filter_out_points(vp, bound_paths,
-                                                                                           self.faces[source_fn], self.faces[sink_fn],
+                                                                                           self.faces[source_fn],
+                                                                                           self.faces[sink_fn],
                                                                                            do_filter=do_filter)
             if relevant_points is None:
                 return False
@@ -1353,7 +1384,8 @@ class Shape:
 
             points = points.T
             vor = Voronoi(points)
-            fig, point_to_segments = voronoi_plot_2d(vor, ax=ax, show_points=False, show_vertices=False, line_colors='black',
+            fig, point_to_segments = voronoi_plot_2d(vor, ax=ax, show_points=False, show_vertices=False,
+                                                     line_colors='black',
                                                      line_width=1, line_alpha=1)
             return True
         return False
@@ -1585,7 +1617,8 @@ class Shape:
                     face = face_map(i, j)
                     if face is not None:
                         xlim, ylim = ploot(i, j).get_xlim(), ploot(i, j).get_ylim()
-                        self.plot_voronoi(p, source_fn, face.name, diameter=diameter, ax=ploot(i, j), do_filter=do_filter)
+                        self.plot_voronoi(p, source_fn, face.name, diameter=diameter, ax=ploot(i, j),
+                                          do_filter=do_filter)
                         ploot(i, j).set_xlim(xlim)
                         ploot(i, j).set_ylim(ylim)
 
@@ -1643,6 +1676,7 @@ class Shape:
                            orient_string='',
                            do_filter=True,
                            font_size=None,
+                           label_diagram=False,
                            ):
         """
         :param figsize: initial figure size (inches)
@@ -1661,6 +1695,8 @@ class Shape:
         :param do_filter: Whether to filter voronoi cell points based on correctness of paths
                 should probably always be true, unless we are not looking at polyhedra
         :param font_size: font size to use for plot (default if None)
+        :param label_diagram: whether to label points and lines
+
         """
         plt.rcParams["figure.autolayout"] = True
         if font_size is not None:
@@ -1693,8 +1729,10 @@ class Shape:
             self.extra_data['unwrap_source_fn'], self.extra_data['p'] = source_fn_p
             if not self.faces[self.extra_data['unwrap_source_fn']].within_bounds(self.extra_data['p']):
                 temp = str(tuple(self.extra_data['p'].flatten()))
-                self.extra_data['p'] = self.faces[self.extra_data['unwrap_source_fn']].get_closest_point(self.extra_data['p'])
-                print("WARNING: point " + temp + ' not in face, taking closest point: ' + str(tuple(self.extra_data['p'].flatten())))
+                self.extra_data['p'] = self.faces[self.extra_data['unwrap_source_fn']].get_closest_point(
+                    self.extra_data['p'])
+                print("WARNING: point " + temp + ' not in face, taking closest point: ' + str(
+                    tuple(self.extra_data['p'].flatten())))
             print('source face:', self.extra_data['unwrap_source_fn'])
             print('p:', self.extra_data['p'].flatten())
         if sink_fn is not None:
@@ -1710,14 +1748,18 @@ class Shape:
                 i_to_display = None
                 if single_display:
                     i_to_display = self.extra_data['unwrap_counter']
-                all_trans_shown = self.plot_unwrapping(self.extra_data['p'], self.extra_data['unwrap_source_fn'], self.extra_data['unwrap_sink_fn'],
-                                                       diameter=diameter, ax=plt.gca(), i_to_display=i_to_display, orient_string=orient_string, do_filter=do_filter)
+                all_trans_shown = self.plot_unwrapping(self.extra_data['p'], self.extra_data['unwrap_source_fn'],
+                                                       self.extra_data['unwrap_sink_fn'],
+                                                       diameter=diameter, ax=plt.gca(), i_to_display=i_to_display,
+                                                       orient_string=orient_string, do_filter=do_filter,
+                                                       label_diagram=label_diagram)
                 print('point locations:')
                 for zero, xvec, yvec, p in all_trans_shown:
                     print('p copy:', p.flatten())
                     print('\tshift:', zero.flatten())
-                    rot_frac=fractions.Fraction(np.arctan2((xvec - zero)[1],(xvec - zero)[0])[0]/np.pi).limit_denominator(1000)
-                    print("\trotation:",rot_frac,'pi')
+                    rot_frac = fractions.Fraction(
+                        np.arctan2((xvec - zero)[1], (xvec - zero)[0])[0]/np.pi).limit_denominator(1000)
+                    print("\trotation:", rot_frac, 'pi')
 
                     print("\tx vec:", (xvec - zero).flatten())
                     print("\ty vec:", (yvec - zero).flatten())
@@ -1739,11 +1781,13 @@ class Shape:
                             face = face_map(i, j)
                             if face is not None:
                                 xlim, ylim = ploot(i, j).get_xlim(), ploot(i, j).get_ylim()
-                                self.plot_voronoi(self.extra_data['p'], self.extra_data['unwrap_source_fn'], face.name, diameter=diameter, ax=ploot(i, j), do_filter=do_filter)
+                                self.plot_voronoi(self.extra_data['p'], self.extra_data['unwrap_source_fn'], face.name,
+                                                  diameter=diameter, ax=ploot(i, j), do_filter=do_filter)
                                 ploot(i, j).set_xlim(xlim)
                                 ploot(i, j).set_ylim(ylim)
                                 if self.extra_data['unwrap_source_fn'] == face.name:
-                                    ploot(i, j).scatter(self.extra_data['p'][0, 0], self.extra_data['p'][1, 0], color='purple')
+                                    ploot(i, j).scatter(self.extra_data['p'][0, 0], self.extra_data['p'][1, 0],
+                                                        color='purple')
                     self.extra_data['unwrap_source_plotted'] = True
                 if not self.extra_data['unwrap_source_plotted']:
                     plt.suptitle("Click $p$")
@@ -1790,7 +1834,8 @@ class Shape:
                     face = face_map(i, j)
                     if face is not None:
                         xlim, ylim = ploot(i, j).get_xlim(), ploot(i, j).get_ylim()
-                        self.plot_voronoi(p, source_fn, face.name, diameter=diameter, ax=ploot(i, j), do_filter=do_filter)
+                        self.plot_voronoi(p, source_fn, face.name, diameter=diameter, ax=ploot(i, j),
+                                          do_filter=do_filter)
                         ploot(i, j).set_xlim(xlim)
                         ploot(i, j).set_ylim(ylim)
             plt.show()
@@ -1806,7 +1851,8 @@ class Shape:
         if show:
             plt.show()
 
-    def plot_faces(self, save_image=None, show=False, figsize=None, legend=lambda i, j: True, voronoi=None, do_filter=True):
+    def plot_faces(self, save_image=None, show=False, figsize=None, legend=lambda i, j: True, voronoi=None,
+                   do_filter=True):
         """
         plots all faces of graph
         :param save_image: whether to save the image
@@ -1841,7 +1887,8 @@ class Shape:
                     if voronoi is not None:
                         # ignore_locus_points = self.plot_voronoi(face.name, ploot(i, j))
                         (p, source_fn, diameter) = voronoi
-                        ignore_locus_points = self.plot_voronoi(p, source_fn, face.name, diameter=diameter, ax=ploot(i, j), do_filter=do_filter)
+                        ignore_locus_points = self.plot_voronoi(p, source_fn, face.name, diameter=diameter,
+                                                                ax=ploot(i, j), do_filter=do_filter)
                         ploot(i, j).set_xlim(xlim)
                         ploot(i, j).set_ylim(ylim)
 

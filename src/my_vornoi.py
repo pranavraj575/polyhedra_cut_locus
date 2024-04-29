@@ -25,6 +25,8 @@ def voronoi_plot_2d(vor, ax=None, **kw):
         Add the Voronoi points to the plot.
     show_vertices : bool, optional
         Add the Voronoi vertices to the plot.
+    label_lines : (point, point)->str, optional
+        label lines in plot, function is point pair to the name
     line_colors : string, optional
         Specifies the line color for polygon boundaries
     line_width : float, optional
@@ -62,16 +64,34 @@ def voronoi_plot_2d(vor, ax=None, **kw):
 
     finite_segments = []
     infinite_segments = []
-    points_to_segments = {i: list() for i in range(vor.npoints)}  # dictionary of point indices to the segments they create
+    points_to_segments = {i: list() for i in
+                          range(vor.npoints)}  # dictionary of point indices to the segments they create
+    segments_to_points = dict()  # dict of segments -> indices of points that created them
     for pointidx, simplex in zip(vor.ridge_points, vor.ridge_vertices):  # iterates through all lines
         # pointidx: two indices of points that create this line
         # simplex: two indices of vertices of the vornoi diagram that create this line
         #       if there is an infinite vertex, there is a -1 here
         simplex = np.asarray(simplex)
+        avg_point = (vor.points[pointidx[1]] + vor.points[pointidx[0]])/2
+        # midpoint the two points whose bisection forms the line
+        # for labeling purposes
+        tangeant = vor.points[pointidx[1]] - vor.points[pointidx[0]]
+        tangeant = tangeant/np.linalg.norm(tangeant)
+        if np.dot((1, 1), tangeant) < 0:
+            tangeant = -tangeant
+
         if np.all(simplex >= 0):
             finite_segments.append(vor.vertices[simplex])
             for idx in pointidx:
                 points_to_segments[idx].append((vor.vertices[simplex[0]], vor.vertices[simplex[1]]))
+            potential = (vor.vertices[simplex[0]] + vor.vertices[simplex[1]])/2
+            if ax is not None and (potential[0] <= ax.get_xlim()[1] and
+                                   potential[0] >= ax.get_xlim()[0] and
+                                   potential[1] <= ax.get_ylim()[1] and
+                                   potential[1] >= ax.get_ylim()[0]):
+                label_point = potential
+            else:
+                label_point = avg_point
         else:
             i = simplex[simplex >= 0][0]  # finite end Voronoi vertex
 
@@ -88,6 +108,22 @@ def voronoi_plot_2d(vor, ax=None, **kw):
             infinite_segments.append([vor.vertices[i], far_point])
             for idx in pointidx:
                 points_to_segments[idx].append((vor.vertices[i], far_point))
+
+            potential = (vor.vertices[simplex[0]] + vor.vertices[simplex[1]])/2
+            if ax is not None and (potential[0] <= ax.get_xlim()[1] and
+                                   potential[0] >= ax.get_xlim()[0] and
+                                   potential[1] <= ax.get_ylim()[1] and
+                                   potential[1] >= ax.get_ylim()[0]):
+                label_point = potential
+            else:
+                label_point = avg_point
+
+        if ax is not None and kw.get('label_lines', False):
+            label_point += tangeant*.25  # push off line
+            label_names = sorted([str(pointidx[0]), str(pointidx[1])])
+            ax.annotate('$\\mathbf{\\ell}^{' + '(' + label_names[0] + ',' + label_names[1] + ')' + '}$',
+                        (label_point[0], label_point[1]), rotation=0)
+
     fig = None
     if ax is not None:
         ax.add_collection(LineCollection(finite_segments,

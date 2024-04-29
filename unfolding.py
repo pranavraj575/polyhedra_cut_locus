@@ -9,6 +9,9 @@ PARSER.add_argument("--single-display", action='store_true', required=False,
 PARSER.add_argument("--orient", action='store', required=False, default='',
                     help="Specify a string to append onto face name to help with orientation ('_' usually works well)")
 
+PARSER.add_argument("--label-unwrapping", action='store_true', required=False,
+                    help="whether to label the points and lines on the unwrapping diagram")
+
 args = PARSER.parse_args()
 shape = shape_from_args(args)
 
@@ -21,7 +24,7 @@ if sink_face_name is not None:
     if sink_face_name is None:
         raise Exception("invalid face name specified: " + str(temp))
 
-do_filter=shape.is_polyhedra() and not args.no_filter
+do_filter = shape.is_polyhedra() and not args.no_filter
 
 shape.interactive_unwrap(track=not args.no_tracking,
                          figsize=figsize_from_args(args),
@@ -35,4 +38,5 @@ shape.interactive_unwrap(track=not args.no_tracking,
                          orient_string=args.orient,
                          do_filter=do_filter,
                          font_size=args.font_size,
+                         label_diagram=args.label_unwrapping
                          )
