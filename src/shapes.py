@@ -1291,7 +1291,7 @@ class Shape:
                 v1 = face[i]
                 v2 = face[(i + 1)%len(face)]
                 ax.plot([v1[0], v2[0]], [v1[1], v2[1]], color=color, linewidth=linewidth)
-            ax.annotate(str(name) + orient_string, (center[0], center[1]), rotation=np.degrees(theta))
+            ax.annotate(str(name) + orient_string, (center[0], center[1]), rotation=np.degrees(theta), color=color)
 
         if len(vp) >= 2:  # if there is only one, the cut locus does not exist on this face
             relevant_points, relevant_bound_paths, relevant_cells = self.filter_out_points(vp, bound_paths, source,
@@ -1334,25 +1334,50 @@ class Shape:
                     all_trans_shown.append(tracker_points + [pt])
 
                     for face, name, center, rot_v in iteration[:-1]:
-                        plot_label_face(ax=ax, face=face, name=name, center=center, rot_v=rot_v, color='blue',
+                        plot_label_face(ax=ax,
+                                        face=face,
+                                        name=name,
+                                        center=center,
+                                        rot_v=rot_v,
+                                        color='blue',
                                         linewidth=1)
                     label = None
                     if not labeled:
                         label = '$p$ copies'
                         labeled = True
-                    ax.scatter(pt[0], pt[1], color='purple', label=label, alpha=1, s=40)
+                    pt_color = 'purple'
+                    ax.scatter(pt[0], pt[1],
+                               color=pt_color,
+                               label=label,
+                               alpha=1,
+                               s=40)
                     if label_diagram:
                         label_pt = pt + [[.1], [.1]]
-                        ax.annotate('$p^{(' + str(pt_idx) + ')}$', (label_pt[0], label_pt[1]), rotation=0)
+                        ax.annotate('$p^{(' + str(pt_idx) + ')}$',
+                                    (label_pt[0], label_pt[1]),
+                                    rotation=0,
+                                    color=pt_color)
             (face, name, center, rot_v) = special_face
-            plot_label_face(ax=ax, face=face, name=name, center=center, rot_v=rot_v, color='red', linewidth=2)
+            plot_label_face(ax=ax,
+                            face=face,
+                            name=name,
+                            center=center,
+                            rot_v=rot_v,
+                            color='red',
+                            linewidth=2)
             # ax.scatter([0], [0], label='center', alpha=.5, s=80)
             relevant_points = np.concatenate(relevant_points, axis=1)
 
             vor = Voronoi(relevant_points.T)
             xlim, ylim = ax.get_xlim(), ax.get_ylim()
-            voronoi_plot_2d(vor, ax=ax, show_points=False, show_vertices=False, line_colors='black',
-                            line_width=2, line_alpha=1, label_lines=label_diagram)
+            voronoi_plot_2d(vor,
+                            ax=ax,
+                            show_points=False,
+                            show_vertices=False,
+                            line_colors='black',
+                            line_width=2,
+                            line_alpha=1,
+                            label_lines=label_diagram)
             ax.set_xlim(xlim)
             ax.set_ylim(ylim)
             ax.legend()

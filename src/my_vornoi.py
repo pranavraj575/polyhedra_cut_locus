@@ -66,7 +66,8 @@ def voronoi_plot_2d(vor, ax=None, **kw):
     infinite_segments = []
     points_to_segments = {i: list() for i in
                           range(vor.npoints)}  # dictionary of point indices to the segments they create
-    segments_to_points = dict()  # dict of segments -> indices of points that created them
+    text_positions = []  # list of label positions so that the next one is far from the previous
+    arrows = []
     for pointidx, simplex in zip(vor.ridge_points, vor.ridge_vertices):  # iterates through all lines
         # pointidx: two indices of points that create this line
         # simplex: two indices of vertices of the vornoi diagram that create this line
@@ -119,10 +120,39 @@ def voronoi_plot_2d(vor, ax=None, **kw):
                 label_point = avg_point
 
         if ax is not None and kw.get('label_lines', False):
-            label_point += tangeant*.25  # push off line
+            # push label point off line
+            potential_text_points = [label_point + tangeant*.3,
+                                     label_point + tangeant*.5,
+                                     label_point - tangeant*.5, #- np.array([.5, 0.])
+                                     ]
+            if len(text_positions) > 0:
+                text_point = max(potential_text_points, key=lambda pt:
+                min(np.linalg.norm(np.array(text_positions) - pt, axis=1)))
+
+                dist = min(np.linalg.norm(np.array(text_positions) - text_point, axis=1))
+                if dist > 1:
+                    text_point = potential_text_points[0]
+            else:
+                text_point = potential_text_points[0]
+
+            text_positions.append(text_point)
             label_names = sorted([str(pointidx[0]), str(pointidx[1])])
             ax.annotate('$\\mathbf{\\ell}^{' + '(' + label_names[0] + ',' + label_names[1] + ')' + '}$',
-                        (label_point[0], label_point[1]), rotation=0)
+                        (text_point[0], text_point[1]), rotation=0, color=line_colors)
+            if (text_point[0] <= ax.get_xlim()[1] and
+                    text_point[0] >= ax.get_xlim()[0] and
+                    text_point[1] <= ax.get_ylim()[1] and
+                    text_point[1] >= ax.get_ylim()[0]):
+                diff = (label_point - text_point)*.7
+                ax.arrow(
+                    text_point[0],  # x
+                    text_point[1],  # y
+                    diff[0],  # dx
+                    diff[1],  # dy
+                    width=.02,
+                    color=line_colors,
+                    alpha=line_alpha/2,
+                )
 
     fig = None
     if ax is not None:
