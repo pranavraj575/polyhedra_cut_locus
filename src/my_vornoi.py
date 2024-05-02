@@ -123,7 +123,7 @@ def voronoi_plot_2d(vor, ax=None, **kw):
             # push label point off line
             potential_text_points = [label_point + tangeant*.3,
                                      label_point + tangeant*.5,
-                                     label_point - tangeant*.5, #- np.array([.5, 0.])
+                                     label_point - tangeant*.5,  # - np.array([.5, 0.])
                                      ]
             if len(text_positions) > 0:
                 text_point = max(potential_text_points, key=lambda pt:
@@ -137,21 +137,22 @@ def voronoi_plot_2d(vor, ax=None, **kw):
 
             text_positions.append(text_point)
             label_names = sorted([str(pointidx[0]), str(pointidx[1])])
-            ax.annotate('$\\mathbf{\\ell}^{' + '(' + label_names[0] + ',' + label_names[1] + ')' + '}$',
+            ax.annotate('$\\mathbf{\\ell}^{' + '\{' + label_names[0] + ',' + label_names[1] + '\}' + '}$',
                         (text_point[0], text_point[1]), rotation=0, color=line_colors)
             if (text_point[0] <= ax.get_xlim()[1] and
                     text_point[0] >= ax.get_xlim()[0] and
                     text_point[1] <= ax.get_ylim()[1] and
                     text_point[1] >= ax.get_ylim()[0]):
-                diff = (label_point - text_point)*.7
+                diff = (label_point - text_point)
                 ax.arrow(
                     text_point[0],  # x
                     text_point[1],  # y
                     diff[0],  # dx
                     diff[1],  # dy
-                    width=.02,
+                    width=.03,
                     color=line_colors,
-                    alpha=line_alpha/2,
+                    alpha=line_alpha,
+                    length_includes_head=True,
                 )
 
     fig = None

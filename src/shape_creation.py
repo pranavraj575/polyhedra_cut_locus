@@ -1,7 +1,7 @@
-from src.shapes import *
+from src.polyhedra import *
 
 
-class Prism(Shape):
+class Prism(ConvexPolyhderon):
     def __init__(self, n, tolerance=.001):
         """
         makes n-gon prism where faces 0 to (n-1) are the 'sides' in order (1 is to the right of 0)
@@ -54,7 +54,7 @@ class Prism(Shape):
         return face_map, 3, self.n
 
 
-class Pyramid(Shape):
+class Pyramid(ConvexPolyhderon):
     def __init__(self, n, tolerance=.001):
         """
         makes pyramid with an n-gon base (3<=n<=6)
@@ -111,7 +111,7 @@ class Pyramid(Shape):
         return self._large_prism_faces_to_plot_n_m()
 
 
-class Bipyramid(Shape):
+class Bipyramid(ConvexPolyhderon):
     def __init__(self, n, tolerance=.001):
         """
         makes bipyramid with 2n triangles(3<=n<=6)
@@ -186,7 +186,7 @@ class Octahedron(Bipyramid):
         super().__init__(4, tolerance=tolerance)
 
 
-class Icosahedron(Shape):
+class Icosahedron(ConvexPolyhderon):
     def __init__(self, tolerance=.001):
         """
         makes icosahedron
@@ -246,7 +246,7 @@ class Icosahedron(Shape):
         return face_map, 4, 5
 
 
-class Dodecahedron(Shape):
+class Dodecahedron(ConvexPolyhderon):
     def __init__(self, tolerance=.05):
         """
         makes dodecahedron
@@ -306,7 +306,7 @@ class Dodecahedron(Shape):
         return face_map, 4, 5
 
 
-class Antiprism(Shape):
+class Antiprism(ConvexPolyhderon):
     def __init__(self, n, tolerance=.001):
         """
         makes uniform antiprism with n-gon (2n+2 faces)
@@ -375,7 +375,7 @@ class Antiprism(Shape):
         return face_map, 4 if self.n > 2 else 2, self.n
 
 
-class ElongatedBipyramid(Shape):
+class ElongatedBipyramid(ConvexPolyhderon):
     def __init__(self, n, tolerance=.001):
         """
         makes elongated bipyramid with 2n triangles(3<=n<=6) and n squares
@@ -431,7 +431,7 @@ class ElongatedBipyramid(Shape):
         return face_map, 3, self.n
 
 
-class ElongatedPyramid(Shape):
+class ElongatedPyramid(ConvexPolyhderon):
     def __init__(self, n, tolerance=.001):
         """
         makes elongated pyramid with n triangles(3<=n<=6), n squares, and one n-gon
@@ -493,7 +493,7 @@ class ElongatedPyramid(Shape):
         return face_map, 3, self.n
 
 
-class Mirror(Shape):
+class Mirror(ConvexPolyhderon):
     def __init__(self, n, tolerance=.001):
         """
         makes n-gon 'mirror', two n-gons pasted to each other
@@ -520,7 +520,7 @@ class Mirror(Shape):
         return False
 
 
-class NTorus(Shape):
+class NTorus(ConvexPolyhderon):
     def __init__(self, n, tolerance=.001):
         """
         makes n-torus, single face
@@ -540,7 +540,7 @@ class NTorus(Shape):
         return False
 
 
-class LargeNTorus(Shape):
+class LargeNTorus(ConvexPolyhderon):
     def __init__(self, n, tolerance=.001):
         """
         makes n-torus, 2^n faces, each dimension is 2 faces long
