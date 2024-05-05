@@ -43,6 +43,59 @@ def voronoi_plot_2d(vor, ax=None, **kw):
     points_to_segments: dictionary of point index to line segments the point creates
         segments are represetned as
     """
+
+    def within_lim(value, lim):
+        return (value <= lim[1] and
+                value >= lim[0])
+
+    def within_bounds(point, xlim=None, ylim=None):
+        if xlim is None:
+            xlim = ax.get_xlim()
+        if ylim is None:
+            ylim = ax.get_ylim()
+        return (within_lim(point[0], xlim) and
+                within_lim(point[1], ylim))
+
+    def get_correct_end_points(start, end, xlim, ylim):
+        end = get_correct_exit_point(start, end, xlim, ylim)
+        if end is None:
+            return None, None
+        start = get_correct_exit_point(end, start, xlim, ylim)
+        if start is None:
+            return None, None
+        return start, end
+
+    def get_correct_exit_point(start, end, xlim, ylim):
+        vec = end - start
+        if vec[0] > 0:
+            if (start + vec)[0] > xlim[1]:
+                if start[0] > xlim[1]:
+                    return None
+                vec = vec*((xlim[1] - start[0])/vec[0])
+        elif vec[0] < 0:
+            if (start + vec)[0] < xlim[0]:
+                if start[0] < xlim[0]:
+                    return None
+                vec = vec*((start[0] - xlim[0])/(-vec[0]))
+        elif vec[0] == 0:
+            if not within_lim(start[0], xlim):
+                return None
+
+        if vec[1] > 0:
+            if (start + vec)[1] > ylim[1]:
+                if start[1] > ylim[1]:
+                    return None
+                vec = vec*((ylim[1] - start[1])/vec[1])
+        elif vec[1] < 0:
+            if (start + vec)[1] < ylim[0]:
+                if start[1] < ylim[0]:
+                    return None
+                vec = vec*((start[1] - ylim[0])/(-vec[1]))
+        elif vec[1] == 0:
+            if not within_lim(start[1], ylim):
+                return None
+        return vec + start
+
     from matplotlib.collections import LineCollection
 
     if vor.points.shape[1] != 2:
@@ -58,6 +111,7 @@ def voronoi_plot_2d(vor, ax=None, **kw):
         line_colors = kw.get('line_colors', 'k')
         line_width = kw.get('line_width', 1.0)
         line_alpha = kw.get('line_alpha', 1.0)
+        line_label_dist = kw.get('line_label_dist', .3)
 
     center = vor.points.mean(axis=0)
     ptp_bound = vor.points.ptp(axis=0)
@@ -67,7 +121,6 @@ def voronoi_plot_2d(vor, ax=None, **kw):
     points_to_segments = {i: list() for i in
                           range(vor.npoints)}  # dictionary of point indices to the segments they create
     text_positions = []  # list of label positions so that the next one is far from the previous
-    arrows = []
     for pointidx, simplex in zip(vor.ridge_points, vor.ridge_vertices):  # iterates through all lines
         # pointidx: two indices of points that create this line
         # simplex: two indices of vertices of the vornoi diagram that create this line
@@ -85,14 +138,14 @@ def voronoi_plot_2d(vor, ax=None, **kw):
             finite_segments.append(vor.vertices[simplex])
             for idx in pointidx:
                 points_to_segments[idx].append((vor.vertices[simplex[0]], vor.vertices[simplex[1]]))
-            potential = (vor.vertices[simplex[0]] + vor.vertices[simplex[1]])/2
-            if ax is not None and (potential[0] <= ax.get_xlim()[1] and
-                                   potential[0] >= ax.get_xlim()[0] and
-                                   potential[1] <= ax.get_ylim()[1] and
-                                   potential[1] >= ax.get_ylim()[0]):
-                label_point = potential
-            else:
-                label_point = avg_point
+            if ax is not None:
+                a, b = get_correct_end_points(vor.vertices[simplex[0]], vor.vertices[simplex[1]], ax.get_xlim(),
+                                              ax.get_ylim())
+                if a is None:
+                    label_point = None
+                else:
+                    label_point = (a + b)/2
+
         else:
             i = simplex[simplex >= 0][0]  # finite end Voronoi vertex
 
@@ -109,40 +162,39 @@ def voronoi_plot_2d(vor, ax=None, **kw):
             infinite_segments.append([vor.vertices[i], far_point])
             for idx in pointidx:
                 points_to_segments[idx].append((vor.vertices[i], far_point))
+            if ax is not None:
+                a, b = get_correct_end_points(vor.vertices[i], far_point, ax.get_xlim(),
+                                              ax.get_ylim())
+                if a is None:
+                    label_point = None
+                else:
+                    label_point = (a + b)/2
 
-            potential = (vor.vertices[simplex[0]] + vor.vertices[simplex[1]])/2
-            if ax is not None and (potential[0] <= ax.get_xlim()[1] and
-                                   potential[0] >= ax.get_xlim()[0] and
-                                   potential[1] <= ax.get_ylim()[1] and
-                                   potential[1] >= ax.get_ylim()[0]):
-                label_point = potential
-            else:
-                label_point = avg_point
-
-        if ax is not None and kw.get('label_lines', False):
+        if ax is not None and kw.get('label_lines', False) and label_point is not None:
             # push label point off line
-            potential_text_points = [label_point + tangeant*.3,
-                                     label_point + tangeant*.5,
-                                     label_point - tangeant*.5,  # - np.array([.5, 0.])
-                                     ]
+            potential_text_points = [
+                                        label_point + tangeant*(1 + dx/10)*line_label_dist for dx in range(10)
+                                    ] + [
+                                        label_point - tangeant*(3 + dx/10)*line_label_dist for dx in range(10)
+                                    ]
             if len(text_positions) > 0:
-                text_point = max(potential_text_points, key=lambda pt:
-                min(np.linalg.norm(np.array(text_positions) - pt, axis=1)))
-
-                dist = min(np.linalg.norm(np.array(text_positions) - text_point, axis=1))
-                if dist > 1:
-                    text_point = potential_text_points[0]
+                satisfiable = False
+                for i in range(len(potential_text_points)):
+                    text_point = potential_text_points[i]
+                    if min(np.linalg.norm(np.array(text_positions) - text_point, axis=1)) > 1.5:
+                        satisfiable = True
+                        break
+                if not satisfiable:
+                    text_point = max(potential_text_points,
+                                     key=lambda pt: min(np.linalg.norm(np.array(text_positions) - pt, axis=1)))
             else:
                 text_point = potential_text_points[0]
 
             text_positions.append(text_point)
             label_names = sorted([str(pointidx[0]), str(pointidx[1])])
-            ax.annotate('$\\mathbf{\\ell}^{' + '\{' + label_names[0] + ',' + label_names[1] + '\}' + '}$',
-                        (text_point[0], text_point[1]), rotation=0, color=line_colors)
-            if (text_point[0] <= ax.get_xlim()[1] and
-                    text_point[0] >= ax.get_xlim()[0] and
-                    text_point[1] <= ax.get_ylim()[1] and
-                    text_point[1] >= ax.get_ylim()[0]):
+            if within_bounds(text_point):
+                ax.annotate('$\\mathbf{\\ell}^{' + '\{' + label_names[0] + ',' + label_names[1] + '\}' + '}$',
+                            (text_point[0], text_point[1]), rotation=0, color=line_colors)
                 diff = (label_point - text_point)
                 ax.arrow(
                     text_point[0],  # x

@@ -16,7 +16,10 @@ class ConvexPolyhderon(Shape):
                         i_to_display=None,
                         orient_string='',
                         do_filter=True,
-                        label_diagram=False):
+                        label_diagram=False,
+                        p_label_shift=(0., 0.),
+                        line_label_dist=.3,
+                        ):
         """
         plots an unwrapping of the cut locus on sink face from point p on source face
         :param p: column vector (np array of dimension (self.dimension,1))
@@ -29,6 +32,8 @@ class ConvexPolyhderon(Shape):
         :param do_filter: Whether to filter voronoi cell points based on correctness of paths
                 should probably always be true, unless we are not looking at polyhedra
         :param label_diagram: whether to label points and lines
+        :param p_label_shift: how to shift the point labels if they exist
+
         :return: (all transitions shown (none if no points),
             whether we are done plotting (i.e. i_to_display is None or larger than the number of paths))
         """
@@ -110,7 +115,7 @@ class ConvexPolyhderon(Shape):
                     if label_diagram:
                         label_pt = pt + [[.1], [.1]]
                         ax.annotate('$p^{(' + str(pt_idx) + ')}$',
-                                    (label_pt[0], label_pt[1]),
+                                    (label_pt[0]+p_label_shift[0], label_pt[1]+p_label_shift[1]),
                                     rotation=0,
                                     color=pt_color)
             (face, name, center, rot_v) = special_face
@@ -132,8 +137,10 @@ class ConvexPolyhderon(Shape):
                             show_vertices=False,
                             line_colors='black',
                             line_width=2,
-                            line_alpha=1,
-                            label_lines=label_diagram)
+                            line_alpha=(.69 if label_diagram else 1),
+                            label_lines=label_diagram,
+                            line_label_dist=line_label_dist,
+                            )
             ax.set_xlim(xlim)
             ax.set_ylim(ylim)
             ax.legend()
@@ -410,6 +417,8 @@ class ConvexPolyhderon(Shape):
                            do_filter=True,
                            font_size=None,
                            label_diagram=False,
+                           p_label_shift=(0., 0.),
+                           line_label_dist=.3,
                            ):
         """
         :param figsize: initial figure size (inches)
@@ -429,6 +438,7 @@ class ConvexPolyhderon(Shape):
                 should probably always be true, unless we are not looking at polyhedra
         :param font_size: font size to use for plot (default if None)
         :param label_diagram: whether to label points and lines
+        :param p_label_shift: how to shift the point labels if they exist
 
         """
         plt.rcParams["figure.autolayout"] = True
@@ -489,10 +499,13 @@ class ConvexPolyhderon(Shape):
                                                                       diameter=diameter, ax=plt.gca(),
                                                                       i_to_display=i_to_display,
                                                                       orient_string=orient_string, do_filter=do_filter,
-                                                                      label_diagram=label_diagram)
+                                                                      label_diagram=label_diagram,
+                                                                      p_label_shift=p_label_shift,
+                                                                      line_label_dist=line_label_dist,
+                                                                      )
                 print('point locations:')
-                for zero, xvec, yvec, p in all_trans_shown:
-                    print('p copy:', p.flatten())
+                for i,(zero, xvec, yvec, p) in enumerate(all_trans_shown):
+                    print('p copy '+str(i)+':', p.flatten())
                     print('\tshift:', zero.flatten())
                     rot_frac = fractions.Fraction(
                         np.arctan2((xvec - zero)[1], (xvec - zero)[0])[0]/np.pi).limit_denominator(1000)
