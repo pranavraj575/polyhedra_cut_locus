@@ -1,9 +1,9 @@
 from utils.shape_argparser import *
 
-PARSER.add_argument("--center-pt", action='store_true', required=False,
-                    help="add center point to faces")
+display_group.add_argument("--center-pt", action='store_true', required=False,
+                           help="add center point to faces")
 
-args = PARSER.parse_args()
+args = parse_args(PARSER)
 shape = shape_from_args(args)
 
 if args.center_pt:
@@ -16,7 +16,7 @@ event_key = None
 if source_fn_p is None:
     event_key = 'button_press_event' if args.no_tracking else 'motion_notify_event'
 
-do_filter=shape.is_polyhedra() and not args.no_filter
+do_filter = shape.is_polyhedra() and not args.no_filter
 
 shape.interactive_vornoi_plot(diameter=args.diameter if args.diameter > 0 else None,
                               figsize=figsize_from_args(args),

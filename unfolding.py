@@ -3,24 +3,23 @@ from utils.shape_argparser import *
 PARSER.add_argument("--sink-face-name", action='store', required=False, default=None,
                     help="Specify sink face name if inputting a specific sink face")
 
-PARSER.add_argument("--single-display", action='store_true', required=False,
-                    help="display only one path at a time")
+display_group.add_argument("--single-display", action='store_true', required=False,
+                           help="display only one path at a time")
 
-PARSER.add_argument("--orient", action='store', required=False, default='',
-                    help="Specify a string to append onto face name to help with orientation ('_' usually works well)")
+display_group.add_argument("--orient", action='store', required=False, default='',
+                           help="Specify a string to append onto face name to help with orientation ('_' usually works well)")
 
-PARSER.add_argument("--label-unwrapping", action='store_true', required=False,
-                    help="whether to label the points and lines on the unwrapping diagram")
+display_group.add_argument("--label-unwrapping", action='store_true', required=False,
+                           help="whether to label the points and lines on the unwrapping diagram")
 
-PARSER.add_argument("--shift-x-p-label", type=float, required=False, default=0.,
-                    help="shift each p label if necessary")
-PARSER.add_argument("--shift-y-p-label", type=float, required=False, default=0.,
-                    help="shift each p label if necessary")
-PARSER.add_argument("--label-dist-line", type=float, required=False, default=.3,
-                    help="distance to label each line at")
+display_group.add_argument("--shift-x-p-label", type=float, required=False, default=0.,
+                           help="shift each p label if necessary")
+display_group.add_argument("--shift-y-p-label", type=float, required=False, default=0.,
+                           help="shift each p label if necessary")
+display_group.add_argument("--label-dist-line", type=float, required=False, default=.3,
+                           help="distance to label each line from")
 
-
-args = PARSER.parse_args()
+args = parse_args(PARSER)
 shape = shape_from_args(args)
 
 source_fn_p = get_source_fn_p_from_args(args, shape)

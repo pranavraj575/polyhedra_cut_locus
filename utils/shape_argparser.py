@@ -12,7 +12,7 @@ from src.shape_creation import (Tetrahedron,
                                 Mirror,
                                 Large2Torus
                                 )
-import argparse
+import sys, argparse
 import numpy as np
 
 mapping = {'tetrahedron': Tetrahedron,
@@ -106,7 +106,8 @@ def shape_from_args(args):
     if len(possible) > 1:
         raise Exception("shape '" + args.shape + "' is ambiguous, could be " + str(tuple(possible)))
     if len(possible) == 0:
-        raise Exception("shape '" + args.shape + "' does not exist, valid arguments are " + str(tuple(s for s in mapping)))
+        raise Exception(
+            "shape '" + args.shape + "' does not exist, valid arguments are " + str(tuple(s for s in mapping)))
     name = possible[0]
     SHAPE = mapping[name]
     if name in arg_n:
@@ -126,13 +127,16 @@ def shape_from_args(args):
 
 
 PARSER = argparse.ArgumentParser()
+display_group = PARSER.add_argument_group('display', 'arguments to tweak display output')
+
+PARSER.add_argument("-hv", action='store_true', required=False,
+                    help="show help message with ALL the arguments and exit (display stuff included)")
+
 PARSER.add_argument("-s", "--shape", action='store', required=True,
                     help="Specify which face to display, options are " + str(tuple(s for s in mapping)))
 PARSER.add_argument("-n", "--n", type=int, required=False, default=None,
                     help="additional argument to specify n, used for " + str(arg_n))
 
-PARSER.add_argument("--legend", action='store_true', required=False,
-                    help="put legend on plot")
 PARSER.add_argument("--diameter", type=int, required=False, default=-1,
                     help="Specify diameter of search graph (longest possible sequence of faces on a geodesic)")
 PARSER.add_argument("--no-filter", action='store_true', required=False,
@@ -146,12 +150,16 @@ PARSER.add_argument("--no-show", action='store_true', required=False,
 
 PARSER.add_argument("--save-file", action='store', required=False, default=None,
                     help="save initial image as specified file")
-PARSER.add_argument("--width-display", type=float, required=False, default=None,
-                    help="width of display in inches")
-PARSER.add_argument("--height-display", type=float, required=False, default=None,
-                    help="height of display in inches")
-PARSER.add_argument("--font-size", type=int, required=False, default=None,
-                    help="font size for plotting")
+
+display_group.add_argument("--legend", action='store_true', required=False,
+                           help="put legend on plot")
+
+display_group.add_argument("--width-display", type=float, required=False, default=None,
+                           help="width of display in inches")
+display_group.add_argument("--height-display", type=float, required=False, default=None,
+                           help="height of display in inches")
+display_group.add_argument("--font-size", type=int, required=False, default=None,
+                           help="font size for plotting")
 
 PARSER.add_argument("--source-face", action='store', required=False, default=None,
                     help="Specify the face name if inputting a specific point")
@@ -162,3 +170,14 @@ PARSER.add_argument("--point-y", type=float, required=False, default=0.,
 
 PARSER.add_argument("--no-tracking", action='store_true', required=False,
                     help="Click to interact instead of tracking the cut locus as mouse moves")
+
+
+def parse_args(parser):
+    if any(help_string in sys.argv for help_string in ['-h', '--help', "-hv"]):
+        if not any(verboseness in sys.argv for verboseness in ["-hv", ]):
+            # we have to remove the display group manually
+            parser._action_groups.remove(display_group)
+        # do this manually
+        parser.print_help()
+        quit()
+    return parser.parse_args()
