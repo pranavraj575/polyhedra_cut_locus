@@ -115,7 +115,7 @@ class ConvexPolyhderon(Shape):
                     if label_diagram:
                         label_pt = pt + [[.1], [.1]]
                         ax.annotate('$p^{(' + str(pt_idx) + ')}$',
-                                    (label_pt[0]+p_label_shift[0], label_pt[1]+p_label_shift[1]),
+                                    (label_pt[0] + p_label_shift[0], label_pt[1] + p_label_shift[1]),
                                     rotation=0,
                                     color=pt_color)
             (face, name, center, rot_v) = special_face
@@ -504,9 +504,13 @@ class ConvexPolyhderon(Shape):
                                                                       line_label_dist=line_label_dist,
                                                                       )
                 print('point locations:')
-                for i,(zero, xvec, yvec, p) in enumerate(all_trans_shown):
-                    print('p copy '+str(i)+':', p.flatten())
-                    print('\tshift:', zero.flatten())
+                for i, (zero, xvec, yvec, p) in enumerate(all_trans_shown):
+                    print('p copy ' + str(i) + ':', p.flatten())
+                    # since mostly this is of the form sqrt(int), try making this nice
+                    print('\tshift:', np.array([int(np.sign(val))*sym.sqrt(round(val**2))
+                                                if abs(round(val**2) - val**2) <= 1e9
+                                                else val
+                                                for val in zero.flatten()]))
                     rot_frac = fractions.Fraction(
                         np.arctan2((xvec - zero)[1], (xvec - zero)[0])[0]/np.pi).limit_denominator(1000)
                     print("\trotation:", rot_frac, 'pi')
