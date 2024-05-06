@@ -108,10 +108,11 @@ def voronoi_plot_2d(vor, ax=None, **kw):
         if kw.get('show_vertices', True):
             ax.plot(vor.vertices[:, 0], vor.vertices[:, 1], 'o')
 
-        line_colors = kw.get('line_colors', 'k')
-        line_width = kw.get('line_width', 1.0)
-        line_alpha = kw.get('line_alpha', 1.0)
-        line_label_dist = kw.get('line_label_dist', .3)
+    line_colors = kw.get('line_colors', 'k')
+    line_width = kw.get('line_width', 1.0)
+    line_alpha = kw.get('line_alpha', 1.0)
+    line_label_dist = kw.get('line_label_dist', .3)
+    point_names = kw.get('point_names', None)
 
     center = vor.points.mean(axis=0)
     ptp_bound = vor.points.ptp(axis=0)
@@ -177,6 +178,7 @@ def voronoi_plot_2d(vor, ax=None, **kw):
                                     ] + [
                                         label_point - tangeant*(3 + dx/10)*line_label_dist for dx in range(10)
                                     ]
+            text_point = None
             if len(text_positions) > 0:
                 satisfiable = False
                 for i in range(len(potential_text_points)):
@@ -191,7 +193,13 @@ def voronoi_plot_2d(vor, ax=None, **kw):
                 text_point = potential_text_points[0]
 
             text_positions.append(text_point)
-            label_names = sorted([str(pointidx[0]), str(pointidx[1])])
+            label_idxes = sorted([pointidx[0], pointidx[1]])
+            label_names = []
+            for pt_idx in label_idxes:
+                if point_names is not None and pt_idx < len(point_names):
+                    label_names.append(str(point_names[pt_idx]))
+                else:
+                    label_names.append(str(pt_idx))
             if within_bounds(text_point):
                 ax.annotate('$\\mathbf{\\ell}^{' + '\{' + label_names[0] + ',' + label_names[1] + '\}' + '}$',
                             (text_point[0], text_point[1]), rotation=0, color=line_colors)

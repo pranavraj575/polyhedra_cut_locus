@@ -18,9 +18,14 @@ display_group.add_argument("--shift-y-p-label", type=float, required=False, defa
                            help="shift each p label if necessary")
 display_group.add_argument("--label-dist-line", type=float, required=False, default=.3,
                            help="distance to label each line from")
+display_group.add_argument("--point-names", action='store', required=False, default=None,
+                           help="comma separated names of each point")
 
 args = parse_args(PARSER)
 shape = shape_from_args(args)
+point_names = None
+if args.point_names is not None:
+    point_names = args.point_names.split(',')
 
 source_fn_p = get_source_fn_p_from_args(args, shape)
 sink_face_name = args.sink_face_name
@@ -48,4 +53,5 @@ shape.interactive_unwrap(track=not args.no_tracking,
                          label_diagram=args.label_unwrapping,
                          p_label_shift=(args.shift_x_p_label, args.shift_y_p_label),
                          line_label_dist=args.label_dist_line,
+                         point_names=point_names
                          )

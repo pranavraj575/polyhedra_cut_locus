@@ -19,6 +19,7 @@ class ConvexPolyhderon(Shape):
                         label_diagram=False,
                         p_label_shift=(0., 0.),
                         line_label_dist=.3,
+                        point_names=None,
                         ):
         """
         plots an unwrapping of the cut locus on sink face from point p on source face
@@ -33,6 +34,7 @@ class ConvexPolyhderon(Shape):
                 should probably always be true, unless we are not looking at polyhedra
         :param label_diagram: whether to label points and lines
         :param p_label_shift: how to shift the point labels if they exist
+        :param point_names: names of the points, list or None
 
         :return: (all transitions shown (none if no points),
             whether we are done plotting (i.e. i_to_display is None or larger than the number of paths))
@@ -114,7 +116,11 @@ class ConvexPolyhderon(Shape):
                                s=40)
                     if label_diagram:
                         label_pt = pt + [[.1], [.1]]
-                        ax.annotate('$p^{(' + str(pt_idx) + ')}$',
+                        if point_names is not None and pt_idx < len(point_names):
+                            pname = point_names[pt_idx]
+                        else:
+                            pname = pt_idx
+                        ax.annotate('$p^{(' + str(pname) + ')}$',
                                     (label_pt[0] + p_label_shift[0], label_pt[1] + p_label_shift[1]),
                                     rotation=0,
                                     color=pt_color)
@@ -140,6 +146,7 @@ class ConvexPolyhderon(Shape):
                             line_alpha=(.69 if label_diagram else 1),
                             label_lines=label_diagram,
                             line_label_dist=line_label_dist,
+                            point_names=point_names,
                             )
             ax.set_xlim(xlim)
             ax.set_ylim(ylim)
@@ -419,6 +426,7 @@ class ConvexPolyhderon(Shape):
                            label_diagram=False,
                            p_label_shift=(0., 0.),
                            line_label_dist=.3,
+                           point_names=None,
                            ):
         """
         :param figsize: initial figure size (inches)
@@ -439,7 +447,7 @@ class ConvexPolyhderon(Shape):
         :param font_size: font size to use for plot (default if None)
         :param label_diagram: whether to label points and lines
         :param p_label_shift: how to shift the point labels if they exist
-
+        :param point_names: names of the points, list or None
         """
         plt.rcParams["figure.autolayout"] = True
         if font_size is not None:
@@ -502,15 +510,21 @@ class ConvexPolyhderon(Shape):
                                                                       label_diagram=label_diagram,
                                                                       p_label_shift=p_label_shift,
                                                                       line_label_dist=line_label_dist,
+                                                                      point_names=point_names,
                                                                       )
                 print('point locations:')
                 for i, (zero, xvec, yvec, p) in enumerate(all_trans_shown):
-                    print('p copy ' + str(i) + ':', p.flatten())
+                    if point_names is not None and i < len(point_names):
+                        pname = point_names[i]
+                    else:
+                        pname = i
+                    print('p copy ' + str(pname) + ':', p.flatten())
                     # since mostly this is of the form sqrt(int), try making this nice
-                    print('\tshift:', np.array([int(np.sign(val))*sym.sqrt(round(val**2))
-                                                if abs(round(val**2) - val**2) <= 1e9
-                                                else val
-                                                for val in zero.flatten()]))
+                    shiftt = np.array([int(np.sign(val))*sym.sqrt(round(val**2))
+                                       if abs(round(val**2) - val**2) <= 1e9
+                                       else val
+                                       for val in zero.flatten()])
+                    print('\tshift:', shiftt)
                     rot_frac = fractions.Fraction(
                         np.arctan2((xvec - zero)[1], (xvec - zero)[0])[0]/np.pi).limit_denominator(1000)
                     print("\trotation:", rot_frac, 'pi')

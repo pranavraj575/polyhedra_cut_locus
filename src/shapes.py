@@ -7,6 +7,7 @@ from src.my_vornoi import voronoi_plot_2d
 import fractions
 import sympy as sym
 
+
 # rotation matrices
 def rotation_T(theta):
     """
