@@ -1,4 +1,5 @@
 from utils.symbolic_utils import *
+from itertools import chain
 
 x = sym.Symbol('p_1')
 y = sym.Symbol('p_2')
@@ -42,3 +43,10 @@ for a, b, c in combinations([0, 1, 2, 3], 3):
     print('equation of x^{' + tup + '}')
     print(exp_simplify(X[a][b][c]))
     print('\\item $x^{\{' + tup + '\}}(p)=\n\t' + latexify(exp_simplify(X[a][b][c])) + '$')
+
+# point_eq is equality of two points
+# this is the list of pairwise equality of all points x^{a,b,c}
+all_equal = (eq_points_equal(X[a][b][c], X[d][e][f]) for (a, b, c), (d, e, f) in combinations(combinations(range(4), 3), 2))
+
+print('equations where all x^{a,b,c} are equal:')
+print(sym.solve(chain(*all_equal)))  # this will solve equality for all the equations in the list

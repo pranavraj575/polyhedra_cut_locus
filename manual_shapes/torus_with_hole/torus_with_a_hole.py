@@ -369,5 +369,5 @@ plot_bounds()
 plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=4, )
 plot_line(p, max_geodesic[0] - [1, 0])
 
-plt.savefig(os.path.join("../images", "hole_torus", "pq.png"))
+plt.savefig(os.path.join("../../images", "hole_torus", "pq.png"))
 plt.show()

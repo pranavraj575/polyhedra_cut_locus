@@ -2,6 +2,7 @@ import sympy as sym
 import numpy as np
 from itertools import combinations
 from collections.abc import Iterable
+from itertools import chain
 
 
 def sym_rotation_T(theta):
@@ -100,45 +101,48 @@ def latexify(equation):
     if (not type(equation) == str) and isinstance(equation, Iterable):
         return '\\left(' + (', '.join([latexify(thing) for thing in equation])) + '\\right)'
 
+    lparens = '({'
+    rparens = ')}'
+
     if not type(equation) == str:
         equation = str(equation)
 
     def first_term(equation: str):
+        divisions = ' *+/'
         paren_count = 0
-        i = 1
-        next_space = False
-        if equation[0] == '(':
-            paren_count += 1
-        else:
-            next_space = True
+        i = 0
         while i < len(equation):
             char = equation[i]
-            if char == '(':
+            if char in lparens:
                 paren_count += 1
-            elif char == ')':
+            elif char in rparens:
                 paren_count -= 1
-            if paren_count == 0:
-                if next_space:
-                    if char == ' ':
-                        break
-                else:
-                    i += 1
-                    break
+            if paren_count < 0:
+                break
+            elif paren_count == 0 and char in divisions:
+                break
+
             i += 1
         return equation[:i]
 
+    def swap(equation: str, a, b):
+        equationp = ''
+        for char in equation:
+            if char == a:
+                equationp += b
+            elif char == b:
+                equationp += a
+            else:
+                equationp += char
+        return equationp
+
     def last_term(equation: str):
         equationp = equation[::-1]
-        replacement_temp = ''
-        while replacement_temp in equationp:
-            replacement_temp += str(np.random.random())
-        equationp = equationp.replace('(', replacement_temp)
-        equationp = equationp.replace(')', '(')
-        equationp = equationp.replace(replacement_temp, ')')
+        for left, right in zip(lparens, rparens):
+            equationp = swap(equationp, left, right)
         last = first_term(equationp)
-        last = last.replace('(', replacement_temp)
-        last = last.replace(')', '(')
-        last = last.replace(replacement_temp, ')')
+        for left, right in zip(lparens, rparens):
+            last = swap(last, left, right)
         return last[::-1]
 
     def sqrtify(equation: str):
@@ -177,7 +181,10 @@ def latexify(equation):
         strips outer parentheses
         """
         while equation.startswith('(') and equation.endswith(')'):
-            equation = equation[1:-1]
+            if first_term(equation) == equation:
+                equation = equation[1:-1]
+            else:
+                break
         return equation
 
     def depower(equation: str):
@@ -192,10 +199,10 @@ def latexify(equation):
         return equation
 
     equation = sqrtify(equation)
-    equation = fracify(equation)
     equation = depower(equation)
+    equation = fracify(equation)
     equation = strip(equation)
-    return equation.replace('*', '')
+    return equation.replace('*', '\cdot ')
 
 
 def exp_simplify(expression):
@@ -219,3 +226,31 @@ def matrixify(arr):
         rope += '\\\\'
     rope += '\n\\end{bmatrix}'
     return rope
+
+
+def equality(a, b):
+    an, ad = sym.fraction(exp_simplify(a))
+    bn, bd = sym.fraction(exp_simplify(b))
+    return sym.Eq(an*bd, bn*ad)
+
+
+def eq_points_equal(p1, p2):
+    return (equality(p1[dim], p2[dim]) for dim in range(len(p1)))
+
+
+def eq_all_points_equal(points):
+    """
+    returns iterable of equations that is where all the points have equality
+    p_i=p_{i+1} is sufficient
+    """
+    return chain(*(eq_points_equal(points[i], points[(i + 1)%len(points)]) for i in range(len(points))))
+
+
+def quartic_roots(equation:sym.core.Expr):
+    sym.polys.polytools.degree_list
+    sym.polys.polytools.degree
+    sym.polys.polytools.total_degree
+    equation.free_symbols
+    sym.Poly(equation).terms()
+
+    pass

@@ -33,7 +33,6 @@ for p in exp_simplify(points):
     print(latexify(p))
 print()
 
-
 STARTS = [[['-' if j >= i else exp_simplify(item[0][dim]) for (j, item) in enumerate(row)]
            for (i, row) in enumerate(L)] for dim in range(2)]
 VECTORS = [[['-' if j >= i else exp_simplify(item[1][dim]) for (j, item) in enumerate(row)]
@@ -42,7 +41,6 @@ for mats in STARTS, VECTORS:
     for dim in range(2):
         for i in range(N):
             mats[dim][i][i] = 0
-
 
 print('x dimension intial point')
 print(matrixify(STARTS[0]))
@@ -56,3 +54,12 @@ print('y dimension direction')
 print(matrixify(VECTORS[1]))
 
 print()
+print('equations where all central x^{a,b,c} are equal:')
+print(sym.solve(eq_all_points_equal([X[a][b][c] for a, b, c in combinations([0, 1, 4, 5, 8, 9, ], 3)])))
+# {p_1: 0, p_2: -2}, {p_1: 0, p_2: 0}, {p_1: -sqrt(3), p_2: 1}, {p_1: sqrt(3), p_2: 1}
+print()
+
+for a, b, c in combinations(range(N), 3):
+    a, b, c = sorted((a, b, c))
+    print('equation for x^{' + str(a) + ',' + str(b) + ',' + str(c) + '}')
+    print(exp_simplify(X[a][b][c]))

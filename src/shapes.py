@@ -1,11 +1,6 @@
-import os.path
-
 import numpy as np, itertools
-from matplotlib import pyplot as plt
 from scipy.spatial import Voronoi
 from src.my_vornoi import voronoi_plot_2d
-import fractions
-import sympy as sym
 
 
 # rotation matrices

@@ -1,5 +1,8 @@
 from src.shapes import *
-
+from matplotlib import pyplot as plt
+import os
+import fractions
+import sympy as sym
 
 class ConvexPolyhderon(Shape):
     """

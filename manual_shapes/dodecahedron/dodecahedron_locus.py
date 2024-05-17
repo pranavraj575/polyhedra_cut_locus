@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
     cube.add_point_to_face(p, fn, {'color': 'purple', 's': 40})
 
-    folder = os.path.join('../images', 'dodecahedron')
+    folder = os.path.join('../../images', 'dodecahedron')
     if not os.path.exists(folder):
         os.makedirs(folder)
     name = 'p_' + str(tuple(p.flatten())) + '_face_' + str(fn) + '.png'
