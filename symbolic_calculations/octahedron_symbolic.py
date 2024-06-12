@@ -132,7 +132,14 @@ for a, b in combinations(range(6), 2):
               ' are equal using wolfram alpha or other software')
         for dim in range(2):
             eq = equality(X[a][line[0]][line[1]][dim], X[b][line[0]][line[1]][dim])
-            print(eq.lhs, '=', eq.rhs)
+            print((eq.lhs), '=', (eq.rhs))
+            print(latexify(eq.lhs), '=', latexify(eq.rhs))
+            for element in roots(X[a][line[0]][line[1]][dim] - X[b][line[0]][line[1]][dim]):
+                print('solution:', #{key: exp_simplify(value) for key, value in element.items()}
+                      )
+                for key,value in element.items():
+                    print('\t',key,'=',latexify(value))
+            # print(simul_roots_solver([X[a][line[0]][line[1]][dim] - X[b][line[0]][line[1]][dim] for dim in range(2)]))
         print()
 print()
 

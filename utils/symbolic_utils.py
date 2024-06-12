@@ -246,11 +246,118 @@ def eq_all_points_equal(points):
     return chain(*(eq_points_equal(points[i], points[(i + 1)%len(points)]) for i in range(len(points))))
 
 
-def quartic_roots(equation:sym.core.Expr):
-    sym.polys.polytools.degree_list
-    sym.polys.polytools.degree
-    sym.polys.polytools.total_degree
-    equation.free_symbols
-    sym.Poly(equation).terms()
+def roots(equation: sym.core.Expr, var_to_use=None):
+    def coefs(eq: sym.core.Expr, var_idx):
+        terms, vars = eq.as_terms()
+        var = vars[var_idx]
 
-    pass
+        coeff_list = [0 for _ in range(1 + sym.polys.polytools.degree(eq, var))]
+
+        for term, (_, degrees, _) in terms:
+            degree = degrees[var_idx]
+            coeff_list[degree] += term/(var**degree)
+
+        return coeff_list
+
+    def linear_roots(eq: sym.core.Expr, var_idx):
+        c, b = coefs(eq, var_idx)  # should only be called on linear eqs
+        return (-c/b,)
+
+    def quad_roots(eq: sym.core.Expr, var_idx):
+        c, b, a = coefs(eq, var_idx)
+        thing = b**2 - 4*a*c
+        if thing == 0:  # one soln
+            return (-b/(2*a),)
+        return ((-b + sym.sqrt(thing))/(2*a), (-b - sym.sqrt(thing))/(2*a))
+
+    def cubic_roots(eq: sym.core.Expr, var_idx):
+        d, c, b, a = coefs(eq, var_idx)
+
+        p = (3*a*c - b**2)/(3*a**2)
+        q = (2*b**3 - 9*a*b*c + 27*a**2*d)/(27*a**3)
+        delta = (q**2/4 + p**3/27)
+
+        u = sym.root((-q/2 + sym.sqrt(delta)), 3)
+        v = sym.root((-q/2 - sym.sqrt(delta)), 3)
+        x1 = u + v - b/(3*a)
+
+        # these could be complex
+        # if delta = 0, these are the same
+        x2 = -(u + v)/2 - b/(3*a) + (u - v)*sym.sqrt(3)/(2*sym.I)
+        x3 = -(u + v)/2 - b/(3*a) - (u - v)*sym.sqrt(3)/(2*sym.I)
+        return (x1, x2, x3)
+
+    def poly_roots(eq: sym.core.Expr, var_idx):
+        terms, vars = eq.as_terms()
+        var = vars[var_idx]
+        degree = sym.polys.polytools.degree(eq, var)
+        if degree == 0:
+            return None  # this variable is not in equation
+        elif degree == 1:
+            return linear_roots(eq, var_idx)
+        elif degree == 2:
+            return quad_roots(eq, var_idx)
+        elif degree == 3:
+            return cubic_roots(eq, var_idx)
+        else:
+            raise Exception('degree ' + str(degree) + ' equation appeared')
+
+    num, denom = sym.fraction(exp_simplify(equation))
+
+    constant, factor_list = sym.factor_list(exp_simplify(num))
+    if len(factor_list) > 1:
+        for fac, multiple in factor_list:
+            for soln in roots(fac, var_to_use=var_to_use):
+                yield soln
+        return
+
+    eq = sym.expand(num)
+    terms, vars = eq.as_terms()
+    if var_to_use is None or (var_to_use not in vars):
+        var_to_use = vars[0]
+    var_idx = vars.index(var_to_use)
+    results = poly_roots(eq, var_idx=var_idx)
+    if results is None:
+        return [{}]  # any values work
+    # degree = sym.polys.polytools.degree(equation, var)
+    for result in results:
+        yield {var_to_use: result}
+
+
+def simul_roots_solver(L):
+    tree = []
+    for equation in L:
+        tree.append(list(roots(equation)))
+
+    def get_vars(thing):
+        try:
+            return thing.as_terms()[1]
+        except:
+            return []
+
+    # now we must see where these intersect
+    def intersect_solver(sol1, sol2):
+        for dic1 in sol1:
+            for dic2 in sol2:
+                variable1, value1 = list(dic1.items())[0]
+                variable2, value2 = list(dic2.items())[0]
+
+                if variable1 == variable2:
+                    inter = value1 - value2
+                    if sym.simplify(inter) == 0:
+                        yield {variable1: value1}
+                    else:
+                        for intersect in sym.solve(inter):
+                            yield {variable1: intersect}
+                else:
+                    vars1, vars2 = get_vars(value1), get_vars(value2)
+                    if vars1 is []:
+                        yield {variable1: value1, variable2: value2.subs({variable1: value1})}
+                    if vars2 is []:
+                        yield {variable2: value2, variable1: value1.subs({variable2: value2})}
+    while len(tree) > 1:
+        sol1, sol2 = tree.pop(), tree.pop()
+        tree.append(list(intersect_solver(sol1, sol2)))
+    return tree[0]
+
+
