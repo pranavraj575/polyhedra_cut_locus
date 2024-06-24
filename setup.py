@@ -5,7 +5,7 @@ setup(
     name='mitochondria',
     version='6.9.0',
     packages=find_packages(),
-    install_requires=['numpy',
+    install_requires=['numpy<2',
                       'scipy',
                       'matplotlib',
                       'sympy'
