@@ -8,6 +8,7 @@ setup(
     install_requires=['numpy',
                       'scipy',
                       'matplotlib',
+                      'sympy'
                       ],
     license='Liscence to Krill',
 )
