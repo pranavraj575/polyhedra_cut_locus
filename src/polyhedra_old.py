@@ -209,6 +209,31 @@ class ConvexPolyhderon(Shape):
 
         return face_map, n, m
 
+    def draw_arc(self, ax, A: Arc, arc_info, n=20):
+        """
+        draws arc on face
+        :param ax: axis to plot on (plt or something)
+        :param A: Arc to plot
+        :param arc_info: dictionary of info to attach to arc
+        :param n: how many points to approximate arc with
+        """
+
+        x0, y0 = tuple(A.p.flatten())
+        thetas = A.low + (np.arange(n)/(n - 1))*(A.high - A.low)
+        X, Y = x0 + A.r*np.cos(thetas), y0 + A.r*np.sin(thetas)
+
+        if arc_info is None:
+            arc_info = dict()
+        color = None
+        plot = True
+        if 'color' in arc_info:
+            color = arc_info['color']
+        if 'plot' in arc_info:
+            plot = arc_info['plot']
+
+        if plot:
+            ax.plot(X, Y, color=color)
+
     def plot_face_boundaries(self, axs, legend):
         """
         plots faces and points/arcs on faces
@@ -267,6 +292,8 @@ class ConvexPolyhderon(Shape):
                         if plot:
                             ploot(i, j).scatter(x, y, color=color, s=s)
 
+                    for (A, arc_info) in self.arcs[face.name]:
+                        self.draw_arc(ploot(i, j), A, arc_info=arc_info)
                     if legend(i, j):
                         ploot(i, j).legend()
 

@@ -1,6 +1,6 @@
 import numpy as np, itertools
+from scipy.spatial import Voronoi
 from src.my_vornoi import voronoi_plot_2d
-from src.bound import Bound
 
 
 # rotation matrices
@@ -12,6 +12,17 @@ def rotation_T(theta):
     # T where T @ v is v rotatied by theta
     return np.array([[np.cos(theta), -np.sin(theta)],
                      [np.sin(theta), np.cos(theta)]])
+
+
+def rotation_of_matrix(T):
+    """
+    :param T: 2x2 rotation matrix by angle theta (np array)
+    :return: theta
+    """
+    # inverse of rotation_T
+    cos = T[0][0]
+    sin = T[1][0]
+    return np.arctan2(sin, cos)
 
 
 def coltation(theta):
@@ -55,6 +66,410 @@ def project_p_onto_line(p, a, v):
     # v_norm=v/np.linalg.norm(v)
     # return a+v_norm*(np.dot(v_norm.T,p-a))
     return a + v*(np.dot(v.T, p - a))/np.square(np.linalg.norm(v))
+
+
+class Arc:
+    def __init__(self, p, low, high, r, tolerance, distance):
+        """
+        Defines an arc in 2d space
+        :param p: point of origin, column vector (np array of dimension (self.dimension,1))
+        :param low: low angle in radians
+        :param high: high angle in radians (must be >= low)
+        :param r: radius, scalar
+        :param tolerance: tolerance for intersection and containment
+        :param distance: original distance, or used to keep track of arbitrary data (can be different if we 'diffract')
+        """
+        assert p.shape == (2, 1)
+        assert low <= high
+
+        self.tol = tolerance
+        self.p = p
+        self.r = r
+        if distance is None:
+            distance = self.r
+        self.dist = distance
+        diff = high - low
+        self.low = low%(2*np.pi)
+        self.high = self.low + diff
+
+    def avg_v(self):
+        """
+        returns vector going towards center of arc
+        :return: column vector (np array of dimension (self.dimension,1))
+        """
+        theta = (self.low + self.high)/2
+        return coltation(theta)
+
+    def is_empty(self):
+        """
+        returns if the arc has empty interior
+        :return: boolean
+        """
+        return (self.high - self.low) <= self.tol
+
+    def angle_of(self, q):
+        """
+        returns angle of point q wrt arc
+        :param q: column vector (np array of dimension (self.dimension,1))
+        :return: angle in radians
+        """
+        x, y = tuple((q - self.p).flatten())
+        theta = np.arctan2(y, x)%(np.pi*2)
+        return theta
+
+    def _strict_contains_angle(self, theta):
+        """
+        returns whether theta is in the interior of the arc angles
+        :param theta: angle in radians
+        :return: boolean
+        """
+        if (self.low < theta + 2*np.pi and theta + 2*np.pi < self.high):
+            return True, theta + 2*np.pi
+        if (self.low < theta - self.tol and theta < self.high - self.tol):
+            return True, theta
+        return False, np.nan
+
+    def _weak_contains_angle(self, theta):
+        """
+        returns whether theta is in the closure of the arc angles
+        :param theta: angle in radians
+        :return: boolean
+        """
+        if (self.low <= theta + 2*np.pi + self.tol and theta + 2*np.pi <= self.high + self.tol):
+            return True, theta + 2*np.pi
+        if (self.low <= theta + self.tol and theta <= self.high + self.tol):
+            return True, theta
+        return False, np.nan
+
+    def contains_angle(self, theta, interior=False):
+        """
+        returns whether theta is within the arc angles
+        assumes theta is on [0,2pi)
+        :param theta: angle in radians
+        :param interior: whether we use exclusive or inclusive bounds
+        :return: boolean
+        """
+        #
+        return self._strict_contains_angle(theta) if interior else self._weak_contains_angle(theta)
+
+    def within_arc(self, q, interior=False):
+        """
+        returns whether a point q is within the arc
+        :param q: column vector (np array of dimension (self.dimension,1))
+        :param interior: whether we check in interior or simply the closure
+        :return: boolean
+        """
+        # returns whether q is in the arc
+        # interior is strict containment
+        r = np.linalg.norm(self.p - q)
+
+        if not interior and r == 0:
+            return True
+        if r > self.r + self.tol:
+            return False
+
+        theta = self.angle_of(q)
+        return self.contains_angle(theta, interior=interior)[0]
+
+    def split_arc_on_point(self, q):
+        """
+        returns two arcs that are this arc split based on q
+        assumes q is within the arc
+        :param q: column vector (np array of dimension (self.dimension,1))
+        :return: partition (Arc,Arc), so that the angle to q is an endpoint of each
+        """
+        # returns two arcs that are this arc split in parts based on p
+        if not self.within_arc(q, interior=True):
+            raise Exception("split arc called on point not in interior of arc")
+        theta = self.angle_of(q)
+        if self.low > theta:
+            theta = theta + 2*np.pi
+        return (Arc(self.p, self.low, theta, self.r, tolerance=self.tol, distance=self.dist),
+                Arc(self.p, theta, self.high, self.r, tolerance=self.tol, distance=self.dist))
+
+    def _break_arc(self, a, b):
+        """
+        breaks arc into pieces based on line segment a-b
+        idea is if arc interacts with a-b, split it into pieces that fully go through a-b and pieces that do not
+
+        :param a: column vector (np array of dimension (self.dimension,1))
+        :param b: column vector (np array of dimension (self.dimension,1))
+        :return: list of arcs
+        """
+        for q in (a, b):
+            if self.within_arc(q, interior=True):
+                (A, B) = self.split_arc_on_point(q)
+                return A.break_arc(a, b) + B.break_arc(a, b)
+        whole_interx = self.circle_line_segment_intersection(a, b)
+        split_angles = [self.low]
+        for q in whole_interx:
+            theta = self.angle_of(q)
+            b, theta = self.contains_angle(theta)
+            if b:
+                split_angles.append(theta)
+        split_angles.append(self.high)
+        split_angles.sort()
+        if len(split_angles) > 2:
+            out = []
+            for i in range(len(split_angles) - 1):
+                th, ph = split_angles[i:i + 2]
+                out.append(Arc(self.p, th, ph, self.r, distance=self.dist, tolerance=self.tol))
+            return out
+        else:
+            return [self]
+
+    def break_arc(self, a, b):
+        """
+        breaks arc into pieces based on line segment a-b, ignoring empty arcs
+        idea is if arc interacts with a-b, split it into pieces that fully go through a-b and pieces that do not
+
+        :param a: column vector (np array of dimension (self.dimension,1))
+        :param b: column vector (np array of dimension (self.dimension,1))
+        :return: list of arcs
+        """
+        return [A for A in self._break_arc(a, b) if not A.is_empty()]
+
+    def breakable(self, a, b):
+        """
+        checks whether arc is breakable on a-b
+        :param a: column vector (np array of dimension (self.dimension,1))
+        :param b: column vector (np array of dimension (self.dimension,1))
+        :return: boolean
+        """
+        return len(self.break_arc(a, b)) > 1
+
+    def circle_line_segment_intersection(self, pt1, pt2):
+        """Find the points where the circle (completed arc) intersects a line segment pt1-pt2.
+        This can happen at 0, 1, or 2 points.
+
+        :param pt1: column vector (np array of dimension (self.dimension,1))
+        :param pt2: column vector (np array of dimension (self.dimension,1))
+        :return: list of numpy arrays (col vectors)
+        """
+        full_line = False
+        (p1x, p1y), (p2x, p2y), (cx, cy) = tuple(pt1.flatten()), tuple(pt2.flatten()), tuple(self.p.flatten())
+        (x1, y1), (x2, y2) = (p1x - cx, p1y - cy), (p2x - cx, p2y - cy)
+        dx, dy = (x2 - x1), (y2 - y1)
+        dr = (dx**2 + dy**2)**.5
+        big_d = x1*y2 - x2*y1
+        discriminant = self.r**2*dr**2 - big_d**2
+
+        if discriminant < 0:  # No intersection between circle and line
+            return []
+        else:  # There may be 0, 1, or 2 intersections with the segment
+            intersections = [
+                (cx + (big_d*dy + sign*(-1 if dy < 0 else 1)*dx*discriminant**.5)/dr**2,
+                 cy + (-big_d*dx + sign*abs(dy)*discriminant**.5)/dr**2)
+                for sign in ((1, -1) if dy < 0 else (-1, 1))]  # This makes sure the order along the segment is correct
+            if not full_line:  # If only considering the segment, filter out intersections that do not fall within the segment
+                fraction_along_segment = [(xi - p1x)/dx if abs(dx) > abs(dy) else (yi - p1y)/dy for xi, yi in
+                                          intersections]
+                intersections = [pt for pt, frac in zip(intersections, fraction_along_segment) if 0 <= frac <= 1]
+            if len(intersections) == 2 and abs(
+                    discriminant) <= self.tol:  # If line is tangent to circle, return just one point (as both intersections have same location)
+                (x, y) = intersections[0]
+                return [np.array([[x], [y]])]
+            else:
+                return [np.array([[x], [y]]) for (x, y) in intersections]
+
+    def intersects_with(self, A):
+        """
+        returns points where self intersects with arc A
+
+        can be 0, 1, or 2 elements
+        :param A: Arc
+        :return: list of column vectors
+        """
+        A: Arc
+        points = []
+        p = self.p
+        r0 = self.r
+        x0, y0 = tuple(p.flatten())
+        q = A.p
+        r1 = A.r
+        x1, y1 = tuple(q.flatten())
+        d = np.linalg.norm(p - q)
+        if d <= self.tol:  # starting from same point
+            return []
+        if d <= abs(r0 - r1):  # one circle is within the other
+            return []
+        if d > r0 + r1:  # non intersecting
+            return []
+        if abs(r0 + r1 - d) < self.tol:  # if we are exactly here, just take the midpoint
+            points.append((p + q)/2)
+        else:
+            a = (r0**2 - r1**2 + d**2)/(2*d)
+            h = np.sqrt(r0**2 - a**2)
+            x2 = x0 + a*(x1 - x0)/d
+            y2 = y0 + a*(y1 - y0)/d
+            x3 = x2 + h*(y1 - y0)/d
+            y3 = y2 - h*(x1 - x0)/d
+
+            x4 = x2 - h*(y1 - y0)/d
+            y4 = y2 + h*(x1 - x0)/d
+
+            points = [np.array([[x3], [y3]]), np.array([[x4], [y4]])]
+        return [pt for pt in points if self.within_arc(pt) and A.within_arc(pt)]
+
+    def __str__(self):
+        return "ARC:{p:" + str(tuple(self.p.flatten())) + "; r:" + str(self.r) + "; dist:" + str(
+            self.dist) + "; range:" + str((self.low, self.high)) + "}"
+
+
+class Bound:
+    def __init__(self, m, b, s, T, si, dimension=None, name=None, identifier=''):
+        """
+        linear boundary of the form mx<=b
+        s,T,si represent the linear transformation that puts a point in our face to the neighboring face
+        represented as a shift, rotation matrix, and another shift
+        for some point x on this face, s + T x + si = x' where x' is the neighbor face coordinates
+
+        :param m: row vector of bound (mx<=b)
+        :param b: scalar of bound (mx<=b)
+        :param s: first translation to shift bound to origin (for a point x, x' on new face is si+T(x+s))
+        :param T: rotation to shift bound to origin (for a point x, x' on new face is si+T(x+s))
+        :param si: final translation to shift bound to origin (for a point x, x' on new face is si+T(x+s))
+        :param dimension: dimension of bound, if none, it is set, if value inserted, it is checked
+        :param identifier: identifier of bound, should mention face names
+        :param name: identifier of bound, or the bound that it is paired with, specify if spawned by another bound
+        """
+        # rescale so that |m|=1
+        # dividing both m and b by |m| yields this with the same bound (mx<=b iff mx/|m|<=b/|m|)
+        scale = np.linalg.norm(m)
+        self.m = m/scale
+        self.b = b/scale
+        self.s = s
+        self.T = T
+        self.si = si
+        self.dimension = self.check_valid(dimension)
+        if name is None:
+            base_id = str(tuple(self.m.flatten())) + str(self.b) + str(tuple(self.s.flatten())) + str(
+                tuple(self.T.flatten())) + str(tuple(self.si.flatten())) + str(self.dimension)
+            name = base_id + identifier
+        self.name = name
+
+    def check_valid(self, dimension):
+        """
+        Checks if self is valid, returns the correct dimension
+        :param dimension: proposed dimension to check
+        :return: dimension, raises exception if invalid
+        """
+        if (len(np.shape(self.m)) != 2 or
+                len(np.shape(self.s)) != 2 or
+                len(np.shape(self.si)) != 2 or
+                len(np.shape(self.T)) != 2 or
+                np.shape(self.m)[0] != 1 or
+                np.shape(self.s)[1] != 1 or
+                np.shape(self.si)[1] != 1
+        ):
+            raise Exception("tried putting in bounds of incorrect dimensions")
+        if (np.shape(self.T)[0] != np.shape(self.T)[1] or
+                np.shape(self.m)[1] != np.shape(self.s)[0] or
+                np.shape(self.s)[0] != np.shape(self.si)[0] or
+                np.shape(self.si)[0] != np.shape(self.m)[1] or
+                np.shape(self.m)[1] != np.shape(self.T)[0]
+        ):
+            raise Exception("tried putting in bounds of inconsistent dimensions")
+        if dimension is None:
+            dimension = np.shape(self.T)[0]
+        else:
+            if dimension != np.shape(self.T)[0]:
+                raise Exception("inconsistent dimensions")
+        if not self.within(np.zeros(dimension)):
+            raise Exception("zero point needs to be within the face")
+        return dimension
+
+    def get_shift(self):
+        """
+        :return: just the shift part of the bound (s,T,si)
+        """
+        return (self.s, self.T, self.si)
+
+    def within(self, p, tol=0.):
+        """
+        checks if point p is within bound with some tolerance
+        mp<=b+tol
+        :param p: column vector (np array of dimension (self.dimension,1))
+        :param tol: scalar
+        :return: boolean
+        """
+        return np.dot(self.m, p) <= self.b + tol
+
+    def grab_intersection(self, p, v):
+        """
+        find where p+vt intersects the bound (mx<=b)
+
+        :param p: column vector (np array of dimension (self.dimension,1))
+        :param v: column vector (np array of dimension (self.dimension,1))
+        :return: point where p+vt intersects bound, (np array of dimension (self.dimension,1))
+        """
+        # m(p+vt)=b
+        # simplify to mvt=b-mp
+        # then t=(b-mp)/(mv)
+        t = (self.b - np.dot(self.m, p))/np.dot(self.m, v)
+        # note that v cannot be parallel to m, which makes sense for this to even work
+        return p + v*t
+
+    def shift_point(self, x):
+        """
+        shifts point x to equivalent x' on face according to bound
+        :param x: column vector (np array of dimension (self.dimension,1))
+        :return: column vector (np array of dimension (self.dimension,1))
+        """
+        return self.T@(x + self.s) + self.si
+
+    def shift_vec(self, v):
+        """
+        shifts vector v to equivalent v'  according to bound
+        :param v: column vector (np array of dimension (self.dimension,1))
+        :return: column vector (np array of dimension (self.dimension,1))
+        """
+        return self.T@v
+
+    def shift_angle(self, theta):
+        """
+        shifts angle theta to equivalent theta' according to bound
+        :param theta: angle in radians
+        :return: angle in radians
+        """
+        return theta + (rotation_of_matrix(self.T))%(2*np.pi)
+
+    def shift_arc(self, A: Arc):
+        """
+        shifts arc A to equivalent A' according to bound
+        :param A: Arc object
+        :return: Arc object
+        """
+        #
+        diff = A.high - A.low
+        angle = self.shift_angle(A.low)
+        return Arc(self.shift_point(A.p), angle, angle + diff, A.r, tolerance=A.tol, distance=A.dist)
+
+    def get_inverse_bound(self):
+        """
+        :return: inverse bound, from neighboring face to this face
+        """
+
+        Ti = np.linalg.inv(self.T)
+        m = -self.m@Ti
+        b = -self.b - np.dot(self.m, self.s) - np.dot(self.m@Ti, self.si)
+        b = b.flatten()[0]
+        return Bound(m, b, -self.si, Ti, -self.s, self.dimension, name=self.name)
+
+    def concatenate_with(self, T=None, s=None):
+        """
+        given some point x that is translated previously like T' x + s',
+            concatenate the translation to this one
+
+            T((T' x + s')+s)+si=T T' x + T(s'+s)+si
+
+        :param T: (self.dimension x self.dimension) translation matrix
+        :param s: shift
+        :return: (self.dimension x self.dimension) tranlstion, (self.dimension x 1) shift
+        """
+        if T is None: T = np.identity(self.dimension)
+        if s is None: s = np.zeros((self.dimension, 1))
+        return (self.T@T, self.si + self.T@(self.s + s))
 
 
 class Face:
@@ -113,6 +528,23 @@ class Face:
             key=lambda v: (2*np.pi + np.arctan2((v[0] - self.basepoint)[1][0], (v[0] - self.basepoint)[0][0]))%(
                     2*np.pi))
 
+    def get_plot_bounds(self):
+        """
+        returns the bounds of the graphical plot of the face
+        :return: (xlim, ylim)
+        """
+        if self.dimension != 2:
+            raise Exception("cannot graph a non-2d face")
+        xmin, xmax = np.inf, -np.inf
+        ymin, ymax = np.inf, -np.inf
+        for (v, _) in self.get_vertices():
+            x, y = v[:, 0]
+            xmin = min(x, xmin)
+            xmax = max(x, xmax)
+            ymin = min(y, ymin)
+            ymax = max(y, ymax)
+        return ((xmin, xmax), (ymin, ymax))
+
     def get_path_and_faces(self):
         """
         grabs path of vertices (v0,v1),(v1,v2),...,(vn,v0)
@@ -142,7 +574,7 @@ class Face:
         """
         if self.bound_M is None:
             self._create_bound_arrays()
-        return np.all(self.bound_M@p <= self.bound_b + self.tol)
+        return all(self.bound_M@p <= self.bound_b + self.tol)
 
     def bound_of_face(self, F):
         """
@@ -243,13 +675,45 @@ class Face:
 
     def line_within_bounds(self, p, q):
         """
-        returns if any part of the line p->q is within the face
+        returns if the line p->q is within the face
         :param p: column vector (np array of dimension (self.dimension,1))
         :param q: column vector (np array of dimension (self.dimension,1))
         :return: boolean
         """
         # enough to test whether either of the endpoints are within the bounds or if the line exits the face
         return self.within_bounds(p) or self.within_bounds(q) or (self.get_exit_point(p, q - p) is not None)
+
+    def points_on_path(self, p, v):
+        """
+        returns list of (face, initial point, end point) of a ray starting from p, taking vector v
+
+        :param p: column vector (np array of dimension (self.dimension,1))
+        :param v: column vector (np array of dimension (self.dimension,1))
+        :return: list of (face, initial point, end point)
+        """
+        q = p + v
+        # q is the end point on current face
+        q_ = p + v
+        # q_ represents the point on the line pq that is intersecting the closest boundary
+
+        if self.within_bounds(q):
+            return [(self, p, q)]
+        closest_bound = None
+        for (bound, F) in self.bounds:
+            bound: Bound
+            if bound.within(p, tol=self.tol) and not bound.within(q_, tol=self.tol):
+                # goes from inside bound to outside bound
+                q_ = bound.grab_intersection(p, v)
+                closest_bound = (bound, F)
+        if closest_bound is None:
+            raise Exception("line passes outside of face")
+        # now we move to the new face with starting point q_ and vector (q-q_)
+        # however, we need to translate this into new face coords
+        (bound, F) = closest_bound
+        new_p = bound.shift_point(q_)
+        new_v = bound.shift_vec(q - q_)
+        rest_of_path = F.points_on_path(new_p, new_v)
+        return [(self, p, q_)] + rest_of_path
 
     def add_boundary_paired(self, f2, m, b, s, T, si):
         """
@@ -264,6 +728,13 @@ class Face:
         B1 = Bound(m, b, s, T, si, dimension=self.dimension, identifier=str(self.name) + str(f2.name))
         self.add_boundary(B1, f2)
         f2.add_boundary(B1.get_inverse_bound(), self)
+
+    def neighbors(self):
+        """
+        returns all face neighbors of self
+        :return: Face list
+        """
+        return [f for (_, f) in self.bounds]
 
     def face_paths_to(self, fn, visited_names=None, diameter=None):
         """
@@ -288,6 +759,59 @@ class Face:
                                                 diameter=None if diameter is None else diameter - 1):
                         yield [(bound, f)] + path
 
+    def get_vertices_of_face_bound(self, fn):
+        """
+        returns the vertices that specified face is touching
+
+        :param fn: name of specified face
+        :return: list of column vectors that face fn touches
+        """
+        row = None
+        for i, (_, F) in enumerate(self.bounds):
+            if F.name == fn:
+                row = i
+        if row is None:
+            raise Exception("face " + str(fn) + " not a neighbor")
+        out = []
+        for v, rows in self.get_vertices():
+            if row in rows:
+                out.append(v)
+        return out
+
+    def push_arc_to_faces(self, A: Arc):
+        """
+        pushes A to the faces it belongs in
+        :param A: Arc
+        :return: list of (Face, Arc), list of resulting arcs and their home faces
+        """
+        arr = np.array([A])
+        for ((a, b), (bound, f)) in self.get_path_and_faces():
+            arr = [B.break_arc(a, b) for B in arr]
+            arr = flatten(arr)
+        faces = (self.get_correct_next_face(B) for B in arr)
+
+        arr = [[(B, self)] if F is None else F.push_arc_to_faces(self.bound_of_face(F).shift_arc(B)) for (B, F) in
+               zip(tuple(arr), faces)]
+        out = []
+        for t in arr:
+            out += t
+        return out
+
+    def get_correct_next_face(self, A: Arc):
+        """
+        gets next face that a line within A touches
+            Note: uses center line, should be unique if A is a result of 'push_arc_to_faces'
+
+        :param A: Arc
+        :return: Face, None if A is within self
+        """
+        v = A.avg_v()*A.r
+        arr = self.points_on_path(A.p, v)
+        if len(arr) == 1:
+            return None
+        else:
+            return arr[1][0]
+
 
 class Shape:
     def __init__(self, tolerance, faces=None):
@@ -303,6 +827,7 @@ class Shape:
         self.tol = tolerance
         self.faces = {face.name: face for face in faces}
         self.points = {face.name: [] for face in self.faces}
+        self.arcs = {face.name: [] for face in self.faces}
         self.memoized_face_translations = dict()
         self.seen_bounds = []
         self.extra_legend = None
@@ -326,7 +851,7 @@ class Shape:
         :param fn: face name
         :return: boolean
         """
-        return all(fn in dic for dic in (self.faces, self.points))
+        return all(fn in dic for dic in (self.faces, self.points, self.arcs))
 
     def is_polyhedra(self):
         return False
@@ -348,6 +873,14 @@ class Shape:
         :param fn: face name
         """
         self.points[fn] = []
+        self.arcs[fn] = []
+
+    def reset_all_faces(self):
+        """
+        resets all faces
+        """
+        for fn in self.faces:
+            self.reset_face(fn)
 
     def add_point_to_face(self, point, fn, point_info):
         """
@@ -368,6 +901,61 @@ class Shape:
         """
         for point in points:
             self.add_point_to_face(point, fn, point_info=point_info)
+
+    def add_arc_to_face(self, A: Arc, fn):
+        """
+        adds arc to specified face
+        :param A: Arc
+        :param fn: face name
+        """
+        assert self._face_exists_correctly(fn)
+        self.arcs[fn].append(A)
+
+    def add_arc_end_to_face(self, A, fn, arc_info=None):
+        """
+        takes an arc, finds its end arcs and adds them to the correct faces
+        :param A: Arc
+        :param fn: face name
+        :param arc_info: dictionary of extra info to add to arc
+        """
+        assert self._face_exists_correctly(fn)
+        src: Face = self.faces[fn]
+        arcs = src.push_arc_to_faces(A)
+        for (B, F) in arcs:
+            self.arcs[F.name].append((B, arc_info))
+
+    def add_all_cut_locus_points(self, point_info=None, conditional_point_info=None):
+        """
+        adds cut locus points to all faces
+        works best if there are a ton of arcs of various lengths
+
+        :param point_info: dictionary of info to add to cut locus points
+        :param conditional_point_info: radius->dictionary of info to add to cut locus points, conditional on r
+        """
+        for fn in self.faces:
+            for (p, r) in self.get_cut_locus_points(fn):
+                new_point_info = {k: point_info[k] for k in point_info}
+                if conditional_point_info is not None:
+                    new_point_info.update(conditional_point_info(r))
+                new_point_info.update({'locus_pt': True})
+                self.add_point_to_face(p, fn, new_point_info)
+
+    def get_cut_locus_arcs(self, fn):
+        """
+        Gets paired arcs on specified face that intersect to form points on cut locus
+        :param fn: face name
+        :return: list of pairs (Arc,Arc)
+        """
+        arcs = self.arcs[fn]
+        out = []
+        for (A, _), (B, _) in itertools.combinations(arcs, 2):
+            if A.dist == B.dist:
+                # equality is fine since we should never update dist
+                ps = A.intersects_with(B)
+                if ps:
+                    out += [(p, A.dist, A, B) for p in ps]
+
+        return [(A, B) for (p, r, A, B) in out if self.is_best_seen(p, r, fn)]
 
     def _get_voronoi_translations(self, source_fn, sink_fn, diameter=None):
         """
@@ -477,6 +1065,10 @@ class Shape:
         (_, sink) = bound_path[-1]
         sink: Face
         source: Face
+
+        DEBUG = np.linalg.norm(p.flatten() - np.array([5.84601932, 0.59591081])) < .001
+
+        QBUG = np.array([0.78747522, -1.18753154])
 
         # all vertices of C that are in F
         # also all boundary intersections
@@ -660,3 +1252,51 @@ class Shape:
             # otherwise, no bad point is found, we can just augment and return here
             points, bound_paths = augment_point_paths(relevant_points, relevant_bound_paths)
             return points, bound_paths, relevant_cells
+
+    def get_cut_locus_points(self, fn):
+        """
+        Gets all cut locus points on fn by considering all possible intersections of arcs
+        :param fn: face name
+        :return: (column vector, radius) list
+        """
+        arcs = self.arcs[fn]
+        intersections = []
+        for (A, _), (B, _) in itertools.combinations(arcs, 2):
+            if A.dist == B.dist:
+                # equality is fine since we should never update dist
+                ps = A.intersects_with(B)
+                if ps:
+                    intersections += [(p, A.dist) for p in ps]
+
+        return [(p, r) for (p, r) in intersections if self.is_best_seen(p, r, fn)]
+
+    def is_best_seen(self, p, r, fn):
+        """
+        returns if the distnace r to p is the best seen out of all arcs assigned to fn
+        :param p: column vector (np array of dimension (self.dimension,1))
+        :param r: radius we are comparing to
+        :param fn: face name
+        :return: whether r is the best radius to p
+        """
+        for (A, _) in self.arcs[fn]:
+            if A.within_arc(p) and A.dist < r:
+                # if we find an arc containing p that is smaller than r
+                return False
+        # otherwise, this is the best
+        return True
+
+    def add_path_end_to_face(self, p, v, fn, point_info=None):
+        """
+        takes a vector starting at p on face fn, goes towards v
+            finds its endpoint and adds it to the correct face with point_info attached
+
+        :param p: column vector (np array of dimension (self.dimension,1))
+        :param v: column vector (np array of dimension (self.dimension,1))
+        :param fn: face name
+        :param point_info: dictionary of info to attach to path end point
+        """
+        assert self._face_exists_correctly(fn)
+        src: Face = self.faces[fn]
+        points = src.points_on_path(p, v)
+        (sink, _, p) = points[-1]
+        self.add_point_to_face(p, sink.name, point_info)

@@ -1,6 +1,6 @@
 import numpy as np
-
-__all__ = ['voronoi_plot_2d']
+from scipy.spatial import Voronoi
+from src.bound import Bound
 
 
 def _adjust_bounds(ax, points):
@@ -11,14 +11,68 @@ def _adjust_bounds(ax, points):
     ax.set_ylim(xy_min[1], xy_max[1])
 
 
-def voronoi_plot_2d(vor, ax=None, **kw):
+def trim_segment(seg, bounds):
+    pass
+
+
+def trim_ray(ray, bounds):
+    pass
+
+
+def voronoi_diagram_calc(points, bounds=None):
+    vor = Voronoi(points)
+    if vor.points.shape[1] != 2:
+        raise ValueError("Voronoi diagram is not 2-D")
+
+    center = vor.points.mean(axis=0)
+
+    point_pair_to_type_and_line = dict()
+
+    points_to_segments = {i: {
+        'segments': list(),
+        'rays': list(),
+    } for i in
+        range(vor.npoints)}  # dictionary of point indices to the segments they create
+    for pointidx, simplex in zip(vor.ridge_points, vor.ridge_vertices):  # iterates through all lines
+        # pointidx: two indices of points that create this line
+        # simplex: two indices of vertices of the vornoi diagram that create this line
+        #       if there is an infinite vertex, there is a -1 here
+        simplex = np.asarray(simplex)
+
+        if np.all(simplex >= 0):
+            point_pair_to_type_and_line[tuple(pointidx)] = ('segment',
+                                                            (vor.vertices[simplex[0]], vor.vertices[simplex[1]]))
+            for idx in pointidx:
+                points_to_segments[idx]['segments'].append((vor.vertices[simplex[0]], vor.vertices[simplex[1]]))
+
+        else:
+            i = simplex[simplex >= 0][0]  # finite end Voronoi vertex
+
+            t = vor.points[pointidx[1]] - vor.points[pointidx[0]]  # tangent
+            t /= np.linalg.norm(t)
+            n = np.array([-t[1], t[0]])  # normal
+
+            midpoint = vor.points[pointidx].mean(axis=0)
+            direction = np.sign(np.dot(midpoint - center, n))*n
+
+            if (vor.furthest_site):
+                direction = -direction
+            for idx in pointidx:
+                points_to_segments[idx]['rays'].append((vor.vertices[i], direction))
+            point_pair_to_type_and_line[tuple(pointidx)] = ('ray',
+                                                            (vor.vertices[i], direction)
+                                                            )
+
+    return point_pair_to_type_and_line
+
+
+def voronoi_plot_2d(points, ax=None, **kw):
     """
     Plot the given Voronoi diagram in 2-D
 
     Parameters
     ----------
-    vor : scipy.spatial.Voronoi instance
-        Diagram to plot
+    points : points to plot
     ax : matplotlib.axes.Axes instance, optional
         Axes to plot on
     show_points : bool, optional
@@ -98,6 +152,7 @@ def voronoi_plot_2d(vor, ax=None, **kw):
 
     from matplotlib.collections import LineCollection
 
+    vor = Voronoi(points)
     if vor.points.shape[1] != 2:
         raise ValueError("Voronoi diagram is not 2-D")
 
@@ -201,7 +256,7 @@ def voronoi_plot_2d(vor, ax=None, **kw):
                 else:
                     label_names.append(str(pt_idx))
             if within_bounds(text_point):
-                ax.annotate('$\\mathbf{\\ell}^{' + '\{' + label_names[0] + ',' + label_names[1] + '\}' + '}$',
+                ax.annotate('$\\mathbf{\\ell}^{' + '\\{' + label_names[0] + ',' + label_names[1] + '\\}' + '}$',
                             (text_point[0], text_point[1]), rotation=0, color=line_colors)
                 diff = (label_point - text_point)
                 ax.arrow(
@@ -231,3 +286,28 @@ def voronoi_plot_2d(vor, ax=None, **kw):
         _adjust_bounds(ax, vor.points)
         fig = ax.figure
     return fig, points_to_segments
+
+
+if __name__ == '__main__':
+    th = lambda theta: np.array([np.cos(theta), np.sin(theta)])
+    points = np.array([[0, 0],
+                       [-1, -1],
+                       [-1, 1],
+                       [1, -1],
+                       [1, 1],
+                       ])
+    points = np.array([[0, 0], ] +
+                      [th(i*2*np.pi/5 + np.pi/10) for i in range(5)] +
+                      [1.4*th(i*2*np.pi/5 + np.pi/5 + np.pi/10) for i in range(5)] +
+                      [5*th(i*2*np.pi/5 + np.pi/5 + np.pi/10) for i in range(5)])
+    import matplotlib.pyplot as plt
+
+    plt.scatter(points[:, 0], points[:, 1])
+    diag = voronoi_diagram_calc(points)
+    for pair in diag:
+        segtype, (a, b) = diag[pair]
+        if segtype == 'segment':
+            plt.plot((a[0], b[0]), (a[1], b[1]), color='black')
+        elif segtype == 'ray':
+            plt.arrow(a[0], a[1], b[0], b[1], color='black', head_width=.1)
+    plt.show()
