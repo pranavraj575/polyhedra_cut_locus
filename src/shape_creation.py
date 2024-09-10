@@ -1,4 +1,8 @@
-from src.polyhedra import *
+import numpy as np
+
+from src.polyhedra import ConvexPolyhderon
+from src.face import Face
+from src.utils import rowtation, coltation, rotation_T
 
 
 class Prism(ConvexPolyhderon):
@@ -76,12 +80,14 @@ class Pyramid(ConvexPolyhderon):
         for i in range(n):
             curr = self.faces[i]
             neigh = self.faces[(i + 1)%n]
-            curr.add_boundary_paired(neigh, rowtation(np.pi/6), 1, -coltation(np.pi/6), rotation_T(-np.pi/3), coltation(np.pi*5/6))
+            curr.add_boundary_paired(neigh, rowtation(np.pi/6), 1, -coltation(np.pi/6), rotation_T(-np.pi/3),
+                                     coltation(np.pi*5/6))
         r = np.sqrt(3)/np.tan(np.pi/n)
         for i in range(n):
             curr = self.faces[i]
             theta = np.pi/2 - 2*i*np.pi/n
-            curr.add_boundary_paired(bottom, np.array([[0, -1]]), 1, np.array([[0], [1]]), rotation_T(-i*2*np.pi/n), r*coltation(theta))
+            curr.add_boundary_paired(bottom, np.array([[0, -1]]), 1, np.array([[0], [1]]), rotation_T(-i*2*np.pi/n),
+                                     r*coltation(theta))
 
     def _tetrahedron_faces_to_plot_n_m(self):
         def face_map(i, j):
@@ -132,17 +138,20 @@ class Bipyramid(ConvexPolyhderon):
         for i in range(n):
             curr = self.faces[i]
             neigh = self.faces[(i + 1)%n]
-            curr.add_boundary_paired(neigh, rowtation(np.pi/6), 1, -coltation(np.pi/6), rotation_T(-np.pi/3), coltation(np.pi*5/6))
+            curr.add_boundary_paired(neigh, rowtation(np.pi/6), 1, -coltation(np.pi/6), rotation_T(-np.pi/3),
+                                     coltation(np.pi*5/6))
 
         for i in range(n):
             curr = self.faces[n + i]
             neigh = self.faces[n + (i + 1)%n]
-            curr.add_boundary_paired(neigh, rowtation(-np.pi/6), 1, -coltation(-np.pi/6), rotation_T(np.pi/3), coltation(-np.pi*5/6))
+            curr.add_boundary_paired(neigh, rowtation(-np.pi/6), 1, -coltation(-np.pi/6), rotation_T(np.pi/3),
+                                     coltation(-np.pi*5/6))
 
         for i in range(n):
             top = self.faces[i]
             bot = self.faces[i + self.n]
-            top.add_boundary_paired(bot, np.array([[0, -1]]), 1, np.array([[0], [1]]), np.identity(2), np.array([[0], [1]]))
+            top.add_boundary_paired(bot, np.array([[0, -1]]), 1, np.array([[0], [1]]), np.identity(2),
+                                    np.array([[0], [1]]))
 
     def faces_to_plot_n_m(self):
         def face_map(i, j):
@@ -204,32 +213,38 @@ class Icosahedron(ConvexPolyhderon):
         for i in range(5):
             curr = self.faces[i]
             neigh = self.faces[(i + 1)%5]
-            curr.add_boundary_paired(neigh, rowtation(np.pi/6), 1, -coltation(np.pi/6), rotation_T(-np.pi/3), coltation(np.pi*5/6))
+            curr.add_boundary_paired(neigh, rowtation(np.pi/6), 1, -coltation(np.pi/6), rotation_T(-np.pi/3),
+                                     coltation(np.pi*5/6))
 
         for i in range(5):
             curr = self.faces[i + 15]
             neigh = self.faces[15 + (i + 1)%5]
-            curr.add_boundary_paired(neigh, rowtation(-np.pi/6), 1, -coltation(-np.pi/6), rotation_T(np.pi/3), coltation(-np.pi*5/6))
+            curr.add_boundary_paired(neigh, rowtation(-np.pi/6), 1, -coltation(-np.pi/6), rotation_T(np.pi/3),
+                                     coltation(-np.pi*5/6))
 
         for i in range(5):
             down = self.faces[5 + 2*i]
             up = self.faces[6 + 2*i]
             next_down = self.faces[5 + 2*((i + 1)%5)]
 
-            down.add_boundary_paired(up, rowtation(-np.pi/6), 1, -coltation(-np.pi/6), np.identity(2), coltation(np.pi*5/6))
-            up.add_boundary_paired(next_down, rowtation(np.pi/6), 1, -coltation(np.pi/6), np.identity(2), coltation(-np.pi*5/6))
+            down.add_boundary_paired(up, rowtation(-np.pi/6), 1, -coltation(-np.pi/6), np.identity(2),
+                                     coltation(np.pi*5/6))
+            up.add_boundary_paired(next_down, rowtation(np.pi/6), 1, -coltation(np.pi/6), np.identity(2),
+                                   coltation(-np.pi*5/6))
 
         for i in range(5):
             top = self.faces[6 + 2*i]
             bottom = self.faces[15 + i]
 
-            top.add_boundary_paired(bottom, rowtation(-np.pi/2), 1, coltation(np.pi/2), np.identity(2), coltation(np.pi/2))
+            top.add_boundary_paired(bottom, rowtation(-np.pi/2), 1, coltation(np.pi/2), np.identity(2),
+                                    coltation(np.pi/2))
 
         for i in range(5):
             top = self.faces[i]
             bottom = self.faces[5 + 2*i]
 
-            top.add_boundary_paired(bottom, rowtation(-np.pi/2), 1, coltation(np.pi/2), np.identity(2), coltation(np.pi/2))
+            top.add_boundary_paired(bottom, rowtation(-np.pi/2), 1, coltation(np.pi/2), np.identity(2),
+                                    coltation(np.pi/2))
 
     def faces_to_plot_n_m(self):
         def face_map(i, j):
@@ -267,29 +282,35 @@ class Dodecahedron(ConvexPolyhderon):
         for i in range(5):
             curr = self.faces[1 + i]
             theta = -tau/4 + i*tau/5
-            top.add_boundary_paired(curr, rowtation(theta), 1, -coltation(theta), rotation_T(-i*tau/5), coltation(tau/4))
+            top.add_boundary_paired(curr, rowtation(theta), 1, -coltation(theta), rotation_T(-i*tau/5),
+                                    coltation(tau/4))
         for i in range(5):
             curr = self.faces[1 + i]
             neigh = self.faces[1 + (i + 1)%5]
-            curr.add_boundary_paired(neigh, rowtation(tau/4 - tau/5), 1, -coltation(tau/4 - tau/5), rotation_T(tau/2 + tau*2/5), coltation(tau/4 + tau/5))
+            curr.add_boundary_paired(neigh, rowtation(tau/4 - tau/5), 1, -coltation(tau/4 - tau/5),
+                                     rotation_T(tau/2 + tau*2/5), coltation(tau/4 + tau/5))
 
         bottom = self.faces[11]
 
         for i in range(5):
             curr = self.faces[6 + i]
             theta = tau/4 - i*tau/5
-            bottom.add_boundary_paired(curr, rowtation(theta), 1, -coltation(theta), rotation_T(i*tau/5), coltation(-tau/4))
+            bottom.add_boundary_paired(curr, rowtation(theta), 1, -coltation(theta), rotation_T(i*tau/5),
+                                       coltation(-tau/4))
         for i in range(5):
             curr = self.faces[6 + i]
             neigh = self.faces[6 + (i + 1)%5]
-            curr.add_boundary_paired(neigh, rowtation(-tau/4 + tau/5), 1, -coltation(-tau/4 + tau/5), rotation_T(tau/2 - tau*2/5), coltation(-tau/4 - tau/5))
+            curr.add_boundary_paired(neigh, rowtation(-tau/4 + tau/5), 1, -coltation(-tau/4 + tau/5),
+                                     rotation_T(tau/2 - tau*2/5), coltation(-tau/4 - tau/5))
 
         for i in range(5):
             floor = self.faces[6 + i]
             ceil = self.faces[1 + i]
             next_floor = self.faces[6 + (i + 1)%5]
-            floor.add_boundary_paired(ceil, rowtation(-tau/4 + 2*tau/5), 1, -coltation(-tau/4 + 2*tau/5), np.identity(2), coltation(tau/4 + tau*2/5))
-            ceil.add_boundary_paired(next_floor, rowtation(tau/4 - 2*tau/5), 1, -coltation(tau/4 - 2*tau/5), np.identity(2), coltation(-tau/4 - 2*tau/5))
+            floor.add_boundary_paired(ceil, rowtation(-tau/4 + 2*tau/5), 1, -coltation(-tau/4 + 2*tau/5),
+                                      np.identity(2), coltation(tau/4 + tau*2/5))
+            ceil.add_boundary_paired(next_floor, rowtation(tau/4 - 2*tau/5), 1, -coltation(tau/4 - 2*tau/5),
+                                     np.identity(2), coltation(-tau/4 - 2*tau/5))
 
     def faces_to_plot_n_m(self):
         def face_map(i, j):
@@ -338,19 +359,23 @@ class Antiprism(ConvexPolyhderon):
         for i in range(n):
             curr = self.faces[i + 2]
             theta = -np.pi/2 + i*dtheta
-            top.add_boundary_paired(curr, rowtation(theta), r, -r*coltation(theta), rotation_T(-i*dtheta), coltation(np.pi/2))
+            top.add_boundary_paired(curr, rowtation(theta), r, -r*coltation(theta), rotation_T(-i*dtheta),
+                                    coltation(np.pi/2))
 
         for i in range(n):
             curr = self.faces[n + i + 2]
             theta = np.pi/2 - i*dtheta
-            bottom.add_boundary_paired(curr, rowtation(theta), r, -r*coltation(theta), rotation_T(i*dtheta), coltation(-np.pi/2))
+            bottom.add_boundary_paired(curr, rowtation(theta), r, -r*coltation(theta), rotation_T(i*dtheta),
+                                       coltation(-np.pi/2))
 
         for i in range(n):
             floor = self.faces[i + 2 + n]
             ceil = self.faces[i + 2]
             next_floor = self.faces[(i + 1)%n + 2 + n]
-            floor.add_boundary_paired(ceil, rowtation(np.pi/6), 1, -coltation(np.pi/6), np.identity(2), coltation(-np.pi*5/6))
-            ceil.add_boundary_paired(next_floor, rowtation(-np.pi/6), 1, -coltation(-np.pi/6), np.identity(2), coltation(np.pi*5/6))
+            floor.add_boundary_paired(ceil, rowtation(np.pi/6), 1, -coltation(np.pi/6), np.identity(2),
+                                      coltation(-np.pi*5/6))
+            ceil.add_boundary_paired(next_floor, rowtation(-np.pi/6), 1, -coltation(-np.pi/6), np.identity(2),
+                                     coltation(np.pi*5/6))
 
     def faces_to_plot_n_m(self):
         center = self.n//2
@@ -405,7 +430,8 @@ class ElongatedBipyramid(ConvexPolyhderon):
         for i in range(n):
             curr = self.faces[i]
             neigh = self.faces[(i + 1)%n]
-            curr.add_boundary_paired(neigh, rowtation(np.pi/6), 1, -coltation(np.pi/6), rotation_T(-np.pi/3), coltation(np.pi*5/6))
+            curr.add_boundary_paired(neigh, rowtation(np.pi/6), 1, -coltation(np.pi/6), rotation_T(-np.pi/3),
+                                     coltation(np.pi*5/6))
 
         for i in range(n):
             curr = self.faces[n + i]
@@ -415,7 +441,8 @@ class ElongatedBipyramid(ConvexPolyhderon):
         for i in range(n):
             curr = self.faces[2*n + i]
             neigh = self.faces[2*n + (i + 1)%n]
-            curr.add_boundary_paired(neigh, rowtation(-np.pi/6), 1, -coltation(-np.pi/6), rotation_T(np.pi/3), coltation(-np.pi*5/6))
+            curr.add_boundary_paired(neigh, rowtation(-np.pi/6), 1, -coltation(-np.pi/6), rotation_T(np.pi/3),
+                                     coltation(-np.pi*5/6))
 
         for i in range(n):
             top = self.faces[i]
@@ -461,7 +488,8 @@ class ElongatedPyramid(ConvexPolyhderon):
         for i in range(n):
             curr = self.faces[i]
             neigh = self.faces[(i + 1)%n]
-            curr.add_boundary_paired(neigh, rowtation(np.pi/6), triangle_r, -triangle_r*coltation(np.pi/6), rotation_T(-np.pi/3), triangle_r*coltation(np.pi*5/6))
+            curr.add_boundary_paired(neigh, rowtation(np.pi/6), triangle_r, -triangle_r*coltation(np.pi/6),
+                                     rotation_T(-np.pi/3), triangle_r*coltation(np.pi*5/6))
 
         for i in range(n):
             curr = self.faces[n + i]
@@ -478,7 +506,8 @@ class ElongatedPyramid(ConvexPolyhderon):
             curr = self.faces[n + i]
             theta = np.pi/2 - 2*np.pi*i/n
             # "angle" of boundary of bottom face.
-            bottom.add_boundary_paired(curr, rowtation(theta), n_gon_r, -n_gon_r*coltation(theta), rotation_T(2*np.pi*i/n), -e2)
+            bottom.add_boundary_paired(curr, rowtation(theta), n_gon_r, -n_gon_r*coltation(theta),
+                                       rotation_T(2*np.pi*i/n), -e2)
 
     def faces_to_plot_n_m(self):
         shift = self.n//2
@@ -514,7 +543,8 @@ class Mirror(ConvexPolyhderon):
             # "angle" of boundary of front face.
             phi = -np.pi - theta
             # "angle" of boundary of back face.
-            front.add_boundary_paired(back, rowtation(theta), 1, -coltation(theta), rotation_T(phi - theta + np.pi), coltation(phi))
+            front.add_boundary_paired(back, rowtation(theta), 1, -coltation(theta), rotation_T(phi - theta + np.pi),
+                                      coltation(phi))
 
     def is_polyhedra(self):
         return False

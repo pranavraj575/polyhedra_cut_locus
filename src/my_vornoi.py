@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.spatial import Voronoi
-from src.bound import Bound
+from src.face import Face
 
 
 def _adjust_bounds(ax, points):
@@ -11,15 +11,7 @@ def _adjust_bounds(ax, points):
     ax.set_ylim(xy_min[1], xy_max[1])
 
 
-def trim_segment(seg, bounds):
-    pass
-
-
-def trim_ray(ray, bounds):
-    pass
-
-
-def voronoi_diagram_calc(points, bounds=None):
+def voronoi_diagram_calc(points, face: Face = None):
     vor = Voronoi(points)
     if vor.points.shape[1] != 2:
         raise ValueError("Voronoi diagram is not 2-D")
@@ -28,11 +20,6 @@ def voronoi_diagram_calc(points, bounds=None):
 
     point_pair_to_type_and_line = dict()
 
-    points_to_segments = {i: {
-        'segments': list(),
-        'rays': list(),
-    } for i in
-        range(vor.npoints)}  # dictionary of point indices to the segments they create
     for pointidx, simplex in zip(vor.ridge_points, vor.ridge_vertices):  # iterates through all lines
         # pointidx: two indices of points that create this line
         # simplex: two indices of vertices of the vornoi diagram that create this line
@@ -42,8 +29,6 @@ def voronoi_diagram_calc(points, bounds=None):
         if np.all(simplex >= 0):
             point_pair_to_type_and_line[tuple(pointidx)] = ('segment',
                                                             (vor.vertices[simplex[0]], vor.vertices[simplex[1]]))
-            for idx in pointidx:
-                points_to_segments[idx]['segments'].append((vor.vertices[simplex[0]], vor.vertices[simplex[1]]))
 
         else:
             i = simplex[simplex >= 0][0]  # finite end Voronoi vertex
@@ -57,12 +42,22 @@ def voronoi_diagram_calc(points, bounds=None):
 
             if (vor.furthest_site):
                 direction = -direction
-            for idx in pointidx:
-                points_to_segments[idx]['rays'].append((vor.vertices[i], direction))
             point_pair_to_type_and_line[tuple(pointidx)] = ('ray',
                                                             (vor.vertices[i], direction)
                                                             )
-
+    if face is not None:
+        out = dict()
+        for point_pair in point_pair_to_type_and_line:
+            segtype, (a, b) = point_pair_to_type_and_line[point_pair]
+            if segtype == 'segment':
+                new_seg = face.get_segment_within_bounds(a, b)
+            elif segtype == 'ray':
+                new_seg = face.get_ray_within_bounds(a, b)
+            else:
+                raise Exception(segtype)
+            if new_seg is not None:
+                out[point_pair] = ('segment', new_seg)
+        return out
     return point_pair_to_type_and_line
 
 
@@ -289,7 +284,19 @@ def voronoi_plot_2d(points, ax=None, **kw):
 
 
 if __name__ == '__main__':
+    from src.bound import Bound
+
     th = lambda theta: np.array([np.cos(theta), np.sin(theta)])
+
+    fc = Face('test', .0001)
+    n = 4
+    bound_len = 2
+    for theta in np.arange(n)*2*np.pi/n:
+        b = Bound(m=th(theta).reshape((1, -1)), b=bound_len, s=np.array([[0], [0]]),
+                  T=np.array([[1, 0.], [0, 1]]), si=np.array([[0], [0]]),
+                  )
+        fc.add_boundary(b, None)
+    # fc = None
     points = np.array([[0, 0],
                        [-1, -1],
                        [-1, 1],
@@ -303,11 +310,20 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
     plt.scatter(points[:, 0], points[:, 1])
-    diag = voronoi_diagram_calc(points)
+    diag = voronoi_diagram_calc(points,
+                                face=fc,
+                                )
     for pair in diag:
         segtype, (a, b) = diag[pair]
         if segtype == 'segment':
             plt.plot((a[0], b[0]), (a[1], b[1]), color='black')
         elif segtype == 'ray':
             plt.arrow(a[0], a[1], b[0], b[1], color='black', head_width=.1)
+    if fc is not None:
+        vxs = np.zeros((len(fc.vertices) + 1, 2))
+        for i, (vx, _) in enumerate(fc.vertices):
+            vxs[i, :] = vx.flatten()
+
+        vxs[-1, :] = fc.vertices[0][0].flatten()
+        plt.plot(vxs[:, 0], vxs[:, 1])
     plt.show()

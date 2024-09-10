@@ -1,8 +1,15 @@
-from src.shapes import *
 from matplotlib import pyplot as plt
 import os
 import fractions
 import sympy as sym
+import numpy as np
+
+from src.utils import coltation
+from src.shapes import Shape
+from src.face import Face
+from src.bound import Bound
+from src.my_vornoi import voronoi_diagram_calc, voronoi_plot_2d
+
 
 class ConvexPolyhderon(Shape):
     """
@@ -15,17 +22,136 @@ class ConvexPolyhderon(Shape):
     def is_polyhedra(self):
         return True
 
-    def plot_unwrapping(self, p, source_fn, sink_fn, diameter, ax,
-                        i_to_display=None,
-                        orient_string='',
-                        do_filter=True,
-                        label_diagram=False,
-                        p_label_shift=(0., 0.),
-                        line_label_dist=.3,
-                        point_names=None,
-                        ):
+    def get_voronoi_diagram(self,
+                            p,
+                            source_fn,
+                            sink_fn,
+                            diameter,
+                            do_filter=True,
+                            intersect_with_face=True,
+                            ):
         """
-        plots an unwrapping of the cut locus on sink face from point p on source face
+        implementaiton of algorithm 3
+
+        considers a point p and a perticular sink face, finds the cut locus on the sink face
+        returns voronoi diagram (set of lines), as well as relevant (points, face bounds, and faces)
+        """
+        # TODO: use this for everything
+        vp, bound_paths = self.get_voronoi_points_from_face_paths(p, source_fn, sink_fn, diameter=diameter)
+
+        if len(vp) >= 2:  # if there is only one point, the cut locus does not exist on this face
+            relevant_points, relevant_bound_paths, relevant_cells = self.filter_out_points(vp,
+                                                                                           bound_paths,
+                                                                                           self.faces[source_fn],
+                                                                                           self.faces[sink_fn],
+                                                                                           do_filter=do_filter,
+                                                                                           )
+            if relevant_points is None:
+                return None
+            points = np.concatenate(relevant_points, axis=1)
+
+            points = points.T
+            if intersect_with_face:
+                face = self.faces[sink_fn]
+            else:
+                face = None
+            point_pair_to_segment = voronoi_diagram_calc(points=points, face=face)
+            return point_pair_to_segment, (relevant_points, relevant_bound_paths, relevant_cells)
+        return None
+
+    def plot_unfolding_from_source(self,
+                                   p,
+                                   source_fn,
+                                   ax=None,
+                                   do_filter=True,
+                                   diameter=None,
+                                   ):
+        """
+        unfold fixing the source face
+        must check the voronoi plot on every face to do this
+
+        """
+        if ax is None:
+            ax = plt.gca()
+        for sink_fn in self.faces:
+            if sink_fn != source_fn:
+                voronoi_diagram = self.get_voronoi_diagram(p=p,
+                                                           source_fn=source_fn,
+                                                           sink_fn=sink_fn,
+                                                           diameter=diameter,
+                                                           do_filter=do_filter,
+                                                           intersect_with_face=True,
+                                                           )
+                if voronoi_diagram is not None:
+                    (point_pair_to_segment,
+                     (relevant_points, relevant_bound_paths, relevant_cells)
+                     ) = voronoi_diagram
+                    # keep track of these to figure out which one is our original one
+                    relevant_points = np.concatenate(relevant_points, axis=1)
+
+                    for path in relevant_bound_paths:
+                        temp_points=relevant_points.copy()
+                        if path is not None:
+                            segments = dict()
+                            for point_pair in point_pair_to_segment:
+                                (_, (a, b)) = point_pair_to_segment[point_pair]
+                                segments[point_pair]=(a.reshape((2, 1)), b.reshape((2, 1)))
+                            T, s = np.identity(2), np.zeros((2, 1))
+
+                            # list of (v,2) arrays where each column is a vertex
+                            vertex_cycles = []
+
+                            for bnd, F in path[::-1]:  # start with sink face
+                                bnd: Bound
+                                bnd = bnd.get_inverse_bound()
+                                T, s = bnd.concatenate_with(T, s)
+                                num_v = len(F.vertices)
+                                vertex_cycles.append(np.concatenate(
+                                    [F.vertices[i%num_v][0]
+                                     for i in range(1 + num_v)]
+                                    , axis=1))
+                                # shift point works on arrays as well
+                                vertex_cycles = [bnd.shift_point(vc) for vc in vertex_cycles]
+                                temp_points = bnd.shift_point(temp_points)
+                                segments={point_pair:(bnd.shift_point(a), bnd.shift_point(b))
+                                          for point_pair,(a,b) in segments.items()}
+                            distances = np.linalg.norm(temp_points - p, axis=0)
+                            best_idx = np.argmin(distances)
+
+                            for vertices_cycle in vertex_cycles:
+                                ax.plot(vertices_cycle[0], vertices_cycle[1], color='blue', alpha=1, lw=1)
+
+                            for point_pair,(a, b) in segments.items():
+
+                                if best_idx in point_pair:
+                                    ax.plot((a[0], b[0]), (a[1], b[1]), color='black', alpha=1,lw=2)
+
+        source = self.faces[source_fn]
+        num_v = len(source.vertices)
+        vertices_cycle = [source.vertices[i%num_v][0]
+                          for i in range(1 + num_v)]
+        vertices_cycle = np.concatenate(vertices_cycle, axis=1)
+        ax.plot(vertices_cycle[0], vertices_cycle[1],
+                color='red')
+        ax.scatter(p[0], p[1], color='purple', s=40)
+
+    def plot_unfolding_from_sink(self,
+                                 p,
+                                 source_fn,
+                                 sink_fn,
+                                 diameter=None,
+                                 ax=None,
+                                 i_to_display=None,
+                                 orient_string='',
+                                 do_filter=True,
+                                 label_diagram=False,
+                                 p_label_shift=(0., 0.),
+                                 line_label_dist=.3,
+                                 point_names=None,
+                                 ):
+        """
+        finds all points that contribute to the cut locus an a particualr face, plots them, plots the voronoi diagram
+        fixes sink face and plots the other faces around it
         :param p: column vector (np array of dimension (self.dimension,1))
         :param source_fn: face name of source
         :param sink_fn: face name of sink
@@ -42,11 +168,25 @@ class ConvexPolyhderon(Shape):
         :return: (all transitions shown (none if no points),
             whether we are done plotting (i.e. i_to_display is None or larger than the number of paths))
         """
+
+        voronoi_diagram = self.get_voronoi_diagram(p=p,
+                                                   source_fn=source_fn,
+                                                   sink_fn=sink_fn,
+                                                   diameter=diameter,
+                                                   do_filter=do_filter,
+                                                   intersect_with_face=False,
+                                                   )
+        if voronoi_diagram is None:
+            # cut locus does not exist on this face
+            return None, True
+
+        (point_pair_to_segment,
+         (relevant_points, relevant_bound_paths, relevant_cells)
+         ) = voronoi_diagram
+
         if ax is None:
             ax = plt.gca()
-        vp, bound_paths = self.get_voronoi_points_from_face_paths(p, source_fn, sink_fn, diameter=diameter)
         source: Face = self.faces[source_fn]
-        sink: Face = self.faces[sink_fn]
 
         def plot_label_face(ax, face, name, center, rot_v, color, linewidth):
             """
@@ -59,102 +199,95 @@ class ConvexPolyhderon(Shape):
                 ax.plot([v1[0], v2[0]], [v1[1], v2[1]], color=color, linewidth=linewidth)
             ax.annotate(str(name) + orient_string, (center[0], center[1]), rotation=np.degrees(theta), color=color)
 
-        if len(vp) >= 2:  # if there is only one, the cut locus does not exist on this face
-            relevant_points, relevant_bound_paths, relevant_cells = self.filter_out_points(vp, bound_paths, source,
-                                                                                           sink, do_filter=do_filter)
+        all_trans_shown = []
 
-            if relevant_points is None:
-                return None, True
-            all_trans_shown = []
+        labeled = False
+        disp_i = -1
+        n = len([pth for pth in relevant_bound_paths if pth is not None])
+        if i_to_display is not None and i_to_display >= n:
+            i_to_display = None  # here, just show all
+        special_face = None
+        for pt_idx, (pt, path) in enumerate(zip(relevant_points, relevant_bound_paths)):
+            # we can graph pt here
+            tracker_points = [np.zeros((2, 1)), coltation(0), coltation(np.pi/2)]  # 0, x, y
+            if path is not None:
+                disp_i += 1
+                if (i_to_display is not None) and (disp_i != i_to_display):
+                    # skip this if we are skipping, and the path is not the correct path
+                    continue
+                face_tracking = [[v.copy() for (v, _) in
+                                  source.get_vertices()]]  # tracking the vertices of each face and their eventual location
+                center_tracking = [np.zeros((2, 1))]  # tracking the center of each face
+                rot_tracking = [np.array([[1], [0]])]  # tracks the 0 angle of each face
+                face_name_tracking = [source_fn]  # tracks face names
 
-            labeled = False
-            disp_i = -1
-            n = len([pth for pth in relevant_bound_paths if pth is not None])
-            if i_to_display is not None and i_to_display >= n:
-                i_to_display = None  # here, just show all
-            special_face = None
-            for pt_idx, (pt, path) in enumerate(zip(relevant_points, relevant_bound_paths)):
-                # we can graph pt here
-                tracker_points = [np.zeros((2, 1)), coltation(0), coltation(np.pi/2)]  # 0, x, y
-                if path is not None:
-                    disp_i += 1
-                    if (i_to_display is not None) and (disp_i != i_to_display):
-                        # skip this if we are skipping, and the path is not the correct path
-                        continue
-                    face_tracking = [[v.copy() for (v, _) in
-                                      source.get_vertices()]]  # tracking the vertices of each face and their eventual location
-                    center_tracking = [np.zeros((2, 1))]  # tracking the center of each face
-                    rot_tracking = [np.array([[1], [0]])]  # tracks the 0 angle of each face
-                    face_name_tracking = [source_fn]  # tracks face names
+                for (bound, F) in path:
+                    bound: Bound
+                    face_tracking = [[bound.shift_point(v) for v in vees] for vees in face_tracking] + [
+                        [v.copy() for (v, _) in F.get_vertices()]]
+                    center_tracking = [bound.shift_point(v) for v in center_tracking] + [np.zeros((2, 1))]
+                    rot_tracking = [bound.shift_vec(v) for v in rot_tracking] + [np.array([[1], [0]])]
+                    face_name_tracking = face_name_tracking + [F.name]
+                    tracker_points = [bound.shift_point(track) for track in tracker_points]
+                iteration = list(zip(face_tracking, face_name_tracking, center_tracking, rot_tracking))
+                special_face = iteration[-1]
+                all_trans_shown.append(tracker_points + [pt])
 
-                    for (bound, F) in path:
-                        bound: Bound
-                        face_tracking = [[bound.shift_point(v) for v in vees] for vees in face_tracking] + [
-                            [v.copy() for (v, _) in F.get_vertices()]]
-                        center_tracking = [bound.shift_point(v) for v in center_tracking] + [np.zeros((2, 1))]
-                        rot_tracking = [bound.shift_vec(v) for v in rot_tracking] + [np.array([[1], [0]])]
-                        face_name_tracking = face_name_tracking + [F.name]
-                        tracker_points = [bound.shift_point(track) for track in tracker_points]
-                    iteration = list(zip(face_tracking, face_name_tracking, center_tracking, rot_tracking))
-                    special_face = iteration[-1]
-                    all_trans_shown.append(tracker_points + [pt])
+                for face, name, center, rot_v in iteration[:-1]:
+                    plot_label_face(ax=ax,
+                                    face=face,
+                                    name=name,
+                                    center=center,
+                                    rot_v=rot_v,
+                                    color='blue',
+                                    linewidth=1)
+                label = None
+                if not labeled:
+                    label = '$p$ copies'
+                    labeled = True
+                pt_color = 'purple'
+                ax.scatter(pt[0], pt[1],
+                           color=pt_color,
+                           label=label,
+                           alpha=1,
+                           s=40,
+                           )
+                if label_diagram:
+                    label_pt = pt + [[.1], [.1]]
+                    if point_names is not None and pt_idx < len(point_names):
+                        pname = point_names[pt_idx]
+                    else:
+                        pname = pt_idx
+                    ax.annotate('$p^{(' + str(pname) + ')}$',
+                                (label_pt[0] + p_label_shift[0], label_pt[1] + p_label_shift[1]),
+                                rotation=0,
+                                color=pt_color)
+        (face, name, center, rot_v) = special_face
+        plot_label_face(ax=ax,
+                        face=face,
+                        name=name,
+                        center=center,
+                        rot_v=rot_v,
+                        color='red',
+                        linewidth=2)
+        # ax.scatter([0], [0], label='center', alpha=.5, s=80)
+        relevant_points = np.concatenate(relevant_points, axis=1)
 
-                    for face, name, center, rot_v in iteration[:-1]:
-                        plot_label_face(ax=ax,
-                                        face=face,
-                                        name=name,
-                                        center=center,
-                                        rot_v=rot_v,
-                                        color='blue',
-                                        linewidth=1)
-                    label = None
-                    if not labeled:
-                        label = '$p$ copies'
-                        labeled = True
-                    pt_color = 'purple'
-                    ax.scatter(pt[0], pt[1],
-                               color=pt_color,
-                               label=label,
-                               alpha=1,
-                               s=40)
-                    if label_diagram:
-                        label_pt = pt + [[.1], [.1]]
-                        if point_names is not None and pt_idx < len(point_names):
-                            pname = point_names[pt_idx]
-                        else:
-                            pname = pt_idx
-                        ax.annotate('$p^{(' + str(pname) + ')}$',
-                                    (label_pt[0] + p_label_shift[0], label_pt[1] + p_label_shift[1]),
-                                    rotation=0,
-                                    color=pt_color)
-            (face, name, center, rot_v) = special_face
-            plot_label_face(ax=ax,
-                            face=face,
-                            name=name,
-                            center=center,
-                            rot_v=rot_v,
-                            color='red',
-                            linewidth=2)
-            # ax.scatter([0], [0], label='center', alpha=.5, s=80)
-            relevant_points = np.concatenate(relevant_points, axis=1)
-
-            xlim, ylim = ax.get_xlim(), ax.get_ylim()
-            voronoi_plot_2d(relevant_points.T,
-                            ax=ax,
-                            show_points=False,
-                            show_vertices=False,
-                            line_colors='black',
-                            line_width=2,
-                            line_alpha=(.69 if label_diagram else 1),
-                            label_lines=label_diagram,
-                            line_label_dist=line_label_dist,
-                            point_names=point_names,
-                            )
-            ax.set_xlim(xlim)
-            ax.set_ylim(ylim)
-            ax.legend()
-            return all_trans_shown, i_to_display == None
-        return None, True
+        xlim, ylim = ax.get_xlim(), ax.get_ylim()
+        line_alpha = (.69 if label_diagram else 1)
+        for point_pair in point_pair_to_segment:
+            segtype, (a, b) = point_pair_to_segment[point_pair]
+            if segtype == 'segment':
+                plt.plot((a[0], b[0]), (a[1], b[1]),
+                         color='black',
+                         lw=2,
+                         alpha=line_alpha,
+                         )
+                # TODO: label lines here
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+        ax.legend()
+        return all_trans_shown, i_to_display == None
 
     def plot_voronoi(self, p, source_fn, sink_fn, diameter, ax, do_filter=True):
         """
@@ -168,21 +301,18 @@ class ConvexPolyhderon(Shape):
                 should probably always be true, unless we are not looking at polyhedra
         :return: whether we were successful
         """
-        vp, bound_paths = self.get_voronoi_points_from_face_paths(p, source_fn, sink_fn, diameter=diameter)
-
-        if len(vp) >= 2:  # if there is only one point, the cut locus does not exist on this face
-            relevant_points, relevant_bound_paths, relevant_cells = self.filter_out_points(vp, bound_paths,
-                                                                                           self.faces[source_fn],
-                                                                                           self.faces[sink_fn],
-                                                                                           do_filter=do_filter)
-            if relevant_points is None:
-                return False
-            points = np.concatenate(relevant_points, axis=1)
-
-            points = points.T
-            fig, point_to_segments = voronoi_plot_2d(points, ax=ax, show_points=False, show_vertices=False,
-                                                     line_colors='black',
-                                                     line_width=1, line_alpha=1)
+        voronoi_diagram = self.get_voronoi_diagram(p=p,
+                                                   source_fn=source_fn,
+                                                   sink_fn=sink_fn,
+                                                   diameter=diameter,
+                                                   do_filter=do_filter,
+                                                   intersect_with_face=True
+                                                   )
+        if voronoi_diagram is not None:
+            point_pair_to_seg, _ = voronoi_diagram
+            for point_pair in point_pair_to_seg:
+                _, (p, q) = point_pair_to_seg[point_pair]
+                ax.plot((p[0], q[0]), (p[1], q[1]), color='black', lw=1, alpha=1, )
             return True
         return False
 
@@ -384,7 +514,7 @@ class ConvexPolyhderon(Shape):
         if show:
             plt.show()
 
-    def interactive_unwrap(self,
+    def interactive_unfold(self,
                            figsize=None,
                            legend=lambda i, j: False,
                            diameter=None,
@@ -401,6 +531,7 @@ class ConvexPolyhderon(Shape):
                            p_label_shift=(0., 0.),
                            line_label_dist=.3,
                            point_names=None,
+                           from_source=False,
                            ):
         """
         :param figsize: initial figure size (inches)
@@ -469,55 +600,67 @@ class ConvexPolyhderon(Shape):
             """
             :return: whether or not done plotting
             """
-            if self.extra_data['unwrap_source_fn'] is not None and self.extra_data['unwrap_sink_fn'] is not None:
+            if ((self.extra_data['unwrap_source_fn'] is not None and self.extra_data['unwrap_sink_fn'] is not None) or
+                (from_source and self.extra_data['unwrap_source_fn'] is not None)):
                 # if we have finished both
                 plt.clf()
                 i_to_display = None
                 if single_display:
                     i_to_display = self.extra_data['unwrap_counter']
-                all_trans_shown, done_plotting = self.plot_unwrapping(self.extra_data['p'],
-                                                                      self.extra_data['unwrap_source_fn'],
-                                                                      self.extra_data['unwrap_sink_fn'],
-                                                                      diameter=diameter, ax=plt.gca(),
-                                                                      i_to_display=i_to_display,
-                                                                      orient_string=orient_string, do_filter=do_filter,
-                                                                      label_diagram=label_diagram,
-                                                                      p_label_shift=p_label_shift,
-                                                                      line_label_dist=line_label_dist,
-                                                                      point_names=point_names,
-                                                                      )
-                print('point locations:')
-                for i, (zero, xvec, yvec, p) in enumerate(all_trans_shown):
-                    if point_names is not None and i < len(point_names):
-                        pname = point_names[i]
-                    else:
-                        pname = i
-                    print('p copy ' + str(pname) + ':', p.flatten())
-                    # since mostly this is of the form sqrt(int), try making this nice
-                    shiftt = np.array([int(np.sign(val))*sym.sqrt(round(val**2))
-                                       if abs(round(val**2) - val**2) <= 1e9
-                                       else val
-                                       for val in zero.flatten()])
-                    print('\tshift:', shiftt)
-                    rot_frac = fractions.Fraction(
-                        np.arctan2((xvec - zero)[1], (xvec - zero)[0])[0]/np.pi).limit_denominator(1000)
-                    print("\trotation:", rot_frac, 'pi')
+                if from_source:
+                    self.plot_unfolding_from_source(p=self.extra_data['p'],
+                                                    source_fn=self.extra_data['unwrap_source_fn'],
+                                                    ax=plt.gca(),
+                                                    do_filter=do_filter,
+                                                    diameter=diameter,
+                                                    )
+                else:
+                    all_trans_shown, done_plotting = self.plot_unfolding_from_sink(
+                        p=self.extra_data['p'],
+                        source_fn=self.extra_data['unwrap_source_fn'],
+                        sink_fn=self.extra_data['unwrap_sink_fn'],
+                        diameter=diameter,
+                        ax=plt.gca(),
+                        i_to_display=i_to_display,
+                        orient_string=orient_string,
+                        do_filter=do_filter,
+                        label_diagram=label_diagram,
+                        p_label_shift=p_label_shift,
+                        line_label_dist=line_label_dist,
+                        point_names=point_names,
+                    )
+                    print('point locations:')
+                    for i, (zero, xvec, yvec, p) in enumerate(all_trans_shown):
+                        if point_names is not None and i < len(point_names):
+                            pname = point_names[i]
+                        else:
+                            pname = i
+                        print('p copy ' + str(pname) + ':', p.flatten())
+                        # since mostly this is of the form sqrt(int), try making this nice
+                        shiftt = np.array([int(np.sign(val))*sym.sqrt(round(val**2))
+                                           if abs(round(val**2) - val**2) <= 1e9
+                                           else val
+                                           for val in zero.flatten()])
+                        print('\tshift:', shiftt)
+                        rot_frac = fractions.Fraction(
+                            np.arctan2((xvec - zero)[1], (xvec - zero)[0])[0]/np.pi).limit_denominator(1000)
+                        print("\trotation:", rot_frac, 'pi')
 
-                    print("\tx vec:", (xvec - zero).flatten())
-                    print("\ty vec:", (yvec - zero).flatten())
+                        print("\tx vec:", (xvec - zero).flatten())
+                        print("\ty vec:", (yvec - zero).flatten())
 
-                plt.xticks([])
-                plt.yticks([])
-                if single_display and (all_trans_shown is not None):
-                    if save is not None:
-                        if not done_plotting:
-                            plt.savefig(os.path.join(os.path.dirname(save),
-                                                     'point_' + str(i_to_display) + '_' + os.path.basename(save)))
-                        if done_plotting:
-                            plt.savefig(save)
-                    plt.title("click to advance")
-                self.extra_data['unwrap_counter'] += 1
-                return done_plotting
+                    plt.xticks([])
+                    plt.yticks([])
+                    if single_display and (all_trans_shown is not None):
+                        if save is not None:
+                            if not done_plotting:
+                                plt.savefig(os.path.join(os.path.dirname(save),
+                                                         'point_' + str(i_to_display) + '_' + os.path.basename(save)))
+                            if done_plotting:
+                                plt.savefig(save)
+                        plt.title("click to advance")
+                    self.extra_data['unwrap_counter'] += 1
+                    return done_plotting
             else:
                 if not self.extra_data['unwrap_source_plotted'] and self.extra_data['unwrap_source_fn'] is not None:
                     # if we picked a point and havent yet created a plot

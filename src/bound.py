@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Bound:
     def __init__(self, m, b, s, T, si, dimension=None, name=None, identifier=''):
         """
@@ -38,11 +39,15 @@ class Bound:
         :param dimension: proposed dimension to check
         :return: dimension, raises exception if invalid
         """
-        if (len(np.shape(self.m)) != 2 or
-                len(np.shape(self.s)) != 2 or
-                len(np.shape(self.si)) != 2 or
-                len(np.shape(self.T)) != 2 or
-                np.shape(self.m)[0] != 1 or
+        for twodcheck, nm in ((self.m, 'm'),
+                              (self.s, 's'),
+                              (self.si, 'si'),
+                              (self.T, 'T'),
+                              ):
+            if len(np.shape(twodcheck)) != 2:
+                raise Exception("bound should be a 2d array", nm, ':', twodcheck)
+
+        if (np.shape(self.m)[0] != 1 or
                 np.shape(self.s)[1] != 1 or
                 np.shape(self.si)[1] != 1
         ):

@@ -3,6 +3,9 @@ from utils.shape_argparser import *
 PARSER.add_argument("--sink-face-name", action='store', required=False, default=None,
                     help="Specify sink face name if inputting a specific sink face")
 
+display_group.add_argument("--from-source", action='store_true', required=False,
+                           help="unfold from source face instead of sink face")
+
 display_group.add_argument("--single-display", action='store_true', required=False,
                            help="display only one path at a time")
 
@@ -38,7 +41,7 @@ if sink_face_name is not None:
 
 do_filter = shape.is_polyhedra() and not args.no_filter
 
-shape.interactive_unwrap(track=not args.no_tracking,
+shape.interactive_unfold(track=not args.no_tracking,
                          figsize=figsize_from_args(args),
                          single_display=args.single_display,
                          diameter=args.diameter if args.diameter > 0 else None,
@@ -53,5 +56,6 @@ shape.interactive_unwrap(track=not args.no_tracking,
                          label_diagram=args.label_unwrapping,
                          p_label_shift=(args.shift_x_p_label, args.shift_y_p_label),
                          line_label_dist=args.label_dist_line,
-                         point_names=point_names
+                         point_names=point_names,
+                         from_source=args.from_source,
                          )
