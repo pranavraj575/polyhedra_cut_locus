@@ -4,11 +4,11 @@ import fractions
 import sympy as sym
 import numpy as np
 
-from src.utils import coltation
+from src.utils import coltation, get_correct_end_points
 from src.shapes import Shape
 from src.face import Face
 from src.bound import Bound
-from src.my_vornoi import voronoi_diagram_calc, voronoi_plot_2d
+from src.my_vornoi import voronoi_diagram_calc
 
 
 class ConvexPolyhderon(Shape):
@@ -73,6 +73,25 @@ class ConvexPolyhderon(Shape):
         """
         if ax is None:
             ax = plt.gca()
+
+        all_stuff = []
+        for sink_fn in self.faces:
+            if sink_fn != source_fn:
+                voronoi_diagram = self.get_voronoi_diagram(p=p,
+                                                           source_fn=source_fn,
+                                                           sink_fn=sink_fn,
+                                                           diameter=diameter,
+                                                           do_filter=do_filter,
+                                                           intersect_with_face=True,
+                                                           )
+                if voronoi_diagram is not None:
+                    point_pair_to_segment, (relevant_points, _, _) = voronoi_diagram
+                    point_pair_to_segment = {point_pair: (a.reshape((2, 1)), b.reshape((2, 1)))
+                                             for point_pair, (_, (a, b)) in point_pair_to_segment.items()
+                                             }
+                    relevant_points = np.concatenate(relevant_points, axis=1)
+                    all_stuff.append((point_pair_to_segment, relevant_points))
+        contributing_points = [p.flatten()]
         for sink_fn in self.faces:
             if sink_fn != source_fn:
                 voronoi_diagram = self.get_voronoi_diagram(p=p,
@@ -90,16 +109,27 @@ class ConvexPolyhderon(Shape):
                     relevant_points = np.concatenate(relevant_points, axis=1)
 
                     for path in relevant_bound_paths:
-                        temp_points=relevant_points.copy()
+                        temp_points = relevant_points.copy()
+
+                        # TODO: maybe track all possible faces and check if any points line up?
+                        #  if any do, add the thingy
+                        temp_stuff = [({p_p: (a.copy(), b.copy()) for p_p, (a, b) in ppts.items()},
+                                       rp.copy())
+                                      for (ppts, rp) in all_stuff]
+
+                        possible_stuff = []
                         if path is not None:
                             segments = dict()
                             for point_pair in point_pair_to_segment:
                                 (_, (a, b)) = point_pair_to_segment[point_pair]
-                                segments[point_pair]=(a.reshape((2, 1)), b.reshape((2, 1)))
+                                segments[point_pair] = (a.reshape((2, 1)), b.reshape((2, 1)))
                             T, s = np.identity(2), np.zeros((2, 1))
 
                             # list of (v,2) arrays where each column is a vertex
                             vertex_cycles = []
+                            rotations = []
+                            centers = []
+                            names = []
 
                             for bnd, F in path[::-1]:  # start with sink face
                                 bnd: Bound
@@ -110,22 +140,43 @@ class ConvexPolyhderon(Shape):
                                     [F.vertices[i%num_v][0]
                                      for i in range(1 + num_v)]
                                     , axis=1))
+                                rotations.append(np.identity(2))  # x vec, y vec
+                                centers.append(F.basepoint.copy())
+                                names.append(str(F.name))
+
                                 # shift point works on arrays as well
                                 vertex_cycles = [bnd.shift_point(vc) for vc in vertex_cycles]
+                                rotations = [bnd.shift_vec(rt) for rt in rotations]
+                                centers = [bnd.shift_point(c) for c in centers]
                                 temp_points = bnd.shift_point(temp_points)
-                                segments={point_pair:(bnd.shift_point(a), bnd.shift_point(b))
-                                          for point_pair,(a,b) in segments.items()}
-                            distances = np.linalg.norm(temp_points - p, axis=0)
-                            best_idx = np.argmin(distances)
+                                segments = {point_pair: (bnd.shift_point(a), bnd.shift_point(b))
+                                            for point_pair, (a, b) in segments.items()}
+                            distances = np.linalg.norm(temp_points - p, axis=0).flatten()
+                            for point in temp_points.T:
 
-                            for vertices_cycle in vertex_cycles:
-                                ax.plot(vertices_cycle[0], vertices_cycle[1], color='blue', alpha=1, lw=1)
+                                if all([np.linalg.norm(cont_pt - point) > self.tol for cont_pt in contributing_points]):
+                                    contributing_points.append(point)
+                            best_indices = np.where(distances <= self.tol)[0]
+                            plot_faces = False
+                            for point_pair, (a, b) in segments.items():
+                                if any([best_idx in point_pair for best_idx in best_indices]):
+                                    plot_faces = True
 
-                            for point_pair,(a, b) in segments.items():
-
-                                if best_idx in point_pair:
-                                    ax.plot((a[0], b[0]), (a[1], b[1]), color='black', alpha=1,lw=2)
-
+                                    ax.plot((a[0], b[0]), (a[1], b[1]), color='black', alpha=1, lw=3, zorder=9)
+                                    # ax.scatter((a[0], b[0]), (a[1], b[1]), color='black')
+                            if plot_faces:
+                                for vertices_cycle, rot, c, name in zip(vertex_cycles, rotations, centers, names):
+                                    ax.plot(vertices_cycle[0], vertices_cycle[1], color='blue', alpha=1, lw=1)
+                                    continue
+                                    self._plot_label_face(ax=ax,
+                                                          face=None,
+                                                          name=name,
+                                                          center=c,
+                                                          rot_v=rot[:, (0,)],  # x vector after rotation
+                                                          color='blue',
+                                                          linewidth=1,
+                                                          plot_face=False,
+                                                          )
         source = self.faces[source_fn]
         num_v = len(source.vertices)
         vertices_cycle = [source.vertices[i%num_v][0]
@@ -133,7 +184,46 @@ class ConvexPolyhderon(Shape):
         vertices_cycle = np.concatenate(vertices_cycle, axis=1)
         ax.plot(vertices_cycle[0], vertices_cycle[1],
                 color='red')
-        ax.scatter(p[0], p[1], color='purple', s=40)
+        ax.scatter(p[0], p[1], color='purple', s=40, zorder=10)  # TODO: mess with zorder
+
+        xlim, ylim = ax.get_xlim(), ax.get_ylim()
+
+        contributing_points = np.stack(contributing_points[1:])
+        # ax.scatter(contributing_points[:, 0],
+        #           contributing_points[:, 1],
+        #           s=10,
+        #           color='purple',
+        #           )
+
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+
+    def _plot_label_face(self,
+                         ax,
+                         face,
+                         name,
+                         center,
+                         rot_v,
+                         color,
+                         linewidth,
+                         orient_string='',
+                         plot_face=True,
+                         zorder=None,
+                         label_zorder=None,
+                         ):
+        """
+        plots and labels face on ax
+        """
+        if label_zorder is None:
+            label_zorder = zorder
+        theta = np.arctan2(rot_v[1, 0], rot_v[0, 0])
+        if plot_face:
+            for i in range(len(face)):
+                v1 = face[i]
+                v2 = face[(i + 1)%len(face)]
+                ax.plot([v1[0], v2[0]], [v1[1], v2[1]], color=color, linewidth=linewidth, zorder=zorder)
+        ax.annotate(str(name) + orient_string, (center[0], center[1]), rotation=np.degrees(theta), color=color,
+                    zorder=label_zorder)
 
     def plot_unfolding_from_sink(self,
                                  p,
@@ -149,6 +239,7 @@ class ConvexPolyhderon(Shape):
                                  line_label_dist=.3,
                                  point_names=None,
                                  ):
+        # TODO: maybe do the same thing as above method, calculate cut locus for all faces, paste them together
         """
         finds all points that contribute to the cut locus an a particualr face, plots them, plots the voronoi diagram
         fixes sink face and plots the other faces around it
@@ -183,21 +274,13 @@ class ConvexPolyhderon(Shape):
         (point_pair_to_segment,
          (relevant_points, relevant_bound_paths, relevant_cells)
          ) = voronoi_diagram
-
+        if point_names is None:
+            point_names = []
+        while len(point_names) < len(relevant_points):
+            point_names.append(str(len(point_names)))
         if ax is None:
             ax = plt.gca()
         source: Face = self.faces[source_fn]
-
-        def plot_label_face(ax, face, name, center, rot_v, color, linewidth):
-            """
-            plots and labels face on ax
-            """
-            theta = np.arctan2(rot_v[1, 0], rot_v[0, 0])
-            for i in range(len(face)):
-                v1 = face[i]
-                v2 = face[(i + 1)%len(face)]
-                ax.plot([v1[0], v2[0]], [v1[1], v2[1]], color=color, linewidth=linewidth)
-            ax.annotate(str(name) + orient_string, (center[0], center[1]), rotation=np.degrees(theta), color=color)
 
         all_trans_shown = []
 
@@ -234,13 +317,17 @@ class ConvexPolyhderon(Shape):
                 all_trans_shown.append(tracker_points + [pt])
 
                 for face, name, center, rot_v in iteration[:-1]:
-                    plot_label_face(ax=ax,
-                                    face=face,
-                                    name=name,
-                                    center=center,
-                                    rot_v=rot_v,
-                                    color='blue',
-                                    linewidth=1)
+                    self._plot_label_face(ax=ax,
+                                          face=face,
+                                          name=name,
+                                          center=center,
+                                          rot_v=rot_v,
+                                          color='blue',
+                                          linewidth=1,
+                                          orient_string=orient_string,
+                                          zorder=7,
+                                          label_zorder=11,
+                                          )
                 label = None
                 if not labeled:
                     label = '$p$ copies'
@@ -251,45 +338,84 @@ class ConvexPolyhderon(Shape):
                            label=label,
                            alpha=1,
                            s=40,
+                           zorder=11,
                            )
                 if label_diagram:
                     label_pt = pt + [[.1], [.1]]
-                    if point_names is not None and pt_idx < len(point_names):
-                        pname = point_names[pt_idx]
-                    else:
-                        pname = pt_idx
+                    pname = point_names[pt_idx]
                     ax.annotate('$p^{(' + str(pname) + ')}$',
                                 (label_pt[0] + p_label_shift[0], label_pt[1] + p_label_shift[1]),
                                 rotation=0,
-                                color=pt_color)
+                                color=pt_color,
+                                zorder=11,
+                                )
         (face, name, center, rot_v) = special_face
-        plot_label_face(ax=ax,
-                        face=face,
-                        name=name,
-                        center=center,
-                        rot_v=rot_v,
-                        color='red',
-                        linewidth=2)
+        self._plot_label_face(ax=ax,
+                              face=face,
+                              name=name,
+                              center=center,
+                              rot_v=rot_v,
+                              color='red',
+                              linewidth=2,
+                              orient_string=orient_string,
+                              zorder=8,
+                              label_zorder=11,
+                              )
         # ax.scatter([0], [0], label='center', alpha=.5, s=80)
         relevant_points = np.concatenate(relevant_points, axis=1)
 
         xlim, ylim = ax.get_xlim(), ax.get_ylim()
+
         line_alpha = (.69 if label_diagram else 1)
         for point_pair in point_pair_to_segment:
             segtype, (a, b) = point_pair_to_segment[point_pair]
             if segtype == 'segment':
-                plt.plot((a[0], b[0]), (a[1], b[1]),
-                         color='black',
-                         lw=2,
-                         alpha=line_alpha,
-                         )
-                # TODO: label lines here
+                ax.plot((a[0], b[0]), (a[1], b[1]),
+                        color='black',
+                        lw=2,
+                        alpha=line_alpha,
+                        zorder=10,
+                        )
+                names = [point_names[pt_idx] for pt_idx in point_pair]
+                a, b = get_correct_end_points(a, b, xlim, ylim)
+                if label_diagram and a is not None:
+                    midpoint = (a + b)/2
+                    tangent = np.array([(b - a)[1], -(b - a)[0]])
+                    tangent = tangent/np.linalg.norm(tangent)*line_label_dist
+                    if np.dot(tangent, np.array((3, 1))) < 0:  # favor the up right direction (strong right)
+                        tangent = -tangent
+                    text_pt = midpoint + tangent
+                    ax.annotate('$\\mathbf{\\ell}^{' + '\\{' + names[0] + ',' + names[1] + '\\}' + '}$',
+                                text_pt, rotation=0, color='black',
+                                zorder=11,
+                                )
+                    ax.arrow(
+                        text_pt[0],  # x
+                        text_pt[1],  # y
+                        -tangent[0],  # dx
+                        -tangent[1],  # dy
+                        width=.03,
+                        color='black',
+                        alpha=line_alpha,
+                        length_includes_head=True,
+                        zorder=11,
+                    )
+                    # TODO: label lines here
         ax.set_xlim(xlim)
         ax.set_ylim(ylim)
         ax.legend()
         return all_trans_shown, i_to_display == None
 
-    def plot_voronoi(self, p, source_fn, sink_fn, diameter, ax, do_filter=True):
+    def plot_voronoi(self,
+                     p,
+                     source_fn,
+                     sink_fn,
+                     diameter,
+                     ax,
+                     do_filter=True,
+                     plot_endpoints=False,
+                     zorder=None,
+                     ):
         """
         creates a voronoi plot for the sink face from p on a souce face
         :param p: column vector (np array of dimension (self.dimension,1))
@@ -312,7 +438,9 @@ class ConvexPolyhderon(Shape):
             point_pair_to_seg, _ = voronoi_diagram
             for point_pair in point_pair_to_seg:
                 _, (p, q) = point_pair_to_seg[point_pair]
-                ax.plot((p[0], q[0]), (p[1], q[1]), color='black', lw=1, alpha=1, )
+                ax.plot((p[0], q[0]), (p[1], q[1]), color='black', lw=2, alpha=1, zorder=zorder)
+                if plot_endpoints:
+                    ax.scatter((p[0], q[0]), (p[1], q[1]), color='black', alpha=1, s=6.9, zorder=zorder)
             return True
         return False
 
@@ -468,8 +596,15 @@ class ConvexPolyhderon(Shape):
                     face = face_map(i, j)
                     if face is not None:
                         xlim, ylim = ploot(i, j).get_xlim(), ploot(i, j).get_ylim()
-                        self.plot_voronoi(p, source_fn, face.name, diameter=diameter, ax=ploot(i, j),
-                                          do_filter=do_filter)
+                        self.plot_voronoi(p,
+                                          source_fn,
+                                          face.name,
+                                          diameter=diameter,
+                                          ax=ploot(i, j),
+                                          do_filter=do_filter,
+                                          plot_endpoints=False,
+                                          zorder=10,
+                                          )
                         ploot(i, j).set_xlim(xlim)
                         ploot(i, j).set_ylim(ylim)
 
@@ -511,6 +646,7 @@ class ConvexPolyhderon(Shape):
             full_v_plot_from_point_axis(p, ploot(I, J))
         if save is not None:
             plt.savefig(save)
+            print('saving to', save)
         if show:
             plt.show()
 
@@ -601,7 +737,7 @@ class ConvexPolyhderon(Shape):
             :return: whether or not done plotting
             """
             if ((self.extra_data['unwrap_source_fn'] is not None and self.extra_data['unwrap_sink_fn'] is not None) or
-                (from_source and self.extra_data['unwrap_source_fn'] is not None)):
+                    (from_source and self.extra_data['unwrap_source_fn'] is not None)):
                 # if we have finished both
                 plt.clf()
                 i_to_display = None
@@ -614,6 +750,11 @@ class ConvexPolyhderon(Shape):
                                                     do_filter=do_filter,
                                                     diameter=diameter,
                                                     )
+
+                    plt.xticks([])
+                    plt.yticks([])
+                    if save is not None:
+                        plt.savefig(save)
                 else:
                     all_trans_shown, done_plotting = self.plot_unfolding_from_sink(
                         p=self.extra_data['p'],

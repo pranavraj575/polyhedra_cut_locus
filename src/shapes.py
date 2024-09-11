@@ -1,9 +1,8 @@
 import numpy as np
 
-from src.my_vornoi import voronoi_plot_2d,voronoi_diagram_calc
+from src.my_vornoi import voronoi_diagram_calc
 from src.bound import Bound
 from src.face import Face
-
 
 
 def project_p_onto_line(p, a, v):
@@ -314,7 +313,18 @@ class Shape:
             points = np.concatenate(vp, axis=1)
             points = points.T
             # find the cell complex of them
-            fig, point_to_segments = voronoi_plot_2d(points, ax=None)
+            # fig, point_to_segments = voronoi_plot_2d(points, ax=None)
+            point_to_segments = dict()
+            for point_pair, (seg_type, (a, b)) in voronoi_diagram_calc(points=points).items():
+                for pt in point_pair:
+                    if pt not in point_to_segments:
+                        point_to_segments[pt] = list()
+                    if seg_type == 'segment':
+                        point_to_segments[pt].append((a, b))
+                    elif seg_type == 'ray':
+                        point_to_segments[pt].append((a, a + b))
+                    else:
+                        raise NotImplementedError
 
             # gather the relevant points: the ones whose cells intersect the sink face
             # to check this, we can split into two cases

@@ -30,7 +30,7 @@ class Face:
         self.basepoint = basepoint  # if None, will update this when the dimension is set by adding a bound
 
     def __str__(self):
-        return '(Face ' + str(self.name) + ': connected to faces ' + str([F.name for (_, _, F, _) in self.bounds]) + ')'
+        return '(Face ' + str(self.name) + ': connected to faces ' + str([F.name for (_, F) in self.bounds]) + ')'
 
     def add_boundary(self, bound: Bound, F, update=True):
         """
@@ -224,9 +224,14 @@ class Face:
             pp = self.get_exit_point(q, p - q)
             return (pp, q)
         qp = self.get_exit_point(p, q - p)
-        if qp is None:
-            return None
         pp = self.get_exit_point(q, p - q)
+        if qp is None and pp is None:
+            return None
+        # weird error due to tolerance
+        if qp is None:
+            qp=pp
+        if pp is None:
+            pp=qp
         return (pp, qp)
 
     def add_boundary_paired(self, f2, m, b, s, T, si):
