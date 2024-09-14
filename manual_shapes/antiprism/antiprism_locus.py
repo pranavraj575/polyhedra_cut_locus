@@ -1,6 +1,8 @@
-from src.shapes import *
-from src.shape_creation import Antiprism
 import os
+import numpy as np
+
+from src.utils import coltation
+from src.shape_creation import Antiprism
 
 for n in range(3, 10):
     print(n)

@@ -1,10 +1,21 @@
 import sympy as sym
-from itertools import chain
+import numpy as np
+from itertools import combinations
 
-from utils.symbolic_utils import *
+from utils.symbolic_utils import (sym_rotation_T,
+                                  matrixify,
+                                  latexify,
+                                  line_intersection,
+                                  equality,
+                                  eq_points_equal,
+                                  roots,
+                                  get_all_bisecting_lines,
+                                  get_all_triple_points,
+                                  exp_simplify,
+                                  )
 
-x = sym.Symbol('x')
-y = sym.Symbol('y')
+x = sym.Symbol('p_1')
+y = sym.Symbol('p_2')
 
 p = np.array([x, y])
 
@@ -25,6 +36,21 @@ points = [p0, p1, p2, p3, p4, p5]
 N = len(points)
 
 L = get_all_bisecting_lines(points)
+for i in range(6):
+    for j in range(i + 1, 6):
+        lij_eq = L[i][j]
+        # equation is (startpoint, direction)
+        # L[j][i] is (startpoint, -direction)
+        assert all(list(eq_points_equal(L[i][j][0], L[j][i][0])))
+        assert all(list(eq_points_equal(-L[i][j][1], L[j][i][1])))
+        start_point, direction = lij_eq
+        start_point = [exp_simplify(t) for t in start_point]
+        direction = [exp_simplify(t) for t in direction]
+        print('\\item')
+        print('$\\ell^{\\{',i,',',j,'\\}}(p) := t \\mapsto ',
+              latexify(start_point),'+', latexify(direction),'t$')
+quit()
+
 X = get_all_triple_points(points)
 print(exp_simplify(points))
 for p in exp_simplify(points):
@@ -135,10 +161,10 @@ for a, b in combinations(range(6), 2):
             print((eq.lhs), '=', (eq.rhs))
             print(latexify(eq.lhs), '=', latexify(eq.rhs))
             for element in roots(X[a][line[0]][line[1]][dim] - X[b][line[0]][line[1]][dim]):
-                print('solution:', #{key: exp_simplify(value) for key, value in element.items()}
+                print('solution:',  # {key: exp_simplify(value) for key, value in element.items()}
                       )
-                for key,value in element.items():
-                    print('\t',key,'=',latexify(value))
+                for key, value in element.items():
+                    print('\t', key, '=', latexify(value))
             # print(simul_roots_solver([X[a][line[0]][line[1]][dim] - X[b][line[0]][line[1]][dim] for dim in range(2)]))
         print()
 print()

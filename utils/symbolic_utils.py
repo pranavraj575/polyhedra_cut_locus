@@ -146,7 +146,7 @@ def latexify(equation):
         return last[::-1]
 
     def sqrtify(equation: str):
-        while equation.count('sqrt') > equation.count('\sqrt'):
+        while equation.count('sqrt') > equation.count('\\sqrt'):
             i = 0
             # we want the first occurance of sqrt in equation[i:] to be unlatexified
             while equation.find('sqrt', i) == equation.find('\\sqrt', i) + 1:
@@ -202,7 +202,9 @@ def latexify(equation):
     equation = depower(equation)
     equation = fracify(equation)
     equation = strip(equation)
-    return equation.replace('*', '\cdot ')
+    # no need for cdot
+    return equation.replace('*', ' ')
+    #return equation.replace('*', '\cdot ')
 
 
 def exp_simplify(expression):

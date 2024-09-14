@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
 import numpy as np
-from src.shapes import rowtation
+from src.utils import rowtation
 import os
 
 plt.rcParams["figure.figsize"] = (2*2*np.sqrt(3), 2*3)

@@ -1,4 +1,15 @@
-from utils.symbolic_utils import *
+import sympy as sym
+import numpy as np
+from itertools import combinations
+
+from utils.symbolic_utils import (sym_rotation_T,
+                                  eq_points_equal,
+                                  latexify,
+                                  line_intersection,
+                                  get_all_bisecting_lines,
+                                  get_all_triple_points,
+                                  exp_simplify,
+                                  )
 from itertools import chain
 
 x = sym.Symbol('p_1')
@@ -46,7 +57,8 @@ for a, b, c in combinations([0, 1, 2, 3], 3):
 
 # point_eq is equality of two points
 # this is the list of pairwise equality of all points x^{a,b,c}
-all_equal = (eq_points_equal(X[a][b][c], X[d][e][f]) for (a, b, c), (d, e, f) in combinations(combinations(range(4), 3), 2))
+all_equal = (eq_points_equal(X[a][b][c], X[d][e][f]) for (a, b, c), (d, e, f) in
+             combinations(combinations(range(4), 3), 2))
 
 print('equations where all x^{a,b,c} are equal:')
 print(sym.solve(chain(*all_equal)))  # this will solve equality for all the equations in the list

@@ -1,6 +1,8 @@
-from src.shapes import *
-from src.shape_creation import Icosahedron
 import os
+import numpy as np
+
+from src.utils import coltation
+from src.shape_creation import Icosahedron
 
 """
 ICOSAHEDRON IS AT LEAST 5!!

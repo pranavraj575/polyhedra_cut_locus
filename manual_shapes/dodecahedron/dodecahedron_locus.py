@@ -1,6 +1,8 @@
-from src.shapes import *
-from src.shape_creation import Dodecahedron
 import os
+import numpy as np
+
+from src.utils import coltation
+from src.shape_creation import Dodecahedron
 
 """
 DODECAHEDRON IS AT LEAST 5!!

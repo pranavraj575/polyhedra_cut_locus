@@ -1,6 +1,15 @@
 import sympy as sym
 import numpy as np
-from utils.symbolic_utils import *
+from itertools import combinations
+
+from utils.symbolic_utils import (sym_rotation_T,
+                                  matrixify,
+                                  latexify,
+                                  get_all_bisecting_lines,
+                                  get_all_triple_points,
+                                  exp_simplify,
+                                  eq_all_points_equal,
+                                  )
 
 x = sym.Symbol('p_1')
 y = sym.Symbol('p_2')

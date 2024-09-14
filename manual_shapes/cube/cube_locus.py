@@ -1,6 +1,7 @@
-from src.shapes import *
-from src.shape_creation import Cube
 import os
+import numpy as np
+
+from src.shape_creation import Cube
 
 if __name__ == "__main__":
 

@@ -367,6 +367,7 @@ class ConvexPolyhderon(Shape):
         xlim, ylim = ax.get_xlim(), ax.get_ylim()
 
         line_alpha = (.69 if label_diagram else 1)
+        existing_labels = []
         for point_pair in point_pair_to_segment:
             segtype, (a, b) = point_pair_to_segment[point_pair]
             if segtype == 'segment':
@@ -377,6 +378,7 @@ class ConvexPolyhderon(Shape):
                         zorder=10,
                         )
                 names = [point_names[pt_idx] for pt_idx in point_pair]
+                names.sort()
                 a, b = get_correct_end_points(a, b, xlim, ylim)
                 if label_diagram and a is not None:
                     midpoint = (a + b)/2
@@ -384,6 +386,14 @@ class ConvexPolyhderon(Shape):
                     tangent = tangent/np.linalg.norm(tangent)*line_label_dist
                     if np.dot(tangent, np.array((3, 1))) < 0:  # favor the up right direction (strong right)
                         tangent = -tangent
+                    if existing_labels:
+                        temp_tan = tangent.copy()
+                        for mult in [1] + sum([[i, -i] for i in range(3, 5)], []):
+                            tangent = mult*temp_tan
+                            dist = min([np.linalg.norm(lb - (midpoint + tangent)) for lb in existing_labels])
+                            if dist >= 2*line_label_dist:
+                                break
+
                     text_pt = midpoint + tangent
                     ax.annotate('$\\mathbf{\\ell}^{' + '\\{' + names[0] + ',' + names[1] + '\\}' + '}$',
                                 text_pt, rotation=0, color='black',
@@ -400,6 +410,7 @@ class ConvexPolyhderon(Shape):
                         length_includes_head=True,
                         zorder=11,
                     )
+                    existing_labels.append(text_pt)
                     # TODO: label lines here
         ax.set_xlim(xlim)
         ax.set_ylim(ylim)
