@@ -29,6 +29,7 @@ class ConvexPolyhderon(Shape):
                             diameter,
                             do_filter=True,
                             intersect_with_face=True,
+                            ignore_points_on_locus=False,
                             ):
         """
         implementaiton of algorithm 3
@@ -40,12 +41,14 @@ class ConvexPolyhderon(Shape):
         vp, bound_paths = self.get_voronoi_points_from_face_paths(p, source_fn, sink_fn, diameter=diameter)
 
         if len(vp) >= 2:  # if there is only one point, the cut locus does not exist on this face
-            relevant_points, relevant_bound_paths, relevant_cells = self.filter_out_points(vp,
-                                                                                           bound_paths,
-                                                                                           self.faces[source_fn],
-                                                                                           self.faces[sink_fn],
-                                                                                           do_filter=do_filter,
-                                                                                           )
+            relevant_points, relevant_bound_paths, relevant_cells = self.filter_out_points(
+                vp,
+                bound_paths,
+                self.faces[source_fn],
+                self.faces[sink_fn],
+                do_filter=do_filter,
+                ignore_points_on_locus=ignore_points_on_locus,
+            )
             if relevant_points is None:
                 return None
             points = np.concatenate(relevant_points, axis=1)
@@ -65,6 +68,7 @@ class ConvexPolyhderon(Shape):
                                    ax=None,
                                    do_filter=True,
                                    diameter=None,
+                                   ignore_points_on_locus=False,
                                    ):
         """
         unfold fixing the source face
@@ -83,6 +87,7 @@ class ConvexPolyhderon(Shape):
                                                            diameter=diameter,
                                                            do_filter=do_filter,
                                                            intersect_with_face=True,
+                                                           ignore_points_on_locus=ignore_points_on_locus,
                                                            )
                 if voronoi_diagram is not None:
                     point_pair_to_segment, (relevant_points, _, _) = voronoi_diagram
@@ -100,6 +105,7 @@ class ConvexPolyhderon(Shape):
                                                            diameter=diameter,
                                                            do_filter=do_filter,
                                                            intersect_with_face=True,
+                                                           ignore_points_on_locus=ignore_points_on_locus,
                                                            )
                 if voronoi_diagram is not None:
                     (point_pair_to_segment,
@@ -238,6 +244,7 @@ class ConvexPolyhderon(Shape):
                                  p_label_shift=(0., 0.),
                                  line_label_dist=.3,
                                  point_names=None,
+                                 ignore_points_on_locus=False,
                                  ):
         # TODO: maybe do the same thing as above method, calculate cut locus for all faces, paste them together
         """
@@ -266,6 +273,7 @@ class ConvexPolyhderon(Shape):
                                                    diameter=diameter,
                                                    do_filter=do_filter,
                                                    intersect_with_face=False,
+                                                   ignore_points_on_locus=ignore_points_on_locus,
                                                    )
         if voronoi_diagram is None:
             # cut locus does not exist on this face
@@ -426,6 +434,7 @@ class ConvexPolyhderon(Shape):
                      do_filter=True,
                      plot_endpoints=False,
                      zorder=None,
+                     ignore_points_on_locus=False,
                      ):
         """
         creates a voronoi plot for the sink face from p on a souce face
@@ -443,7 +452,8 @@ class ConvexPolyhderon(Shape):
                                                    sink_fn=sink_fn,
                                                    diameter=diameter,
                                                    do_filter=do_filter,
-                                                   intersect_with_face=True
+                                                   intersect_with_face=True,
+                                                   ignore_points_on_locus=ignore_points_on_locus,
                                                    )
         if voronoi_diagram is not None:
             point_pair_to_seg, _ = voronoi_diagram
@@ -549,6 +559,7 @@ class ConvexPolyhderon(Shape):
                                 save=None,
                                 do_filter=True,
                                 font_size=None,
+                                ignore_points_on_locus=False,
                                 ):
         """
         :param figsize: initial figure size (inches)
@@ -615,6 +626,7 @@ class ConvexPolyhderon(Shape):
                                           do_filter=do_filter,
                                           plot_endpoints=False,
                                           zorder=10,
+                                          ignore_points_on_locus=ignore_points_on_locus,
                                           )
                         ploot(i, j).set_xlim(xlim)
                         ploot(i, j).set_ylim(ylim)
@@ -679,6 +691,7 @@ class ConvexPolyhderon(Shape):
                            line_label_dist=.3,
                            point_names=None,
                            from_source=False,
+                           ignore_points_on_locus=False,
                            ):
         """
         :param figsize: initial figure size (inches)
@@ -760,6 +773,7 @@ class ConvexPolyhderon(Shape):
                                                     ax=plt.gca(),
                                                     do_filter=do_filter,
                                                     diameter=diameter,
+                                                    ignore_points_on_locus=ignore_points_on_locus,
                                                     )
 
                     plt.xticks([])
@@ -780,6 +794,7 @@ class ConvexPolyhderon(Shape):
                         p_label_shift=p_label_shift,
                         line_label_dist=line_label_dist,
                         point_names=point_names,
+                        ignore_points_on_locus=ignore_points_on_locus,
                     )
                     print('point locations:')
                     for i, (zero, xvec, yvec, p) in enumerate(all_trans_shown):
@@ -825,8 +840,13 @@ class ConvexPolyhderon(Shape):
                             face = face_map(i, j)
                             if face is not None:
                                 xlim, ylim = ploot(i, j).get_xlim(), ploot(i, j).get_ylim()
-                                self.plot_voronoi(self.extra_data['p'], self.extra_data['unwrap_source_fn'], face.name,
-                                                  diameter=diameter, ax=ploot(i, j), do_filter=do_filter)
+                                self.plot_voronoi(self.extra_data['p'],
+                                                  self.extra_data['unwrap_source_fn'], face.name,
+                                                  diameter=diameter,
+                                                  ax=ploot(i, j),
+                                                  do_filter=do_filter,
+                                                  ignore_points_on_locus=ignore_points_on_locus,
+                                                  )
                                 ploot(i, j).set_xlim(xlim)
                                 ploot(i, j).set_ylim(ylim)
                                 if self.extra_data['unwrap_source_fn'] == face.name:
@@ -879,8 +899,14 @@ class ConvexPolyhderon(Shape):
                     face = face_map(i, j)
                     if face is not None:
                         xlim, ylim = ploot(i, j).get_xlim(), ploot(i, j).get_ylim()
-                        self.plot_voronoi(p, source_fn, face.name, diameter=diameter, ax=ploot(i, j),
-                                          do_filter=do_filter)
+                        self.plot_voronoi(p,
+                                          source_fn,
+                                          face.name,
+                                          diameter=diameter,
+                                          ax=ploot(i, j),
+                                          do_filter=do_filter,
+                                          ignore_points_on_locus=ignore_points_on_locus,
+                                          )
                         ploot(i, j).set_xlim(xlim)
                         ploot(i, j).set_ylim(ylim)
             plt.show()
@@ -899,8 +925,15 @@ class ConvexPolyhderon(Shape):
         if show:
             plt.show()
 
-    def plot_faces(self, save_image=None, show=False, figsize=None, legend=lambda i, j: True, voronoi=None,
-                   do_filter=True):
+    def plot_faces(self,
+                   save_image=None,
+                   show=False,
+                   figsize=None,
+                   legend=lambda i, j: True,
+                   voronoi=None,
+                   do_filter=True,
+                   ignore_points_on_locus=False,
+                   ):
         """
         plots all faces of graph
         :param save_image: whether to save the image
@@ -935,8 +968,14 @@ class ConvexPolyhderon(Shape):
                     if voronoi is not None:
                         # ignore_locus_points = self.plot_voronoi(face.name, ploot(i, j))
                         (p, source_fn, diameter) = voronoi
-                        ignore_locus_points = self.plot_voronoi(p, source_fn, face.name, diameter=diameter,
-                                                                ax=ploot(i, j), do_filter=do_filter)
+                        ignore_locus_points = self.plot_voronoi(p,
+                                                                source_fn,
+                                                                face.name,
+                                                                diameter=diameter,
+                                                                ax=ploot(i, j),
+                                                                do_filter=do_filter,
+                                                                ignore_points_on_locus=ignore_points_on_locus,
+                                                                )
                         ploot(i, j).set_xlim(xlim)
                         ploot(i, j).set_ylim(ylim)
 

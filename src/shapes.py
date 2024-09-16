@@ -260,8 +260,7 @@ class Shape:
                 return False
         return True
 
-    def filter_out_points(self, points, bound_paths, source, sink, do_filter=True):
-        # TODO: dont use vornoiplot2d
+    def filter_out_points(self, points, bound_paths, source, sink, do_filter=True, ignore_points_on_locus=False):
         """
         repeatedly makes voronoi complices, looks at relevant points, then filters out points that do not pass through correct faces
         Note: this augments points by placing 4 very distant points that do not affect the relevant section of the complex
@@ -272,6 +271,7 @@ class Shape:
         :param sink: sink face
         :param do_filter: whether to filter the points
                     probably only set to false when surface is not polyhedra (i.e. torus or mirror)
+        :param ignore_points_on_locus: whether to ignore single points on cut locus
         :return: list of points and bound paths that are relevant, augmented by four bounding points that are very far away
         """
 
@@ -313,7 +313,6 @@ class Shape:
             points = np.concatenate(vp, axis=1)
             points = points.T
             # find the cell complex of them
-            # fig, point_to_segments = voronoi_plot_2d(points, ax=None)
             point_to_segments = dict()
             for point_pair, (seg_type, (a, b)) in voronoi_diagram_calc(points=points).items():
                 for pt in point_pair:
@@ -353,7 +352,10 @@ class Shape:
                     continue
                 for a, b in point_to_segments[p_idx]:
                     # if any line of the point's voronoi cell is in face F, we call this point relevant and continue
-                    if sink.line_within_bounds(a.reshape((2, 1)), b.reshape((2, 1))):
+                    if sink.line_within_bounds(a.reshape((2, 1)),
+                                               b.reshape((2, 1)),
+                                               ignore_points=ignore_points_on_locus,
+                                               ):
                         relevant_points.append(point.T)
                         relevant_bound_paths.append(bound_paths[p_idx])
                         relevant_cells.append(point_to_segments[p_idx])

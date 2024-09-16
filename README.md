@@ -1,11 +1,11 @@
+[//]: <> (hello)
 # Geodesic Complexity Visualizations
 Visualize relevant features of a polytope consisting of 2-d faces
 (tested with [Python 3.8.10](https://www.python.org/downloads/release/python-3810/))
 
+[//]: <> (python cut_locus.py -s tetra --legend; python unfolding.py -s cube --legend) 
 * **Interactive Cut Locus Visualization:**
-  
   ![](https://github.com/pranavraj575/mitochondria/blob/main/images/tetrahedron/demo_cut_locus.gif)
-  
 * **Unfolding Visualization:**
   
   ![](https://github.com/pranavraj575/mitochondria/blob/main/images/cube/demo_unfold.gif)
@@ -78,7 +78,8 @@ python3 unfolding.py --shape cube
     ```bash
     python3 cut_locus.py --shape tetrahedron
     ```
-    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/tetrahedron/p_(-0.4%2C%20-0.6)_face_3.png)
+    [\\]: <> (python cut_locus.py -s tetra --source 3 --point-x -.5 --point-y -0.86602540378 --save images/tetrahedron/tetra_locus_three.png --height-display 6 --width-display 9 --legend --no-show --font 14)
+    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/tetrahedron/tetra_locus_three.png)
     
   * **Cube**:
     ```bash
@@ -90,7 +91,8 @@ python3 unfolding.py --shape cube
     ```bash
     python3 cut_locus.py --shape octahedron
     ```
-    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/octahedron/p_(0.0649519052838329%2C%200.16250000000000003)_face_1.png)
+    [\\]: <> (python cut_locus.py -s octa --source 6  --point-x 0.45 --point-y .5  --height-display 6 --width-display 12 --font-size 14 --save images\octahedron\unlabeled_locus_tau1.png --legend --no-show)
+    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/octahedron/unlabeled_locus_tau1.png)
     
   * **Dodecahedron**:
     ```bash

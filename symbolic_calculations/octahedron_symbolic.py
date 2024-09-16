@@ -48,15 +48,13 @@ for i in range(6):
         direction = [exp_simplify(t) for t in direction]
         print('\\item')
         print('$\\ell^{\\{',i,',',j,'\\}}(p) := t \\mapsto ',
-              latexify(start_point),'+', latexify(direction),'t$')
+              latexify(start_point),'+', latexify(direction),'t$.')
 quit()
-
 X = get_all_triple_points(points)
-print(exp_simplify(points))
+print('points')
 for p in exp_simplify(points):
     print(latexify(p))
 print()
-
 for i in range(N):
     j = (i + 1)%N
     print('line L' + str(i) + str(j))
@@ -123,15 +121,16 @@ x05 = line_intersection(right_face, L[0][5])
 print(exp_simplify(x05))
 print(latexify(exp_simplify(x05)))
 print()
-
+print()
+print('triple points')
 for a, b, c in combinations(range(6), 3):
     abc = sorted([a, b, c])
     tup = str((a, b, c))[1:-1]
     print()
-    print('equation of x^{' + tup + '}')
-    print(exp_simplify(X[a][b][c]))
-    print(latexify(exp_simplify(X[a][b][c])))
-    # print('\\item $x^{\{' + tup + '\}}(p)=\n\t' + latexify(exp_simplify(X[a][b][c])) + '$')
+    #print('equation of x^{' + tup + '}')
+    #print(exp_simplify(X[a][b][c]))
+    #print(latexify(exp_simplify(X[a][b][c])))
+    print('\\item $x^{\\{' + tup + '\\}}(p)=\n\t' + latexify(exp_simplify(X[a][b][c])) + '$.')
 
 print('sympy equality solver does not function well, use mathematica or wolfram alpha beyond this point')
 

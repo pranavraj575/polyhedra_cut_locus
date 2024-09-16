@@ -2,6 +2,8 @@ from utils.shape_argparser import *
 
 display_group.add_argument("--center-pt", action='store_true', required=False,
                            help="add center point to faces")
+PARSER.add_argument("--ignore-points", action='store_true', required=False,
+                    help="ignore single points on faces of cut loci, useful for fixing corner cases or repeat paths")
 
 args = parse_args(PARSER)
 shape = shape_from_args(args)
@@ -27,4 +29,5 @@ shape.interactive_vornoi_plot(diameter=args.diameter if args.diameter > 0 else N
                               save=args.save_file,
                               do_filter=do_filter,
                               font_size=args.font_size,
+                              ignore_points_on_locus=args.ignore_points,
                               )

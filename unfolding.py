@@ -5,6 +5,8 @@ PARSER.add_argument("--sink-face-name", action='store', required=False, default=
 
 PARSER.add_argument("--from-source", action='store_true', required=False,
                     help="unfold from source face instead of sink face")
+PARSER.add_argument("--ignore-points", action='store_true', required=False,
+                    help="ignore single points on faces of cut loci, useful for fixing corner cases or repeat paths")
 
 display_group.add_argument("--single-display", action='store_true', required=False,
                            help="display only one path at a time")
@@ -58,4 +60,5 @@ shape.interactive_unfold(track=not args.no_tracking,
                          line_label_dist=args.label_dist_line,
                          point_names=point_names,
                          from_source=args.from_source,
+                         ignore_points_on_locus=args.ignore_points,
                          )

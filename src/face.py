@@ -188,15 +188,30 @@ class Face:
             return None
         return q
 
-    def line_within_bounds(self, p, q):
+    def line_within_bounds(self, p, q, ignore_points):
         """
         returns if any part of the line p->q is within the face
         :param p: column vector (np array of dimension (self.dimension,1))
         :param q: column vector (np array of dimension (self.dimension,1))
         :return: boolean
         """
-        # enough to test whether either of the endpoints are within the bounds or if the line exits the face
-        return self.within_bounds(p) or self.within_bounds(q) or (self.get_exit_point(p, q - p) is not None)
+        if ignore_points:
+            if not self.within_bounds(p):
+                p = self.get_exit_point(q, p - q)
+            if p is None:
+                # if p is not within bounds and the line q->p does not exit face, this line is not in face
+                return False
+            if not self.within_bounds(q):
+                q = self.get_exit_point(p, q - p)
+            if q is None:
+                return False
+            if q is None:
+                return False
+            # check if the two endpoints are far enough apart
+            return np.linalg.norm(p - q) > self.tol
+        else:
+            # enough to test whether either of the endpoints are within the bounds or if the line exits the face
+            return self.within_bounds(p) or self.within_bounds(q) or (self.get_exit_point(p, q - p) is not None)
 
     def get_ray_within_bounds(self, p, direction):
         """
@@ -229,9 +244,9 @@ class Face:
             return None
         # weird error due to tolerance
         if qp is None:
-            qp=pp
+            qp = pp
         if pp is None:
-            pp=qp
+            pp = qp
         return (pp, qp)
 
     def add_boundary_paired(self, f2, m, b, s, T, si):
