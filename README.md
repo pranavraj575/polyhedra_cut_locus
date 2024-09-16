@@ -3,7 +3,7 @@
 Visualize relevant features of a polytope consisting of 2-d faces
 (tested with [Python 3.8.10](https://www.python.org/downloads/release/python-3810/))
 
-[//]: <> (python cut_locus.py -s tetra --legend; python unfolding.py -s cube --legend) 
+[//]: <> (python cut_locus.py -s tetra --legend --font-size 14 --width 7.5 --height 5.5; python unfolding.py -s cube --legend) 
 * **Interactive Cut Locus Visualization:**
   ![](https://github.com/pranavraj575/mitochondria/blob/main/images/tetrahedron/demo_cut_locus.gif)
 * **Unfolding Visualization:**
