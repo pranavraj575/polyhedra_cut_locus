@@ -7,10 +7,13 @@ Visualize relevant features of a polytope consisting of 2-d faces
 [//]: <> (python unfolding.py -s cube --legend --font 11 --width 7.5 --height 5.5)
 [//]: <> (python unfolding.py -s octa --voronoi --legend --font 11)
 * **Interactive Cut Locus Visualization:**
+
   ![](https://github.com/pranavraj575/mitochondria/blob/main/images/tetrahedron/demo_cut_locus.gif)
 * **Unfolding Visualization:**
+  
   ![](https://github.com/pranavraj575/mitochondria/blob/main/images/cube/demo_unfold.gif)
-* **Voronoi Star Unfolding Visualization:**!
+* **Voronoi Star Unfolding Visualization:**
+
   ![](https://github.com/pranavraj575/mitochondria/blob/main/images/octahedron/voronoi_star_demo.gif)
 
 
