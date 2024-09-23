@@ -3,12 +3,15 @@
 Visualize relevant features of a polytope consisting of 2-d faces
 (tested with [Python 3.8.10](https://www.python.org/downloads/release/python-3810/))
 
-[//]: <> (python cut_locus.py -s tetra --legend --font-size 14 --width 7.5 --height 5.5; python unfolding.py -s cube --legend) 
+[//]: <> (python cut_locus.py -s tetra --legend --font-size 14 --width 7.5 --height 5.5)
+[//]: <> (python unfolding.py -s cube --legend --font 11 --width 7.5 --height 5.5)
+[//]: <> (python unfolding.py -s octa --voronoi --legend --font 11)
 * **Interactive Cut Locus Visualization:**
   ![](https://github.com/pranavraj575/mitochondria/blob/main/images/tetrahedron/demo_cut_locus.gif)
 * **Unfolding Visualization:**
-  
-  ![](https://github.com/pranavraj575/mitochondria/blob/main/images/cube/demo_unfold.gif)
+  ![](https://github.com/pranavraj575/mitochondria/blob/main/images/cube/demo_unfold.gif
+* **Voronoi Star Unfolding Visualization:**!
+  ![](https://github.com/pranavraj575/mitochondria/blob/main/images/octahedron/voronoi_star_demo.gif)
 
 
 |**TABLE OF CONTENTS**||
@@ -64,13 +67,20 @@ python3 cut_locus.py --shape tetrahedron --center_pt --legend
 
 ## Unfolding Visualization:
 
-Run `unfolding.py` from terminal/command prompt in the mitochondria folder 
-  
-  (move to correct folder with ```cd <name of folder>```)
+Run `unfolding.py` from terminal/command prompt in the mitochondria folder
 
 **Example**: 
 ```bash
 python3 unfolding.py --shape cube
+```
+
+## Voronoi Star Unfolding:
+
+Same as unfolding, with the additional argument `--voronoi-star`
+
+**Example**: 
+```bash
+python3 unfolding.py --shape octahedron --voronoi-star
 ```
 
 ## Implemented shapes:
@@ -79,13 +89,16 @@ python3 unfolding.py --shape cube
     python3 cut_locus.py --shape tetrahedron
     ```
     [\\]: <> (python cut_locus.py -s tetra --source 3 --point-x -.5 --point-y -0.86602540378 --save images/tetrahedron/tetra_locus_three.png --height-display 6 --width-display 9 --legend --no-show --font 14)
+    [\\]: <> (python unfolding.py -s tetra --source 0 --point-x .5 --point-y 0.86602540378 --label-unwrapping --save images/tetrahedron/initial_voronoi_star.png --height-display 5.5 --width-display 6.5 --font-size 20 --voronoi-star --ignore-points --no-show)
     ![](https://github.com/pranavraj575/mitochondria/blob/main/images/tetrahedron/tetra_locus_three.png)
-    
+    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/tetrahedron/initial_voronoi_star.png)
+
   * **Cube**:
     ```bash
     python3 cut_locus.py --shape cube
     ```
-    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/cube/p_(0.8%2C%200.2)_face_1.png)
+    [\\]: <> (python cut_locus.py --shape cube --point-x .8 --point-y .2 --source 2 --legend --width 7 --height 5.5 --save images/cube/demo_cut_locus.png --no-show)
+    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/cube/demo_cut_locus.png)
     
   * **Octahedron**:
     ```bash

@@ -62,14 +62,14 @@ class ConvexPolyhderon(Shape):
             return point_pair_to_segment, (relevant_points, relevant_bound_paths, relevant_cells)
         return None
 
-    def plot_unfolding_from_source(self,
-                                   p,
-                                   source_fn,
-                                   ax=None,
-                                   do_filter=True,
-                                   diameter=None,
-                                   ignore_points_on_locus=False,
-                                   ):
+    def plot_voronoi_star_unfolding(self,
+                                    p,
+                                    source_fn,
+                                    ax=None,
+                                    do_filter=True,
+                                    diameter=None,
+                                    ignore_points_on_locus=False,
+                                    ):
         """
         unfold fixing the source face
         must check the voronoi plot on every face to do this
@@ -690,7 +690,7 @@ class ConvexPolyhderon(Shape):
                            p_label_shift=(0., 0.),
                            line_label_dist=.3,
                            point_names=None,
-                           from_source=False,
+                           voronoi_star=False,
                            ignore_points_on_locus=False,
                            ):
         """
@@ -761,20 +761,20 @@ class ConvexPolyhderon(Shape):
             :return: whether or not done plotting
             """
             if ((self.extra_data['unwrap_source_fn'] is not None and self.extra_data['unwrap_sink_fn'] is not None) or
-                    (from_source and self.extra_data['unwrap_source_fn'] is not None)):
+                    (voronoi_star and self.extra_data['unwrap_source_fn'] is not None)):
                 # if we have finished both
                 plt.clf()
                 i_to_display = None
                 if single_display:
                     i_to_display = self.extra_data['unwrap_counter']
-                if from_source:
-                    self.plot_unfolding_from_source(p=self.extra_data['p'],
-                                                    source_fn=self.extra_data['unwrap_source_fn'],
-                                                    ax=plt.gca(),
-                                                    do_filter=do_filter,
-                                                    diameter=diameter,
-                                                    ignore_points_on_locus=ignore_points_on_locus,
-                                                    )
+                if voronoi_star:
+                    self.plot_voronoi_star_unfolding(p=self.extra_data['p'],
+                                                     source_fn=self.extra_data['unwrap_source_fn'],
+                                                     ax=plt.gca(),
+                                                     do_filter=do_filter,
+                                                     diameter=diameter,
+                                                     ignore_points_on_locus=ignore_points_on_locus,
+                                                     )
 
                     plt.xticks([])
                     plt.yticks([])

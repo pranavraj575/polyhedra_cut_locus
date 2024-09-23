@@ -3,8 +3,8 @@ from utils.shape_argparser import *
 PARSER.add_argument("--sink-face-name", action='store', required=False, default=None,
                     help="Specify sink face name if inputting a specific sink face")
 
-PARSER.add_argument("--from-source", action='store_true', required=False,
-                    help="unfold from source face instead of sink face")
+PARSER.add_argument("--voronoi-star", action='store_true', required=False,
+                    help="unfold from source face to create a voronoi star")
 PARSER.add_argument("--ignore-points", action='store_true', required=False,
                     help="ignore single points on faces of cut loci, useful for fixing corner cases or repeat paths")
 
@@ -59,6 +59,6 @@ shape.interactive_unfold(track=not args.no_tracking,
                          p_label_shift=(args.shift_x_p_label, args.shift_y_p_label),
                          line_label_dist=args.label_dist_line,
                          point_names=point_names,
-                         from_source=args.from_source,
+                         voronoi_star=args.voronoi_star,
                          ignore_points_on_locus=args.ignore_points,
                          )
