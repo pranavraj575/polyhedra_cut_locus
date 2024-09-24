@@ -21,8 +21,8 @@ Visualize relevant features of a polytope consisting of 2-d faces
 | ------------- | ------------- |
 | [Installation Instructions](#installation-assuming-python-is-installed) | instructions for how to set up code |
 | [Installation Test](#installation-test) | test example (tetrahedron cut locus) | 
-| [Cut Locus Visualization](#cut-locus-visualization) | Instructions for running interactive cut locus visualization |
-| [Unfolding Visualization](#unfolding-visualization) | Instructions for running interactive unfolding visualization |
+| [Cut Locus](#cut-locus) | Instructions for running interactive cut locus visualization |
+| [Unfolding](#unfolding) | Instructions for running interactive unfolding visualization |
 | [Implemented Shapes](#implemented-shapes) | List of implemented polyhedra and examples of their cut loci |
 
 ## Installation (assuming [Python](https://www.python.org/downloads/release/python-3810/) is installed)
@@ -57,7 +57,7 @@ python3 cut_locus.py -h
 ```
 **Note**: try replacing `python3` with `python` if you get error "Python was not found"
 
-## Cut Locus Visualization:
+## Cut Locus:
 
 Run `cut_locus.py` from terminal/command prompt in the mitochondria folder 
   
@@ -68,7 +68,7 @@ Run `cut_locus.py` from terminal/command prompt in the mitochondria folder
 python3 cut_locus.py --shape tetrahedron --center_pt --legend 
 ```
 
-## Unfolding Visualization:
+## Unfolding:
 
 Run `unfolding.py` from terminal/command prompt in the mitochondria folder
 
@@ -77,7 +77,7 @@ Run `unfolding.py` from terminal/command prompt in the mitochondria folder
 python3 unfolding.py --shape cube
 ```
 
-## Voronoi Star Unfolding:
+### Voronoi Star Unfolding:
 
 Same as unfolding, with the additional argument `--voronoi-star`
 
@@ -133,7 +133,7 @@ python3 unfolding.py --shape octahedron --voronoi-star
     ```bash
     python3 cut_locus.py --shape prism --n <n>
     ```
-    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/pentagonal_prism.png)
+    <img src="https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/pentagonal_prism.png" width=690 />
     
   * **Antiprism**:
     
@@ -141,7 +141,7 @@ python3 unfolding.py --shape octahedron --voronoi-star
     ```bash
     python3 cut_locus.py --shape antiprism --n <n>
     ```
-    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/antiprisms/5/p_(-0.21650635094610957%2C%20-1.034680636892047)_face_0.png)
+    <img src="https://github.com/pranavraj575/mitochondria/blob/main/images/antiprisms/5/p_(-0.21650635094610957%2C%20-1.034680636892047)_face_0.png" width=690 />
     
   * **Pyramid**:
     
@@ -149,7 +149,7 @@ python3 unfolding.py --shape octahedron --voronoi-star
     ```bash
     python3 cut_locus.py --shape pyramid --n <n>
     ```
-    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/pentagonal_pyramid.png)
+    <img src="https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/pentagonal_pyramid.png" width=690 />
     
   * **Elongated Pyramid**:
     
@@ -157,7 +157,7 @@ python3 unfolding.py --shape octahedron --voronoi-star
     ```bash
     python3 cut_locus.py --shape longpyramid --n <n>
     ```
-    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/elongated_pentagonal_pyramid.png)
+    <img src="https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/elongated_pentagonal_pyramid.png" width=690 />
     
   * **Bipyramid**:
     
@@ -165,7 +165,7 @@ python3 unfolding.py --shape octahedron --voronoi-star
     ```bash
     python3 cut_locus.py --shape bipyramid --n <n>
     ```
-    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/pentagonal_bipyramid.png)
+    <img src="https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/pentagonal_bipyramid.png" width=690 />
     
   * **Elongated Bipyramid**:
     
@@ -173,13 +173,13 @@ python3 unfolding.py --shape octahedron --voronoi-star
     ```bash
     python3 cut_locus.py --shape longbipyramid --n <n>
     ```
-    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/elongated_octahedron.png)
+    <img src="https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/elongated_octahedron.png" width=690 />
     
   * **Torus**:
     ```bash
     python3 cut_locus.py --shape torus
     ```
-    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/2torus/sample.png)
+    <img src="https://github.com/pranavraj575/mitochondria/blob/main/images/2torus/sample.png" width=690 />
   
   * **Mirror** (two n-gons glued to each other):
 
@@ -187,4 +187,4 @@ python3 unfolding.py --shape octahedron --voronoi-star
     ```bash
     python3 cut_locus.py --shape mirror --n <n>
     ```
-    ![](https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/hexagonal_mirror.png)
+    <img src="https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/hexagonal_mirror.png" width=690 />
