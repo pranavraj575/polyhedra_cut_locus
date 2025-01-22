@@ -7,7 +7,7 @@ class Bound:
         linear boundary of the form mx<=b
         s,T,si represent the linear transformation that puts a point in our face to the neighboring face
         represented as a shift, rotation matrix, and another shift
-        for some point x on this face, s + T x + si = x' where x' is the neighbor face coordinates
+        for some point x on this face, T (x + s) + si = x' where x' is the neighbor face coordinates
 
         :param m: row vector of bound (mx<=b)
         :param b: scalar of bound (mx<=b)
