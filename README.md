@@ -22,7 +22,7 @@ Visualize cut loci of the 2-d surfaces of polyhedra
 | [Installation Instructions](#installation-assuming-python-is-installed) | instructions for how to set up code |
 | [Installation Test](#installation-test) | test example (tetrahedron cut locus) | 
 | [Cut Locus](#cut-locus) | Instructions for running interactive cut locus visualization |
-| [Unfolding](#unfolding) | Instructions for running interactive unfolding visualization |
+| [Path Unfolding](#path-unfolding) | Instructions for running interactive path unfolding visualization |
 | [Implemented Shapes](#implemented-shapes) | List of implemented polyhedra and examples of their cut loci |
 
 ## Installation (assuming [Python](https://www.python.org/downloads/release/python-3810/) is installed)
@@ -68,7 +68,7 @@ Run `cut_locus.py` from terminal/command prompt in the polyhedra_cut_locus folde
 python3 cut_locus.py --shape tetrahedron --center-pt --legend 
 ```
 
-## Unfolding:
+## Path Unfolding:
 
 Run `unfolding.py` from terminal/command prompt in the polyhedra_cut_locus folder
 
@@ -79,7 +79,7 @@ python3 unfolding.py --shape cube
 
 ### Voronoi Star Unfolding:
 
-Same as unfolding, with the additional argument `--voronoi-star`
+Same as path unfolding, with the additional argument `--voronoi-star`
 
 **Example**: 
 ```bash
