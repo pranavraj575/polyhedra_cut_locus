@@ -21,9 +21,10 @@ Visualize cut loci of the 2-d surfaces of polyhedra
 | ------------- | ------------- |
 | [Installation Instructions](#installation-assuming-python-is-installed) | instructions for how to set up code |
 | [Installation Test](#installation-test) | test example (tetrahedron cut locus) | 
-| [Cut Locus](#cut-locus) | Instructions for running interactive cut locus visualization |
-| [Path Unfolding](#path-unfolding) | Instructions for running interactive path unfolding visualization |
-| [Implemented Shapes](#implemented-shapes) | List of implemented polyhedra and examples of their cut loci |
+| [Cut Locus](#cut-locus) | instructions for running interactive cut locus visualization |
+| [Path Unfolding](#path-unfolding) | instructions for running interactive path unfolding visualization |
+| [Implemented Shapes](#implemented-shapes) | list of implemented polyhedra and examples of their cut loci |
+| [Implement New Shapes](https://github.com/pranavraj575/polyhedra_cut_locus/tree/main/src#to-implement-new-shapes) | instructions to implement new shapes |
 
 ## Installation (assuming [Python](https://www.python.org/downloads/release/python-3810/) is installed)
 * **Option 1**: [Download zip](https://github.com/pranavraj575/polyhedra_cut_locus/archive/refs/heads/main.zip), then extract all
