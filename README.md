@@ -1,6 +1,6 @@
 [//]: <> (hello)
-# Geodesic Complexity Visualizations
-Visualize relevant features of a polytope consisting of 2-d faces
+# Polyhedra Cut Locus Calculation
+Visualize cut loci of the 2-d surfaces of polyhedra
 (tested with [Python 3.8.10](https://www.python.org/downloads/release/python-3810/))
 
 [//]: <> (python cut_locus.py -s tetra --legend --font 14 --display-dims 7.5 5.5)
@@ -9,7 +9,7 @@ Visualize relevant features of a polytope consisting of 2-d faces
 * **Interactive Cut Locus Visualization:**
 
   ![](https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/tetrahedron/demo_cut_locus.gif)
-* **Unfolding Visualization:**
+* **Path Unfolding Visualization:**
   
   ![](https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/cube/demo_unfold.gif)
 * **Voronoi Star Unfolding Visualization:**
