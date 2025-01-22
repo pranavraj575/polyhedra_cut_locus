@@ -560,6 +560,7 @@ class ConvexPolyhderon(Shape):
                                 do_filter=True,
                                 font_size=None,
                                 ignore_points_on_locus=False,
+                                mark_points=(),
                                 ):
         """
         :param figsize: initial figure size (inches)
@@ -577,7 +578,13 @@ class ConvexPolyhderon(Shape):
         :param do_filter: Whether to filter voronoi cell points based on correctness of paths
                 should probably always be true, unless we are not looking at polyhedra
         :param font_size: font size to use for plot (default if None)
+        :param mark_points: points to always mark, list of (face id, x, y, color)
         """
+        mark_dict = {}
+        for fid, mp, c in mark_points:
+            if fid not in mark_dict:
+                mark_dict[fid] = []
+            mark_dict[fid].append((mp, c))
         plt.rcParams["figure.autolayout"] = True
         face_map, n, m = self.faces_to_plot_n_m()
         fig, axs = plt.subplots(n, m, figsize=figsize)
@@ -628,6 +635,10 @@ class ConvexPolyhderon(Shape):
                                           zorder=10,
                                           ignore_points_on_locus=ignore_points_on_locus,
                                           )
+                        for (mpx, mpy), c in mark_dict.get(str(face.name), []):
+                            if c is not None:
+                                c = c.replace('\\', '')
+                            ploot(i, j).scatter(mpx, mpy, color=c)
                         ploot(i, j).set_xlim(xlim)
                         ploot(i, j).set_ylim(ylim)
 
