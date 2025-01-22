@@ -56,18 +56,7 @@ def figsize_from_args(args):
     :param args: args object
     :return: (width,height) or None
     """
-    figsize = None
-    if args.height_display is not None:
-        if args.width_display is None:
-            figsize = (args.height_display, args.height_display)
-        else:
-            figsize = (args.width_display, args.height_display)
-    if args.width_display is not None:
-        if args.height_display is None:
-            figsize = (args.width_display, args.width_display)
-        else:
-            figsize = (args.width_display, args.height_display)
-    return figsize
+    return args.display_dims
 
 
 def get_source_fn_p_from_args(args, shape):
@@ -79,7 +68,7 @@ def get_source_fn_p_from_args(args, shape):
     """
 
     face_name = args.source_face
-    p = np.array([[args.point_x], [args.point_y]])
+    p = np.array([[args.point[0]], [args.point[1]]])
     source_fn_p = None
     if face_name is not None:
         temp = face_name
@@ -154,19 +143,15 @@ PARSER.add_argument("--save-file", action='store', required=False, default=None,
 display_group.add_argument("--legend", action='store_true', required=False,
                            help="put legend on plot")
 
-display_group.add_argument("--width-display", type=float, required=False, default=None,
-                           help="width of display in inches")
-display_group.add_argument("--height-display", type=float, required=False, default=None,
-                           help="height of display in inches")
+display_group.add_argument("--display-dims", type=float, nargs=2, required=False, default=None,
+                           help="dimenisions of display in inches", metavar=('WIDTH', 'HEIGHT'))
 display_group.add_argument("--font-size", type=int, required=False, default=None,
                            help="font size for plotting")
 
 PARSER.add_argument("--source-face", action='store', required=False, default=None,
                     help="Specify the face name if inputting a specific point")
-PARSER.add_argument("--point-x", type=float, required=False, default=0.,
-                    help="Specify point x if inputting a specific point (defaults to 0)")
-PARSER.add_argument("--point-y", type=float, required=False, default=0.,
-                    help="Specify point y if inputting a specific point (defaults to 0)")
+PARSER.add_argument("--point", type=float, required=False, default=(0., 0.), nargs=2,
+                    help="Specify point if inputting a specific point (defaults to (0,0))", metavar=('x', 'y'))
 
 PARSER.add_argument("--no-tracking", action='store_true', required=False,
                     help="Click to interact instead of tracking the cut locus as mouse moves")
