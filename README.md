@@ -8,13 +8,13 @@ Visualize relevant features of a polytope consisting of 2-d faces
 [//]: <> (python unfolding.py -s octa --voronoi --legend --font 11)
 * **Interactive Cut Locus Visualization:**
 
-  ![](https://github.com/pranavraj575/mitochondria/blob/main/images/tetrahedron/demo_cut_locus.gif)
+  ![](https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/tetrahedron/demo_cut_locus.gif)
 * **Unfolding Visualization:**
   
-  ![](https://github.com/pranavraj575/mitochondria/blob/main/images/cube/demo_unfold.gif)
+  ![](https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/cube/demo_unfold.gif)
 * **Voronoi Star Unfolding Visualization:**
 
-  ![](https://github.com/pranavraj575/mitochondria/blob/main/images/octahedron/voronoi_star_demo.gif)
+  ![](https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/octahedron/voronoi_star_demo.gif)
 
 
 |**TABLE OF CONTENTS**||
@@ -26,7 +26,7 @@ Visualize relevant features of a polytope consisting of 2-d faces
 | [Implemented Shapes](#implemented-shapes) | List of implemented polyhedra and examples of their cut loci |
 
 ## Installation (assuming [Python](https://www.python.org/downloads/release/python-3810/) is installed)
-* **Option 1**: [Download zip](https://github.com/pranavraj575/mitochondria/archive/refs/heads/main.zip), then extract all
+* **Option 1**: [Download zip](https://github.com/pranavraj575/polyhedra_cut_locus/archive/refs/heads/main.zip), then extract all
   
   run the following in terminal/command prompt to install Python package:
 
@@ -37,13 +37,13 @@ Visualize relevant features of a polytope consisting of 2-d faces
   ```
 * **Option 2**: Clone Repository, then install the python package (assumes [Git is installed](https://github.com/git-guides/install-git))
   ```bash
-  git clone https://github.com/pranavraj575/mitochondria
-  pip3 install -e mitochondria
+  git clone https://github.com/pranavraj575/polyhedra_cut_locus
+  pip3 install -e polyhedra_cut_locus
   ```
 
 ## Installation Test
 
-Run `cut_locus.py` from terminal/command prompt in the mitochondria folder 
+Run `cut_locus.py` from terminal/command prompt in the polyhedra_cut_locus folder 
   
   (move to correct folder with ```cd <name of folder>```)
 
@@ -59,7 +59,7 @@ python3 cut_locus.py -h
 
 ## Cut Locus:
 
-Run `cut_locus.py` from terminal/command prompt in the mitochondria folder 
+Run `cut_locus.py` from terminal/command prompt in the polyhedra_cut_locus folder 
   
   (move to correct folder with ```cd <name of folder>```)
 
@@ -70,7 +70,7 @@ python3 cut_locus.py --shape tetrahedron --center_pt --legend
 
 ## Unfolding:
 
-Run `unfolding.py` from terminal/command prompt in the mitochondria folder
+Run `unfolding.py` from terminal/command prompt in the polyhedra_cut_locus folder
 
 **Example**: 
 ```bash
@@ -94,22 +94,22 @@ python3 unfolding.py --shape octahedron --voronoi-star
     ```
     [\\]: <> (python cut_locus.py -s tetra --source 3 --point -.5 -0.86602540378 --save images/tetrahedron/tetra_locus_three.png --display-dims 9 6 --legend --no-show --font 14)
     [\\]: <> (python unfolding.py -s tetra --source 0 --point .5 0.86602540378 --label-unwrapping --save images/tetrahedron/initial_voronoi_star.png --display-dims 6.5 5.5 --font 20 --voronoi-star --ignore-points --no-show)
-    <img src="https://github.com/pranavraj575/mitochondria/blob/main/images/tetrahedron/tetra_locus_three.png" width=420 />
-    <img src="https://github.com/pranavraj575/mitochondria/blob/main/images/tetrahedron/initial_voronoi_star.png" width=420 />
+    <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/tetrahedron/tetra_locus_three.png" width=420 />
+    <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/tetrahedron/initial_voronoi_star.png" width=420 />
 
   * **Cube**:
     ```bash
     python3 cut_locus.py --shape cube
     ```
     [\\]: <> (python cut_locus.py --shape cube --point .8 .2 --source 2 --legend --display-dims 7 5.5 --save images/cube/demo_cut_locus.png --no-show)
-    <img src="https://github.com/pranavraj575/mitochondria/blob/main/images/cube/demo_cut_locus.png" width=690 />
+    <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/cube/demo_cut_locus.png" width=690 />
     
   * **Octahedron**:
     ```bash
     python3 cut_locus.py --shape octahedron
     ```
     [\\]: <> (python cut_locus.py -s octa --source 6  --point 0.45 .5  --display-dims 12 6 --font 14 --save images\octahedron\unlabeled_locus_tau1.png --legend --no-show)
-    <img src="https://github.com/pranavraj575/mitochondria/blob/main/images/octahedron/unlabeled_locus_tau1.png" width=690 />
+    <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/octahedron/unlabeled_locus_tau1.png" width=690 />
     
   * **Dodecahedron**:
     ```bash
@@ -118,8 +118,8 @@ python3 unfolding.py --shape octahedron --voronoi-star
     ```
     [\\]: <> (python cut_locus.py -s dodeca --source 11 --point 0 0 --display-dims 12 10 --font 17 --save images/dodecahedron/dodeca_locus_zero.png --no-show)
     [\\]: <> (python unfolding.py -s dodeca --source 0 --point 0 0 --display-dims 11 10 --font 17 --voronoi-star --save images/dodecahedron/dodeca_star_zero.png --ignore-points --no-show)
-    <img src="https://github.com/pranavraj575/mitochondria/blob/main/images/dodecahedron/dodeca_locus_zero.png" width=420 />
-    <img src="https://github.com/pranavraj575/mitochondria/blob/main/images/dodecahedron/dodeca_star_zero.png" width=420 />
+    <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/dodecahedron/dodeca_locus_zero.png" width=420 />
+    <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/dodecahedron/dodeca_star_zero.png" width=420 />
     
   * **Icosahedron**:
     ```bash
@@ -128,8 +128,8 @@ python3 unfolding.py --shape octahedron --voronoi-star
     ```
     [\\]: <> (python cut_locus.py -s icosa --source 17 --point 0 0 --display-dims 15 10 --font 17 --save images/icosahedron/icosa_locus_zero.png --no-show)
     [\\]: <> (python unfolding.py -s icosa --source 0 --point 0 0 --display-dims 12 10 --font 17 --voronoi-star  --save images/icosahedron/icosa_star_zero.png --no-show)
-    <img src="https://github.com/pranavraj575/mitochondria/blob/main/images/icosahedron/icosa_locus_zero.png" width=420 />
-    <img src="https://github.com/pranavraj575/mitochondria/blob/main/images/icosahedron/icosa_star_zero.png" width=420 />
+    <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/icosahedron/icosa_locus_zero.png" width=420 />
+    <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/icosahedron/icosa_star_zero.png" width=420 />
     
   * **Prism**:
     
@@ -138,7 +138,7 @@ python3 unfolding.py --shape octahedron --voronoi-star
     python3 cut_locus.py --shape prism --n <n>
     ```
     [\\]: <> (python cut_locus.py --shape prism --n 5 --legend --source 5 --point -.2 .69 --display-dims 9 6 --save images/display_images/pentagonal_prism.png --no-show)
-    <img src="https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/pentagonal_prism.png" width=690 />
+    <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/display_images/pentagonal_prism.png" width=690 />
     
   * **Antiprism**:
     
@@ -147,7 +147,7 @@ python3 unfolding.py --shape octahedron --voronoi-star
     python3 cut_locus.py --shape antiprism --n <n>
     ```
     [\\]: <> (python cut_locus.py --shape antiprism --n 5 --legend --source 0 --point -1.3 1.5 --display-dims 10 8 --save images/display_images/pentagonal_antiprism.png --no-show)
-    <img src="https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/pentagonal_antiprism.png" width=690 />
+    <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/display_images/pentagonal_antiprism.png" width=690 />
     
   * **Pyramid**:
     
@@ -156,7 +156,7 @@ python3 unfolding.py --shape octahedron --voronoi-star
     python3 cut_locus.py --shape pyramid --n <n>
     ```
     [\\]: <> (python cut_locus.py --shape pyramid --n 5 --legend --source 0 --point -.69 .420 --display-dims 12 5 --save images/display_images/pentagonal_pyramid.png --no-show)
-    <img src="https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/pentagonal_pyramid.png" width=690 />
+    <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/display_images/pentagonal_pyramid.png" width=690 />
     
   * **Elongated Pyramid**:
     
@@ -165,7 +165,7 @@ python3 unfolding.py --shape octahedron --voronoi-star
     python3 cut_locus.py --shape longpyramid --n <n>
     ```
     [\\]: <> (python cut_locus.py --shape longpyramid --n 5 --legend --source 0 --point .4 -.1 --display-dims 8 5 --save images/display_images/elongated_pentagonal_pyramid.png --no-show)
-    <img src="https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/elongated_pentagonal_pyramid.png" width=690 />
+    <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/display_images/elongated_pentagonal_pyramid.png" width=690 />
     
   * **Bipyramid**:
     
@@ -174,7 +174,7 @@ python3 unfolding.py --shape octahedron --voronoi-star
     python3 cut_locus.py --shape bipyramid --n <n>
     ```
     [\\]: <> (python cut_locus.py --shape bipyramid --n 5 --legend --source 0 --point .5 -.8 --display-dims 12 5 --save images/display_images/pentagonal_bipyramid.png --no-show)
-    <img src="https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/pentagonal_bipyramid.png" width=690 />
+    <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/display_images/pentagonal_bipyramid.png" width=690 />
     
   * **Elongated Bipyramid**:
     
@@ -183,14 +183,14 @@ python3 unfolding.py --shape octahedron --voronoi-star
     python3 cut_locus.py --shape longbipyramid --n <n>
     ```
     [\\]: <> (python cut_locus.py --shape longbipyramid --n 4 --legend --source 0 --point .5 -.8 --display-dims 7 5 --save images/display_images/elongated_octahedron.png --no-show)
-    <img src="https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/elongated_octahedron.png" width=690 />
+    <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/display_images/elongated_octahedron.png" width=690 />
     
   * **Torus**:
     ```bash
     python3 cut_locus.py --shape torus
     ```
     [\\]: <> (python cut_locus.py --shape torus --point .69 .420 --source 00 --display-dims 5.5 5.5 --save images/2torus/sample.png --no-show)
-    <img src="https://github.com/pranavraj575/mitochondria/blob/main/images/2torus/sample.png" width=690 />
+    <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/2torus/sample.png" width=690 />
   
   * **Mirror** (two n-gons glued to each other):
 
@@ -199,4 +199,4 @@ python3 unfolding.py --shape octahedron --voronoi-star
     python3 cut_locus.py --shape mirror --n <n>
     ```
     [\\]: <> (python cut_locus.py --shape mirror --legend -n 6 --point .5 .5 --source 0 --display-dims 8 4 --save images/display_images/hexagonal_mirror.png --no-show)
-    <img src="https://github.com/pranavraj575/mitochondria/blob/main/images/display_images/hexagonal_mirror.png" width=690 />
+    <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/display_images/hexagonal_mirror.png" width=690 />
