@@ -4,7 +4,7 @@ Visualize relevant features of a polytope consisting of 2-d faces
 (tested with [Python 3.8.10](https://www.python.org/downloads/release/python-3810/))
 
 [//]: <> (python cut_locus.py -s tetra --legend --font 14 --display-dims 7.5 5.5)
-[//]: <> (python unfolding.py -s cube --legend --font 11 --display-dims 7.5 5.5)
+[//]: <> (python unfolding.py -s cube --legend --font 11 --display-dims 6.5 5.5)
 [//]: <> (python unfolding.py -s octa --voronoi --legend --font 11)
 * **Interactive Cut Locus Visualization:**
 
