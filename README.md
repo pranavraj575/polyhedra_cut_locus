@@ -65,7 +65,7 @@ Run `cut_locus.py` from terminal/command prompt in the polyhedra_cut_locus folde
 
 **Example**: 
 ```bash
-python3 cut_locus.py --shape tetrahedron --center_pt --legend 
+python3 cut_locus.py --shape tetrahedron --center-pt --legend 
 ```
 
 ## Unfolding:

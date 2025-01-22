@@ -2,7 +2,7 @@ from distutils.core import setup
 from setuptools import find_packages
 
 setup(
-    name='mitochondria',
+    name='polyhedra_cut_locus',
     version='6.9.0',
     packages=find_packages(),
     install_requires=['numpy<2',
