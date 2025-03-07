@@ -16,15 +16,35 @@ Visualize cut loci of the 2-d surfaces of polyhedra
 
   ![](https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/octahedron/voronoi_star_demo.gif)
 
-
-|**TABLE OF CONTENTS**||
-| ------------- | ------------- |
-| [Installation Instructions](#installation-assuming-python-is-installed) | instructions for how to set up code |
-| [Installation Test](#installation-test) | test example (tetrahedron cut locus) | 
-| [Cut Locus](#cut-locus) | instructions for running interactive cut locus visualization |
-| [Path Unfolding](#path-unfolding) | instructions for running interactive path unfolding visualization |
-| [Implemented Shapes](#implemented-shapes) | list of implemented polyhedra and examples of their cut loci |
-| [Implement New Shapes](https://github.com/pranavraj575/polyhedra_cut_locus/tree/main/src#to-implement-new-shapes) | instructions to implement new shapes |
+<table>
+    <tr>
+        <td colspan="2" align="center"><strong>TABLE OF CONTENTS</strong></td>
+    </tr>
+    <tr>
+        <td><a href=#installation-assuming-python-is-installed>Installation Instructions</a></td>
+        <td>instructions for how to set up code</td>
+    </tr>
+    <tr>
+        <td><a href=#installation-test>Installation Test</a></td>
+        <td>test example (tetrahedron cut locus)</td>
+    </tr>
+    <tr>
+        <td><a href=#cut-locus>Cut Locus</a></td>
+        <td>instructions for running interactive cut locus visualization</td>
+    </tr>
+    <tr>
+        <td><a href=#path-unfolding>Path Unfolding</a></td>
+        <td>instructions for running interactive path unfolding visualization</td>
+    </tr>
+    <tr>
+        <td><a href=#implemented-shapes>Implemented Shapes</a></td>
+        <td>list of implemented polyhedra and examples of their cut loci</td>
+    </tr>
+    <tr>
+        <td><a href=https://github.com/pranavraj575/polyhedra_cut_locus/tree/main/src#to-implement-new-shapes>Implement New Shapes</a></td>
+        <td>instructions to implement new shapes</td>
+    </tr>
+</table>
 
 ## Installation (assuming [Python](https://www.python.org/downloads/release/python-3810/) is installed)
 * **Option 1**: [Download zip](https://github.com/pranavraj575/polyhedra_cut_locus/archive/refs/heads/main.zip), then extract all
