@@ -1,5 +1,7 @@
 from utils.shape_argparser import *
 
+PARSER.description = 'interactively view the unfoldings that create the cut locus of a point on the surface of a polytope'
+
 PARSER.add_argument("--sink-face-name", action='store', required=False, default=None,
                     help="Specify sink face name if inputting a specific sink face")
 

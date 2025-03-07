@@ -1,5 +1,6 @@
 from utils.shape_argparser import *
 
+PARSER.description = 'interactively view the cut locus on the surface of a polytope'
 display_group.add_argument("--center-pt", action='store_true', required=False,
                            help="add center point to faces")
 display_group.add_argument('--mark', action='append', nargs='*', required=False,
