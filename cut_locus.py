@@ -5,6 +5,9 @@ display_group.add_argument("--center-pt", action='store_true', required=False,
                            help="add center point to faces")
 display_group.add_argument('--mark', action='append', nargs='*', required=False,
                            help='mark point on cut locus faces', metavar='FACE_ID X Y <COLOR>')
+
+display_group.add_argument("--handlelength", type=int, required=False, default=None,
+                           help="length of lines shown in legend")
 PARSER.add_argument("--ignore-points", action='store_true', required=False,
                     help="ignore single points on faces of cut loci, useful for fixing corner cases or repeat paths")
 
@@ -56,4 +59,5 @@ shape.interactive_vornoi_plot(diameter=args.diameter if args.diameter > 0 else N
                               font_size=args.font_size,
                               ignore_points_on_locus=args.ignore_points,
                               mark_points=marks,
+                              legend_kwargs={'handlelength': args.handlelength},  # TODO maybe make default 1
                               )

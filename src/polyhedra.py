@@ -488,7 +488,7 @@ class ConvexPolyhderon(Shape):
 
         return face_map, n, m
 
-    def plot_face_boundaries(self, axs, legend):
+    def plot_face_boundaries(self, axs, legend, legend_kwargs=None):
         """
         plots faces and points/arcs on faces
 
@@ -496,6 +496,8 @@ class ConvexPolyhderon(Shape):
         :param legend: (i,j)-> whether to put a legend on plot (i,j)
         """
         face_map, n, m = self.faces_to_plot_n_m()
+        if legend_kwargs is None:
+            legend_kwargs = dict()
 
         def ploot(i, j):
             if m > 1 and n > 1:
@@ -547,7 +549,7 @@ class ConvexPolyhderon(Shape):
                             ploot(i, j).scatter(x, y, color=color, s=s)
 
                     if legend(i, j):
-                        ploot(i, j).legend()
+                        ploot(i, j).legend(**legend_kwargs)
 
     def interactive_vornoi_plot(self,
                                 figsize=None,
@@ -561,6 +563,7 @@ class ConvexPolyhderon(Shape):
                                 font_size=None,
                                 ignore_points_on_locus=False,
                                 mark_points=(),
+                                legend_kwargs=None,
                                 ):
         """
         :param figsize: initial figure size (inches)
@@ -615,7 +618,7 @@ class ConvexPolyhderon(Shape):
             fc: Face
             if fc is None:
                 return
-            self.plot_face_boundaries(axs, legend=legend)
+            self.plot_face_boundaries(axs, legend=legend, legend_kwargs=legend_kwargs)
             ax.scatter(p[0, 0], p[1, 0], color='purple')
 
             source_fn = fc.name
@@ -661,7 +664,7 @@ class ConvexPolyhderon(Shape):
 
         if event_key is not None:
             cid = fig.canvas.mpl_connect(event_key, mouse_event)
-            self.plot_face_boundaries(axs, legend=legend)
+            self.plot_face_boundaries(axs, legend=legend, legend_kwargs=legend_kwargs)
         else:
             fn, p = source_fn_p
             if fn not in self.faces:
