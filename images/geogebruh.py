@@ -39,10 +39,10 @@ if __name__ == '__main__':
         print('cropping', thing)
         img = np.asarray(Image.open(thing))
         for idx in (0, -1):
-            while np.all(img[idx, :, channels] == white.reshape(1, 1, -1)):
+            while np.all(img[idx, :][:, channels] == white.reshape(1, -1)):
                 img = np.concatenate((img[:idx], img[(idx%len(img)) + 1:]), axis=0)
 
-            while np.all(img[:, idx, channels] == white.reshape(1, 1, -1)):
+            while np.all(img[:, idx][:, channels] == white.reshape(1, 1, -1)):
                 img = np.concatenate((img[:, :idx], img[:, (idx%len(img[0])) + 1:]), axis=1)
         if border_size > 0:
             out_img = np.ones((img.shape[0] + border_size*2, img.shape[1] + border_size*2, img.shape[2]),
