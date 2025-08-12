@@ -498,6 +498,10 @@ class ConvexPolyhderon(Shape):
         face_map, n, m = self.faces_to_plot_n_m()
         if legend_kwargs is None:
             legend_kwargs = dict()
+        if "face_name_to_label" in legend_kwargs:
+            face_name_to_label = legend_kwargs.pop("face_name_to_label")
+        else:
+            face_name_to_label = lambda x: x
 
         def ploot(i, j):
             if m > 1 and n > 1:
@@ -524,7 +528,7 @@ class ConvexPolyhderon(Shape):
                     for ((p1, p2), (bound, f)) in path:
                         (x, y) = tuple(p1.flatten())
                         (xp, yp) = tuple(p2.flatten())
-                        label = str(f.name)
+                        label = face_name_to_label(str(f.name))
                         if self.extra_legend[face.name]:
                             if bound.name not in self.seen_bounds:
                                 self.seen_bounds.append(bound.name)
