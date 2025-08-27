@@ -240,7 +240,7 @@ class Shape:
                 bound = inv_bound.get_inverse_bound()
                 if not face.within_bounds(q):
                     # if the end that we check is outside of the face, we fail
-                    print(p.flatten(), 'invalid with point ', q_orig.flatten())
+                    # print(p.flatten(), 'invalid with point ', q_orig.flatten())
                     return False
 
                 # set new q to the point where qp exits the current face
@@ -256,7 +256,7 @@ class Shape:
                 p_temp = bound.shift_point(p_temp)
             # here, we do one last check to see if our last q is actually in the source face
             if not source.within_bounds(q):
-                print(p.flatten(), 'invalid with point ', q.flatten())
+                # print(p.flatten(), 'invalid with point ', q.flatten())
                 return False
         return True
 
