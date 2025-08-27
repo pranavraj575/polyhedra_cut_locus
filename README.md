@@ -1,6 +1,7 @@
 [//]: <> (hello)
 # Polyhedra Cut Locus Calculation
 Visualize cut loci of the 2-d surfaces of polyhedra
+
 Tested with [Python 3.8.10](https://www.python.org/downloads/release/python-3810/) on Ubuntu (versions 20.04, 22.04, and 24.04) and on Windows 11
 
 [//]: <> (python cut_locus.py -s tetra --legend --font 14 --display-dims 7.5 5.5)
