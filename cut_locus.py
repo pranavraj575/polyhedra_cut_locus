@@ -10,6 +10,8 @@ display_group.add_argument("--handlelength", type=int, required=False, default=N
                            help="length of lines shown in legend")
 display_group.add_argument("--explicit-edges", action='store_true', required=False,
                            help="say 'face <face number>' on legend for edges")
+display_group.add_argument("--leg-font-size", type=int, required=False, default=None,
+                           help="legend font size")
 PARSER.add_argument("--ignore-points", action='store_true', required=False,
                     help="ignore single points on faces of cut loci, useful for fixing corner cases or repeat paths")
 
@@ -63,6 +65,7 @@ shape.interactive_vornoi_plot(diameter=args.diameter if args.diameter > 0 else N
                               mark_points=marks,
                               legend_kwargs={
                                   'handlelength': args.handlelength,
-                                  "face_name_to_label": lambda x: "FACE " + str(x) if args.explicit_edges else x
+                                  "face_name_to_label": lambda x: "FACE " + str(x) if args.explicit_edges else x,
+                                  'fontsize': args.leg_font_size,
                               },  # TODO maybe make default 1
                               )
