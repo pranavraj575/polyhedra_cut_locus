@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 from utils.shape_argparser import *
 
 PARSER.description = 'interactively view the unfoldings that create the cut locus of a point on the surface of a polytope'
@@ -41,6 +42,10 @@ if sink_face_name is not None:
 
 do_filter = shape.is_polyhedra() and not args.no_filter
 # TODO: check
+
+save_kwargs = dict()
+if args.dpi is not None:
+    save_kwargs['dpi'] = args.dpi
 shape.interactive_unfold(track=not args.no_tracking,
                          figsize=figsize_from_args(args),
                          single_display=args.single_display,
@@ -50,6 +55,7 @@ shape.interactive_unfold(track=not args.no_tracking,
                          sink_fn=sink_face_name,
                          show=not args.no_show,
                          save=args.save_file,
+                         save_kwargs=save_kwargs,
                          orient_string=args.orient,
                          do_filter=do_filter,
                          font_size=args.font_size,

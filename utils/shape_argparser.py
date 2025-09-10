@@ -147,6 +147,8 @@ display_group.add_argument("--display-dims", type=float, nargs=2, required=False
                            help="dimenisions of display in inches", metavar=('WIDTH', 'HEIGHT'))
 display_group.add_argument("--font-size", type=int, required=False, default=None,
                            help="font size for plotting")
+display_group.add_argument("--dpi", type=int, required=False, default=None,
+                           help="dpi for plotting")
 
 PARSER.add_argument("--source-face", action='store', required=False, default=None,
                     help="Specify the face name if inputting a specific point")

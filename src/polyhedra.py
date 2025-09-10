@@ -563,6 +563,7 @@ class ConvexPolyhderon(Shape):
                                 source_fn_p=None,
                                 show=True,
                                 save=None,
+                                save_kwargs=None,
                                 do_filter=True,
                                 font_size=None,
                                 ignore_points_on_locus=False,
@@ -587,6 +588,8 @@ class ConvexPolyhderon(Shape):
         :param font_size: font size to use for plot (default if None)
         :param mark_points: points to always mark, list of (face id, x, y, color)
         """
+        if save_kwargs is None:
+            save_kwargs = dict()
         mark_dict = {}
         for fid, mp, c in mark_points:
             if fid not in mark_dict:
@@ -686,7 +689,7 @@ class ConvexPolyhderon(Shape):
                             I, J = i, j
             full_v_plot_from_point_axis(p, ploot(I, J))
         if save is not None:
-            plt.savefig(save)
+            plt.savefig(save, **save_kwargs)
             print('saving to', save)
         if show:
             plt.show()
@@ -701,6 +704,7 @@ class ConvexPolyhderon(Shape):
                            sink_fn=None,
                            show=True,
                            save=None,
+                           save_kwargs=None,
                            orient_string='',
                            do_filter=True,
                            font_size=None,
@@ -732,6 +736,8 @@ class ConvexPolyhderon(Shape):
         :param p_label_shift: how to shift the point labels if they exist
         :param point_names: names of the points, list or None
         """
+        if save_kwargs is None:
+            save_kwargs = dict()
         plt.rcParams["figure.autolayout"] = True
         if font_size is not None:
             plt.rcParams.update({'font.size': font_size})
@@ -797,7 +803,7 @@ class ConvexPolyhderon(Shape):
                     plt.xticks([])
                     plt.yticks([])
                     if save is not None:
-                        plt.savefig(save)
+                        plt.savefig(save, **save_kwargs)
                 else:
                     all_trans_shown, done_plotting = self.plot_unfolding_from_sink(
                         p=self.extra_data['p'],
@@ -840,9 +846,10 @@ class ConvexPolyhderon(Shape):
                         if save is not None:
                             if not done_plotting:
                                 plt.savefig(os.path.join(os.path.dirname(save),
-                                                         'point_' + str(i_to_display) + '_' + os.path.basename(save)))
+                                                         'point_' + str(i_to_display) + '_' + os.path.basename(save)),
+                                            **save_kwargs)
                             if done_plotting:
-                                plt.savefig(save)
+                                plt.savefig(save, **save_kwargs)
                         plt.title("click to advance")
                     self.extra_data['unwrap_counter'] += 1
                     return done_plotting
@@ -936,7 +943,7 @@ class ConvexPolyhderon(Shape):
         plt.suptitle("Click $p$")
         done_plottin = spin()
         if save is not None:
-            plt.savefig(save)
+            plt.savefig(save, **save_kwargs)
             if single_display:
                 while not done_plottin:
                     done_plottin = spin()
