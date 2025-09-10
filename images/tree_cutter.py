@@ -70,3 +70,18 @@ f = open(output_file, 'w')
 f.write(txt)
 f.close()
 print('saved to', output_file)
+
+img_suffixs = ['.png', '.jpg', '.jpeg']
+
+
+def get_imgs(d=root_dir):
+    if os.path.isdir(d):
+        for f in os.listdir(d):
+            for itm in get_imgs(os.path.join(d, f)):
+                yield itm
+    else:
+        if any(d.lower().endswith(suf) for suf in img_suffixs):
+            yield d
+
+
+imgs = [im for im in get_imgs() if os.path.basename(im) in txt]
