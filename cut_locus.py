@@ -23,16 +23,17 @@ def get_marks(args):
     for mp in args.mark:
         if len(mp) < 3:
             raise Exception('--mark requires at least 3 args (--mark FACE_ID X Y), invalid:', mp)
-        if len(mp) > 4:
-            raise Exception('--mark takes at most 4 args (--mark FACE_ID X Y <COLOR>), invalid:', mp)
+        if len(mp) > 5:
+            raise Exception('--mark takes at most 5 args (--mark FACE_ID X Y <COLOR> <LABEL>), invalid:', mp)
         try:
             float(mp[1])
             float(mp[2])
         except:
-            raise Exception('--mark usage is (--mark FACE_ID X Y <COLOR>), invalid:', mp)
+            raise Exception('--mark usage is (--mark FACE_ID X Y <COLOR> <LABEL>), invalid:', mp)
         marks.append((mp[0],
                       (float(mp[1]), float(mp[2])),
-                      mp[3] if len(mp) == 4 else None))
+                      mp[3] if len(mp) >= 4 else None,
+                      mp[4] if len(mp) == 5 else None))
     return marks
 
 

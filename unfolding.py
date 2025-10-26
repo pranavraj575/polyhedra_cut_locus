@@ -26,10 +26,43 @@ display_group.add_argument("--label-dist-line", type=float, required=False, defa
                            help="distance to label each line from")
 display_group.add_argument("--point-names", action='store', nargs='*', required=False, default=None,
                            help="names of each point", metavar='p0 p1')
+display_group.add_argument('--mark', action='append', nargs='*', required=False,
+                           help='mark point on cut locus faces', metavar='X Y <COLOR>, <LABEL>')
+
+
+def get_marks(args):
+    marks = []
+    if args.mark is None:
+        return marks
+    for mp in args.mark:
+        if len(mp) < 2:
+            raise Exception('--mark requires at least 2 args (--mark X Y), invalid:', mp)
+        if len(mp) > 6:
+            raise Exception('--mark takes at most 6 args (--mark X Y <COLOR> <LABEL> <SHIFT X> <SHIFT Y>), invalid:', mp)
+        try:
+            float(mp[0])
+            float(mp[1])
+        except:
+            raise Exception('--mark usage is (--mark X Y <COLOR> <LABEL> <SHIFT X> <SHIFT Y>), invalid:', mp)
+
+        mark = {
+            'pt': (float(mp[0]), float(mp[1]))
+        }
+        if len(mp) >= 3:
+            mark['color'] = (None if mp[2] == "None" else mp[2])
+
+        if len(mp) >= 4:
+            mark['label'] = (None if mp[3] == "None" else mp[3])
+        if len(mp) == 6:
+            mark['shift'] = (float(mp[4]), float(mp[5]))
+        marks.append(mark)
+    return marks
+
 
 args = parse_args(PARSER)
 shape = shape_from_args(args)
 point_names = args.point_names
+marks = get_marks(args)
 
 source_fn_p = get_source_fn_p_from_args(args, shape)
 sink_face_name = args.sink_face_name
@@ -65,4 +98,5 @@ shape.interactive_unfold(track=not args.no_tracking,
                          point_names=point_names,
                          voronoi_star=args.voronoi_star,
                          ignore_points_on_locus=args.ignore_points,
+                         mark_points=marks,
                          )

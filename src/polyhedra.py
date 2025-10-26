@@ -586,15 +586,15 @@ class ConvexPolyhderon(Shape):
         :param do_filter: Whether to filter voronoi cell points based on correctness of paths
                 should probably always be true, unless we are not looking at polyhedra
         :param font_size: font size to use for plot (default if None)
-        :param mark_points: points to always mark, list of (face id, x, y, color)
+        :param mark_points: points to always mark, list of (face id, (x, y), color, label)
         """
         if save_kwargs is None:
             save_kwargs = dict()
         mark_dict = {}
-        for fid, mp, c in mark_points:
+        for fid, mp, c, label in mark_points:
             if fid not in mark_dict:
                 mark_dict[fid] = []
-            mark_dict[fid].append((mp, c))
+            mark_dict[fid].append((mp, c, label))
         plt.rcParams["figure.autolayout"] = True
         face_map, n, m = self.faces_to_plot_n_m()
         fig, axs = plt.subplots(n, m, figsize=figsize)
@@ -645,10 +645,10 @@ class ConvexPolyhderon(Shape):
                                           zorder=10,
                                           ignore_points_on_locus=ignore_points_on_locus,
                                           )
-                        for (mpx, mpy), c in mark_dict.get(str(face.name), []):
+                        for (mpx, mpy), c, label in mark_dict.get(str(face.name), []):
                             if c is not None:
                                 c = c.replace('\\', '')
-                            ploot(i, j).scatter(mpx, mpy, color=c)
+                            ploot(i, j).scatter(mpx, mpy, color=c, label=label)
                         ploot(i, j).set_xlim(xlim)
                         ploot(i, j).set_ylim(ylim)
 
@@ -714,6 +714,7 @@ class ConvexPolyhderon(Shape):
                            point_names=None,
                            voronoi_star=False,
                            ignore_points_on_locus=False,
+                           mark_points=(),
                            ):
         """
         :param figsize: initial figure size (inches)
@@ -735,6 +736,11 @@ class ConvexPolyhderon(Shape):
         :param label_diagram: whether to label points and lines
         :param p_label_shift: how to shift the point labels if they exist
         :param point_names: names of the points, list or None
+        :param mark_points: points to always mark, list of dictionary ('pt' -> (x,y)
+                                                                        'color' -> color
+                                                                        'label' -> label
+                                                                        'shift' -> (shift x, shift y)
+                                                                        )
         """
         if save_kwargs is None:
             save_kwargs = dict()
@@ -942,6 +948,21 @@ class ConvexPolyhderon(Shape):
         self.plot_face_boundaries(axs, legend=legend)
         plt.suptitle("Click $p$")
         done_plottin = spin()
+        for mark in mark_points:
+            shift = mark.get('shift', None)
+            if shift is None:
+                shift = p_label_shift
+            x, y = mark['pt']
+            c = mark.get('color', None)
+            label = mark.get('label', None)
+            plt.scatter(x, y, color=c, label=label, zorder=11, )
+            if label is not None:
+                plt.annotate(label,
+                             (x + shift[0], y + shift[1]),
+                             rotation=0,
+                             color=c,
+                             zorder=11,
+                             )
         if save is not None:
             plt.savefig(save, **save_kwargs)
             if single_display:
