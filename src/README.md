@@ -10,3 +10,5 @@ This consists of a translation (from the edge towards the origin), a rotation, t
 
 The file `src/shape_creation.py` has all currently implemented shapes.
 Any new implementations should probably inherit the ConvexPolyhderon class (or at least the Shape class).
+
+Some checks are implemented (i.e. for making sure the zero point is inside a face), but it is not fully failsafe. For example, it is not checked that polygon sides are consistent, so the distances of each included face must be calculated correctly.
