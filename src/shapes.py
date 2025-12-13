@@ -60,14 +60,16 @@ class Shape:
     def is_polyhedra(self):
         return False
 
-    def add_face(self, face=None):
+    def add_face(self, face=None,face_name=None):
         """
         adds new face to shape
         :param face: Face, if already defined
             if None, initializes new face and adds it
         """
         if face is None:
-            face = Face(self._pick_new_face_name(), tolerance=self.tol)
+            if face_name is None:
+                face_name=self._pick_new_face_name()
+            face = Face(face_name, tolerance=self.tol)
         self.faces[face.name] = face
         self.reset_face(face.name)
 

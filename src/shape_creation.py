@@ -336,6 +336,27 @@ class Dodecahedron(ConvexPolyhderon):
 # ARCHIMEDIAN SOLIDS  #
 # # # # # # # # # # # #
 
+def add_truncation(faces_and_rotations_around_vertex,
+                   truncating_face,
+                   initial_rotation,
+                   truncating_face_r,
+                   main_face_r=1):
+    """
+    adds a truncation to a specified vertex
+    :param faces_and_rotations_around_vertex: list of (faces, rotation to truncate face at) in COUNTERCLOCKWISE order around vertex
+    :param truncating_face: face that will become truncating face
+    :param initial_rotation: initial rotation to start the truncating face at (mostly for display purposes)
+    :param truncating_face_r: radius that new face will have side lengths at
+    :param main_face_r: radius to truncate main face at
+    :return:
+    """
+    n = len(faces_and_rotations_around_vertex)
+    for i, (main_face, rot) in enumerate(faces_and_rotations_around_vertex):
+        main_face.add_boundary_paired(truncating_face, rowtation(rot), main_face_r, -coltation(rot),
+                                      rotation_T(-rot + initial_rotation + i*2*np.pi/n + np.pi),
+                                      truncating_face_r*coltation(initial_rotation + i*2*np.pi/n))
+
+
 class TruncatedTetrahedron(ConvexPolyhderon):
     def __init__(self, tolerance=.001):
         """
@@ -345,45 +366,44 @@ class TruncatedTetrahedron(ConvexPolyhderon):
         """
         super().__init__(tolerance=tolerance)
 
-        for i in range(8):
-            self.add_face()
-
+        for i in range(4):
+            self.add_face()  # face_name=f'H{i}'
+        for i in range(4):
+            self.add_face()  # face_name=f'T{i}'
+        hex_faces = [self.faces[i] for i in range(4)]
+        tri_faces = [self.faces[i] for i in range(4, 8)]
         # iterate over the hexagons (arranged in the same position as the tetrahedron)
         # these are the top three, arranged in a pyramid
         for i in range(3):
-            curr = self.faces[i]
-            neigh = self.faces[(i + 1)%3]
+            curr = hex_faces[i]
+            neigh = hex_faces[(i + 1)%3]
             curr.add_boundary_paired(neigh, rowtation(np.pi/6), 1, -coltation(np.pi/6), rotation_T(-np.pi/3),
                                      coltation(np.pi*5/6))
-        bottom = self.faces[3]
+        bottom = hex_faces[3]
 
         for i in range(3):
-            curr = self.faces[i]
+            curr = hex_faces[i]
             theta = np.pi/2 - 2*i*np.pi/3
             curr.add_boundary_paired(bottom, np.array([[0, -1]]), 1, np.array([[0], [1]]), rotation_T(-i*2*np.pi/3),
                                      coltation(theta))
 
-        # (face, rotation) in clockwise order around the vertex
+        # (face, rotation) in counterclockwise order around the vertex
         truncations = [
-            {'truncations': ((0, np.pi/2), (1, np.pi/2), (2, np.pi/2))},
+            {'truncations': ((0, np.pi/2), (1, np.pi/2), (2, np.pi/2)), 'initial_rot': -np.pi/2},
             # make these triangles upside down for display purposes
-            {'truncations': ((0, -np.pi/6), (3, np.pi/6), (1, -5*np.pi/6)), 'invert': True},
-            {'truncations': ((0, -5*np.pi/6), (2, -np.pi/6), (3, 5*np.pi/6)), 'invert': True},
-            {'truncations': ((3, -np.pi/2), (2, -5*np.pi/6), (1, -np.pi/6)), 'invert': True},
+            {'truncations': ((0, -np.pi/6), (3, np.pi/6), (1, -5*np.pi/6)), 'initial_rot': np.pi/2},
+            {'truncations': ((0, -5*np.pi/6), (2, -np.pi/6), (3, 5*np.pi/6)), 'initial_rot': np.pi/2},
+            {'truncations': ((3, -np.pi/2), (2, -5*np.pi/6), (1, -np.pi/6)), 'initial_rot': np.pi/2},
         ]
-        f_i = 4
         triangle_r = 1/3
-        for dic in truncations:
+        for f_i, dic in enumerate(truncations):
             truncation = dic['truncations']
-            upside_down = dic.get('invert', False)
-            zeroth_face = np.pi/2 if upside_down else -np.pi/2
-            trunc_face = self.faces[f_i]
-            for i, (hex_f_i, rot) in enumerate(truncation):
-                hex_face = self.faces[hex_f_i]
-                hex_face.add_boundary_paired(trunc_face, rowtation(rot), 1, -coltation(rot),
-                                             rotation_T(-rot + zeroth_face + i*2*np.pi/3 + np.pi),
-                                             triangle_r*coltation(zeroth_face + i*2*np.pi/3))
-            f_i += 1
+            add_truncation(faces_and_rotations_around_vertex=[(hex_faces[hex_f_i], rot) for (hex_f_i, rot) in truncation],
+                           truncating_face=tri_faces[f_i],
+                           initial_rotation=dic.get('initial_rot', -np.pi/2),
+                           truncating_face_r=triangle_r,
+                           main_face_r=1,
+                           )
 
     def is_polyhedra(self):
         return True
@@ -479,6 +499,88 @@ class Cuboctahedron(ConvexPolyhderon):
                 return None
 
         return face_map, 4, 6
+
+
+class TruncatedCube(ConvexPolyhderon):
+    def __init__(self, tolerance=.001):
+        """
+        makes truncated cube (an archimedian solid)
+        distance from octahedron center to sides are all 1
+        this makes all side lengths 2 tan(pi/8) = 2(sqrt(2)-1)
+        distance from triangle center to edge is (sqrt(2)-1)/sqrt(3)
+        """
+        super().__init__(tolerance=tolerance)
+
+        for i in range(6):
+            self.add_face()  # face_name=f'O{i}'
+        for i in range(8):
+            self.add_face()  # face_name=f'T{i}'
+
+        I = np.identity(2)
+        e1 = np.array([[1], [0]])
+        e2 = np.array([[0], [1]])
+        octa_faces = [self.faces[i] for i in range(6)]
+        tri_faces = [self.faces[i] for i in range(6, 14)]
+
+        for i in range(4):
+            curr: Face = octa_faces[i]
+            neigh = octa_faces[(i + 1)%4]
+            curr.add_boundary_paired(neigh, e1.T, 1, -e1, I, -e1)
+
+        top = octa_faces[4]
+        bot = octa_faces[5]
+        for i in range(4):
+            curr = octa_faces[i]
+            theta = -np.pi/2 + 2*np.pi*i/4
+            # "angle" of boundary of top face.
+            top.add_boundary_paired(curr, rowtation(theta), 1, -coltation(theta), rotation_T(-2*np.pi*i/4), e2)
+        for i in range(4):
+            curr = octa_faces[i]
+            theta = np.pi/2 - 2*np.pi*i/4
+            # "angle" of boundary of bottom face.
+            bot.add_boundary_paired(curr, rowtation(theta), 1, -coltation(theta), rotation_T(2*np.pi*i/4), -e2)
+
+        # (face, rotation) in counterclockwise order around the vertex
+        truncations = [
+            {'truncations': ((0, np.pi/4), (1, 3*np.pi/4), (4, -np.pi/4)), 'initial_rot': -5*np.pi/6},
+            {'truncations': ((1, np.pi/4), (2, 3*np.pi/4), (4, np.pi/4)), 'initial_rot': -5*np.pi/6},
+            {'truncations': ((2, np.pi/4), (3, 3*np.pi/4), (4, 3*np.pi/4)), 'initial_rot': -5*np.pi/6},
+            {'truncations': ((3, np.pi/4), (0, 3*np.pi/4), (4, -3*np.pi/4)), 'initial_rot': -5*np.pi/6},
+            {'truncations': ((0, -np.pi/4), (5, np.pi/4), (1, -3*np.pi/4)), 'initial_rot': 5*np.pi/6},
+            {'truncations': ((1, -np.pi/4), (5, -np.pi/4), (2, -3*np.pi/4)), 'initial_rot': 5*np.pi/6},
+            {'truncations': ((2, -np.pi/4), (5, -3*np.pi/4), (3, -3*np.pi/4)), 'initial_rot': 5*np.pi/6},
+            {'truncations': ((3, -np.pi/4), (5, 3*np.pi/4), (0, -3*np.pi/4)), 'initial_rot': 5*np.pi/6},
+        ]
+        triangle_r = (np.sqrt(2) - 1)/np.sqrt(3)
+
+        for f_i, dic in enumerate(truncations):
+            truncation = dic['truncations']
+            add_truncation(faces_and_rotations_around_vertex=[(octa_faces[oct_f_i], rot) for (oct_f_i, rot) in truncation],
+                           truncating_face=tri_faces[f_i],
+                           initial_rotation=dic.get('initial_rot', 0),
+                           truncating_face_r=triangle_r,
+                           main_face_r=1,
+                           )
+
+    def is_polyhedra(self):
+        return False
+
+    def faces_to_plot_n_m(self):
+        def face_map(i, j):
+            shift = 2
+            if (i, j) == (0, shift):  # top
+                return self.faces[4]
+            elif (i, j) == (4, shift):  # bottom
+                return self.faces[5]
+            elif i == 2:  # octagon faces
+                return self.faces[(j - shift)%4]
+            elif i == 1:  # face to the top right of the (j-shift)%4 th octagon
+                return self.faces[6 + (j - shift - 1)%4]
+            elif i == 3:  # face to the bottom right of the (j-shift)%4 th octagon
+                return self.faces[10 + (j - shift - 1)%4]
+            return None
+
+        return face_map, 5, 4
 
 
 # # # # # # # # #
@@ -777,7 +879,7 @@ class Large2Torus(LargeNTorus):
 
 
 if __name__ == "__main__":
-    shape = Cuboctahedron()
+    shape = TruncatedTetrahedron()
     p = np.array([[0.0], [0.0]])
 
-    shape.interactive_vornoi_plot(event_key='motion_notify_event', legend=lambda i, j: True)
+    shape.interactive_unfold(legend=lambda i, j: True, track=False)
