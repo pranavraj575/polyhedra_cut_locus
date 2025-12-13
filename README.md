@@ -155,12 +155,17 @@ python3 unfolding.py --shape octahedron --voronoi-star
     
   * **Truncated Tetrahedron**:
     ```bash
-    python3 cut_locus.py --shape icosahedron --click
-    python3 unfolding.py --shape icosahedron --click --voronoi-star
+    python3 cut_locus.py --shape trunc-tetrahedron
     ```
     [\\]: <> (python cut_locus.py --shape trunc-tetrahedron --legend --source 0 --point 0 0 --display-dims 6 8 --save images/display_images/truncated_tetrahedron.png --no-show)
-    <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/icosahedron/icosa_locus_zero.png" width=420 />
-    <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/icosahedron/icosa_star_zero.png" width=420 />
+    <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/display_images/truncated_tetrahedron.png" width=420 />
+    
+  * **Cuboctahedron**:
+    ```bash
+    python3 cut_locus.py --shape cuboctahedron
+    ```
+    [\\]: <> (python cut_locus.py --shape cuboctahedron --legend --source 0 --point 0 0 --display-dims 10 7 --save images/display_images/cuboctahedron.png --no-show)
+    <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/display_images/truncated_tetrahedron.png" width=420 />
     
     
   * **Prism**:
