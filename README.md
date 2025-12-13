@@ -113,6 +113,8 @@ python3 unfolding.py --shape octahedron --voronoi-star
 <details>
 <summary><b>Platonic Solids</b></summary>
 
+Includes all of the [platonic solids](https://en.wikipedia.org/wiki/Platonic_solid).
+
   * Tetrahedron:
     ```bash
     python3 cut_locus.py --shape tetrahedron
@@ -161,6 +163,8 @@ python3 unfolding.py --shape octahedron --voronoi-star
 
 <details>
 <summary><b>Archimedean Solids</b></summary>
+
+Includes some of the [archimedean solids](https://en.wikipedia.org/wiki/Archimedean_solid).
 
   * Truncated Tetrahedron:
     ```bash
@@ -240,6 +244,8 @@ python3 unfolding.py --shape octahedron --voronoi-star
 
 <details>
 <summary><b>Non-Polyhedra</b></summary>
+
+Includes some non-polyhedra. The cut locus algorithm is not guaranteed to be correct for these implementations (though it seems to still work).
 
   * Torus:
     ```bash
