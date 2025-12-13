@@ -109,7 +109,11 @@ python3 unfolding.py --shape octahedron --voronoi-star
 ```
 
 ## Implemented shapes:
-  * **Tetrahedron**:
+
+<details>
+<summary><b>Platonic Solids</b></summary>
+
+  * Tetrahedron:
     ```bash
     python3 cut_locus.py --shape tetrahedron
     python3 unfolding.py --shape tetrahedron --voronoi-star
@@ -119,21 +123,21 @@ python3 unfolding.py --shape octahedron --voronoi-star
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/tetrahedron/tetra_locus_three.png" width=420 />
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/tetrahedron/initial_voronoi_star.png" width=420 />
 
-  * **Cube**:
+  * Cube:
     ```bash
     python3 cut_locus.py --shape cube
     ```
     [\\]: <> (python cut_locus.py --shape cube --point .8 .2 --source 2 --legend --display-dims 7 5.5 --save images/cube/demo_cut_locus.png --no-show)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/cube/demo_cut_locus.png" width=690 />
     
-  * **Octahedron**:
+  * Octahedron:
     ```bash
     python3 cut_locus.py --shape octahedron
     ```
     [\\]: <> (python cut_locus.py -s octahedron --source 6  --point 0.45 .5  --display-dims 12 6 --font 14 --save images\octahedron\unlabeled_locus_tau1.png --legend --no-show)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/octahedron/unlabeled_locus_tau1.png" width=690 />
     
-  * **Dodecahedron**:
+  * Dodecahedron:
     ```bash
     python3 cut_locus.py --shape dodecahedron --click
     python3 unfolding.py --shape dodecahedron --click --voronoi-star
@@ -143,7 +147,7 @@ python3 unfolding.py --shape octahedron --voronoi-star
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/dodecahedron/dodeca_locus_zero.png" width=420 />
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/dodecahedron/dodeca_star_zero.png" width=420 />
     
-  * **Icosahedron**:
+  * Icosahedron:
     ```bash
     python3 cut_locus.py --shape icosahedron --click
     python3 unfolding.py --shape icosahedron --click --voronoi-star
@@ -152,23 +156,32 @@ python3 unfolding.py --shape octahedron --voronoi-star
     [\\]: <> (python unfolding.py -s icosahedron --source 0 --point 0 0 --display-dims 12 10 --font 17 --voronoi-star  --save images/icosahedron/icosa_star_zero.png --no-show)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/icosahedron/icosa_locus_zero.png" width=420 />
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/icosahedron/icosa_star_zero.png" width=420 />
-    
-  * **Truncated Tetrahedron**:
+
+</details>
+
+<details>
+<summary><b>Archimedean Solids</b></summary>
+
+  * Truncated Tetrahedron:
     ```bash
     python3 cut_locus.py --shape trunc-tetrahedron
     ```
     [\\]: <> (python cut_locus.py --shape trunc-tetrahedron --legend --source 0 --point 0 0 --display-dims 6 8 --save images/display_images/truncated_tetrahedron.png --no-show)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/display_images/truncated_tetrahedron.png" width=420 />
     
-  * **Cuboctahedron**:
+  * Cuboctahedron:
     ```bash
     python3 cut_locus.py --shape cuboctahedron
     ```
     [\\]: <> (python cut_locus.py --shape cuboctahedron --legend --source 0 --point 0 0 --display-dims 10 7 --save images/display_images/cuboctahedron.png --no-show)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/display_images/truncated_tetrahedron.png" width=420 />
-    
-    
-  * **Prism**:
+
+</details>
+
+<details>
+<summary><b>Polyhedra Families</b></summary>
+
+  * Prism:
     
     replace `<n>` with the n-gon you want (`3<=n`)
     ```bash
@@ -177,7 +190,7 @@ python3 unfolding.py --shape octahedron --voronoi-star
     [\\]: <> (python cut_locus.py --shape prism --n 5 --legend --source 5 --point -.2 .69 --display-dims 9 6 --save images/display_images/pentagonal_prism.png --no-show)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/display_images/pentagonal_prism.png" width=690 />
     
-  * **Antiprism**:
+  * Antiprism:
     
     replace `<n>` with the n-gon you want (`2<=n`)
     ```bash
@@ -186,7 +199,7 @@ python3 unfolding.py --shape octahedron --voronoi-star
     [\\]: <> (python cut_locus.py --shape antiprism --n 5 --legend --source 0 --point -1.3 1.5 --display-dims 10 8 --save images/display_images/pentagonal_antiprism.png --no-show)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/display_images/pentagonal_antiprism.png" width=690 />
     
-  * **Pyramid**:
+  * Pyramid:
     
     replace `<n>` with the n-gon you want (`3<=n<=5`)
     ```bash
@@ -195,7 +208,7 @@ python3 unfolding.py --shape octahedron --voronoi-star
     [\\]: <> (python cut_locus.py --shape pyramid --n 5 --legend --source 0 --point -.69 .420 --display-dims 12 5 --save images/display_images/pentagonal_pyramid.png --no-show)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/display_images/pentagonal_pyramid.png" width=690 />
     
-  * **Elongated Pyramid**:
+  * Elongated Pyramid:
     
     replace `<n>` with the n-gon you want (`2<=n<=5`)
     ```bash
@@ -204,7 +217,7 @@ python3 unfolding.py --shape octahedron --voronoi-star
     [\\]: <> (python cut_locus.py --shape longpyramid --n 5 --legend --source 0 --point .4 -.1 --display-dims 8 5 --save images/display_images/elongated_pentagonal_pyramid.png --no-show)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/display_images/elongated_pentagonal_pyramid.png" width=690 />
     
-  * **Bipyramid**:
+  * Bipyramid:
     
     replace `<n>` with the n-gon you want (`2<=n<=5`)
     ```bash
@@ -213,7 +226,7 @@ python3 unfolding.py --shape octahedron --voronoi-star
     [\\]: <> (python cut_locus.py --shape bipyramid --n 5 --legend --source 0 --point .5 -.8 --display-dims 12 5 --save images/display_images/pentagonal_bipyramid.png --no-show)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/display_images/pentagonal_bipyramid.png" width=690 />
     
-  * **Elongated Bipyramid**:
+  * Elongated Bipyramid:
     
     replace `<n>` with the n-gon you want (`3<=n<=5`)
     ```bash
@@ -221,15 +234,21 @@ python3 unfolding.py --shape octahedron --voronoi-star
     ```
     [\\]: <> (python cut_locus.py --shape longbipyramid --n 4 --legend --source 0 --point .5 -.8 --display-dims 7 5 --save images/display_images/elongated_octahedron.png --no-show)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/display_images/elongated_octahedron.png" width=690 />
-    
-  * **Torus**:
+
+</details>
+
+
+<details>
+<summary><b>Non-Polyhedra</b></summary>
+
+  * Torus:
     ```bash
     python3 cut_locus.py --shape torus
     ```
     [\\]: <> (python cut_locus.py --shape torus --point .69 .420 --source 00 --display-dims 5.5 5.5 --save images/2torus/sample.png --no-show)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/2torus/sample.png" width=690 />
   
-  * **Mirror** (two n-gons glued to each other):
+  * Mirror (two n-gons glued to each other):
 
     replace `<n>` with the n-gon you want (`3<=n`)
     ```bash
@@ -237,3 +256,5 @@ python3 unfolding.py --shape octahedron --voronoi-star
     ```
     [\\]: <> (python cut_locus.py --shape mirror --legend -n 6 --point .5 .5 --source 0 --display-dims 8 4 --save images/display_images/hexagonal_mirror.png --no-show)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/display_images/hexagonal_mirror.png" width=690 />
+
+</details>
