@@ -3,14 +3,18 @@ from src.shape_creation import (Tetrahedron,
                                 Octahedron,
                                 Dodecahedron,
                                 Icosahedron,
+
                                 TruncatedTetrahedron,
                                 Cuboctahedron,
+                                TruncatedCube,
+
                                 Prism,
                                 Antiprism,
                                 Pyramid,
                                 ElongatedPyramid,
                                 Bipyramid,
                                 ElongatedBipyramid,
+
                                 Mirror,
                                 Large2Torus
                                 )
@@ -22,14 +26,18 @@ mapping = {'tetrahedron': Tetrahedron,
            'octahedron': Octahedron,
            'dodecahedron': Dodecahedron,
            'icosahedron': Icosahedron,
+
            'trunc-tetrahedron': TruncatedTetrahedron,
            'cuboctahedron': Cuboctahedron,
+           'trunc-cube': TruncatedCube,
+
            'pyramid': Pyramid,
            'bipyramid': Bipyramid,
            'longpyramid': ElongatedPyramid,
            'longbipyramid': ElongatedBipyramid,
            'prism': Prism,
            'antiprism': Antiprism,
+
            'mirror': Mirror,
            'torus': Large2Torus,
            }

@@ -180,6 +180,13 @@ Includes some of the [archimedean solids](https://en.wikipedia.org/wiki/Archimed
     [\\]: <> (python cut_locus.py --shape cuboctahedron --legend --source 0 --point 0 0 --display-dims 10 7 --save images/display_images/cuboctahedron.png --no-show)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/display_images/truncated_tetrahedron.png" width=420 />
 
+  * Truncated Cube:
+    ```bash
+    python3 cut_locus.py --shape trunc-cube
+    ```
+    [\\]: <> (python cut_locus.py --shape trunc-cube --legend --source 0 --point 0 0 --display-dims 6 11 --save images/display_images/truncated_cube.png --no-show)
+    <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/display_images/truncated_cube.png" width=420 />
+    
 </details>
 
 <details>
