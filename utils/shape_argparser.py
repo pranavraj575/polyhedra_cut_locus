@@ -3,6 +3,8 @@ from src.shape_creation import (Tetrahedron,
                                 Octahedron,
                                 Dodecahedron,
                                 Icosahedron,
+                                TruncatedTetrahedron,
+                                Cuboctahedron,
                                 Prism,
                                 Antiprism,
                                 Pyramid,
@@ -20,6 +22,8 @@ mapping = {'tetrahedron': Tetrahedron,
            'octahedron': Octahedron,
            'dodecahedron': Dodecahedron,
            'icosahedron': Icosahedron,
+           'trunc-tetrahedron': TruncatedTetrahedron,
+           'cuboctahedron': Cuboctahedron,
            'pyramid': Pyramid,
            'bipyramid': Bipyramid,
            'longpyramid': ElongatedPyramid,
@@ -27,7 +31,8 @@ mapping = {'tetrahedron': Tetrahedron,
            'prism': Prism,
            'antiprism': Antiprism,
            'mirror': Mirror,
-           'torus': Large2Torus}
+           'torus': Large2Torus,
+           }
 
 arg_n = ('prism', 'antiprism', 'pyramid', 'longpyramid', 'bipyramid', 'longbipyramid', 'mirror')
 
@@ -122,7 +127,7 @@ PARSER.add_argument("-hv", action='store_true', required=False,
                     help="show help message with ALL the arguments and exit (display stuff included)")
 
 PARSER.add_argument("-s", "--shape", action='store', required=True,
-                    help="Specify which face to display, options are " + str(tuple(s for s in mapping)))
+                    help="Specify which face to display", choices=list(mapping.keys()))
 PARSER.add_argument("-n", "--n", type=int, required=False, default=None,
                     help="additional argument to specify n, used for " + str(arg_n))
 

@@ -5,6 +5,11 @@ from src.face import Face
 from src.utils import rowtation, coltation, rotation_T
 
 
+# # # # # # # # # # # # # # # # # # # #
+# PLATONIC SOLIDS (plus some extras)  #
+# # # # # # # # # # # # # # # # # # # #
+
+# what is a cube but a squareluar prism
 class Prism(ConvexPolyhderon):
     def __init__(self, n, tolerance=.001):
         """
@@ -327,6 +332,159 @@ class Dodecahedron(ConvexPolyhderon):
         return face_map, 4, 5
 
 
+# # # # # # # # # # # #
+# ARCHIMEDIAN SOLIDS  #
+# # # # # # # # # # # #
+
+class TruncatedTetrahedron(ConvexPolyhderon):
+    def __init__(self, tolerance=.001):
+        """
+        makes truncated tetrahedron (an archimedian solid)
+        length from hexagon center to side is 1
+        length from triangle center to side is forced to be 1/3, and side lengths are all 2/sqrt(3)
+        """
+        super().__init__(tolerance=tolerance)
+
+        for i in range(8):
+            self.add_face()
+
+        # iterate over the hexagons (arranged in the same position as the tetrahedron)
+        # these are the top three, arranged in a pyramid
+        for i in range(3):
+            curr = self.faces[i]
+            neigh = self.faces[(i + 1)%3]
+            curr.add_boundary_paired(neigh, rowtation(np.pi/6), 1, -coltation(np.pi/6), rotation_T(-np.pi/3),
+                                     coltation(np.pi*5/6))
+        bottom = self.faces[3]
+
+        for i in range(3):
+            curr = self.faces[i]
+            theta = np.pi/2 - 2*i*np.pi/3
+            curr.add_boundary_paired(bottom, np.array([[0, -1]]), 1, np.array([[0], [1]]), rotation_T(-i*2*np.pi/3),
+                                     coltation(theta))
+
+        # (face, rotation) in clockwise order around the vertex
+        truncations = [
+            {'truncations': ((0, np.pi/2), (1, np.pi/2), (2, np.pi/2))},
+            # make these triangles upside down for display purposes
+            {'truncations': ((0, -np.pi/6), (3, np.pi/6), (1, -5*np.pi/6)), 'invert': True},
+            {'truncations': ((0, -5*np.pi/6), (2, -np.pi/6), (3, 5*np.pi/6)), 'invert': True},
+            {'truncations': ((3, -np.pi/2), (2, -5*np.pi/6), (1, -np.pi/6)), 'invert': True},
+        ]
+        f_i = 4
+        triangle_r = 1/3
+        for dic in truncations:
+            truncation = dic['truncations']
+            upside_down = dic.get('invert', False)
+            zeroth_face = np.pi/2 if upside_down else -np.pi/2
+            trunc_face = self.faces[f_i]
+            for i, (hex_f_i, rot) in enumerate(truncation):
+                hex_face = self.faces[hex_f_i]
+                hex_face.add_boundary_paired(trunc_face, rowtation(rot), 1, -coltation(rot),
+                                             rotation_T(-rot + zeroth_face + i*2*np.pi/3 + np.pi),
+                                             triangle_r*coltation(zeroth_face + i*2*np.pi/3))
+            f_i += 1
+
+    def is_polyhedra(self):
+        return True
+
+    def faces_to_plot_n_m(self):
+        def face_map(i, j):
+            fm = {(1, 0): 2,
+                  (1, 1): 0,
+                  (1, 2): 1,
+                  (2, 1): 3,
+                  (0, 1): 4,
+                  (2, 0): 6,
+                  (2, 2): 5,
+                  (3, 1): 7,
+                  }
+            idx = fm.get((i, j), None)
+            if idx is None:
+                return None
+            return self.faces[idx]
+
+        return face_map, 4, 3
+
+
+class Cuboctahedron(ConvexPolyhderon):
+    def __init__(self, tolerance=.001):
+        """
+        makes Cuboctahedron (an archimedian solid)
+        """
+        super().__init__(tolerance=tolerance)
+        # we will look at this as a shape with trangle 'top' and 'bottom' face
+        # the sides are then alternating shapes that look like below, with square on top and triangle on bottom, or that upside down
+        #  ||
+        #  \/
+        for i in range(14):
+            self.add_face()
+        top = self.faces[13]
+        bot = self.faces[12]
+        top_faces_matched = 0
+        bot_faces_matched = 0
+        triangle_r = 1/np.sqrt(3)
+        for i in range(6):
+            abov = self.faces[i]
+            abov_right = self.faces[(i + 1)%6]
+            below = self.faces[i + 6]
+            below_right = self.faces[(i + 1)%6 + 6]
+            if i%2:
+                # square on bottom, connect this to bottom face
+                below.add_boundary_paired(bot, rowtation(-np.pi/2), 1, -coltation(-np.pi/2), rotation_T(-bot_faces_matched*2*np.pi/3),
+                                          triangle_r*coltation(np.pi/2 - bot_faces_matched*2*np.pi/3))
+                bot_faces_matched += 1
+
+                # connect to face above
+                below.add_boundary_paired(abov, rowtation(np.pi/2), 1, -coltation(np.pi/2), rotation_T(0),
+                                          triangle_r*coltation(-np.pi/2))
+
+                # connect both rightwards
+                below.add_boundary_paired(below_right, rowtation(0), 1, -coltation(0), rotation_T(np.pi/6),
+                                          triangle_r*coltation(-5*np.pi/6))
+                abov.add_boundary_paired(abov_right, rowtation(np.pi/6), triangle_r, -triangle_r*coltation(np.pi/6),
+                                         rotation_T(-np.pi/6),
+                                         coltation(np.pi))
+            else:
+                # square on top, connect this to top face
+                abov.add_boundary_paired(top, rowtation(np.pi/2), 1, -coltation(np.pi/2), rotation_T(top_faces_matched*2*np.pi/3),
+                                         triangle_r*coltation(-np.pi/2 + top_faces_matched*2*np.pi/3))
+                top_faces_matched += 1
+
+                # connect to face below
+                abov.add_boundary_paired(below, rowtation(-np.pi/2), 1, -coltation(-np.pi/2), rotation_T(0),
+                                         triangle_r*coltation(np.pi/2))
+
+                # connect both rightwards
+                abov.add_boundary_paired(abov_right, rowtation(0), 1, -coltation(0), rotation_T(-np.pi/6),
+                                         triangle_r*coltation(5*np.pi/6))
+                below.add_boundary_paired(below_right, rowtation(-np.pi/6), triangle_r, -triangle_r*coltation(-np.pi/6),
+                                          rotation_T(np.pi/6),
+                                          coltation(np.pi))
+
+    def is_polyhedra(self):
+        return True
+
+    def faces_to_plot_n_m(self):
+        def face_map(i, j):
+            if (i, j) == (0, 2):  # top
+                return self.faces[13]
+            elif (i, j) == (3, 3):  # bottom
+                return self.faces[12]
+            elif i == 1:
+                return self.faces[(j - 2)%6]
+            elif i == 2:
+                return self.faces[(j - 2)%6 + 6]
+            else:
+                return None
+
+        return face_map, 4, 6
+
+
+# # # # # # # # #
+# BONUS SHAPES  #
+# # # # # # # # #
+
 class Antiprism(ConvexPolyhderon):
     def __init__(self, n, tolerance=.001):
         """
@@ -619,32 +777,7 @@ class Large2Torus(LargeNTorus):
 
 
 if __name__ == "__main__":
-
-    cube = Pyramid(5)
+    shape = Cuboctahedron()
     p = np.array([[0.0], [0.0]])
-    # cube.add_point_to_face(p, '00', {'color':'black', 's':20})
 
-    cube.interactive_vornoi_plot(event_key='motion_notify_event', legend=lambda i, j: True)
-    quit()
-    top = cube.faces[4]
-    bottom = cube.faces[5]
-    top: Face
-    for path in top.face_paths_to(bottom.name):
-        for (_, f) in path:
-            print(f.name, end=', ')
-        print()
-    cube.plot_faces()
-
-    face: Face = cube.faces[0]
-    fn = 0
-    p = np.array([[-1.0], [0.0]])
-
-    cube.add_point_to_face(p, fn, {'color': 'red', 's': 20})
-
-    radii = [1 + i/11 for i in range(115)]
-    for r, color in zip(radii, rb_gradient(len(radii))):
-        A = Arc(p, 0, np.pi*2, r)
-        cube.add_arc_end_to_face(A, fn, arc_info={"color": color, 'plot': False})
-    cube.add_all_cut_locus_points(point_info={'color': 'black', 's': 2})
-
-    cube.plot_faces(show=True, legend=lambda i, j: i == 1 or i == 2)
+    shape.interactive_vornoi_plot(event_key='motion_notify_event', legend=lambda i, j: True)

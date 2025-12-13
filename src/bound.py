@@ -33,6 +33,9 @@ class Bound:
             name = base_id + identifier
         self.name = name
 
+    def __str__(self):
+        return f'Bound(m={self.m.flatten()}, b={self.b}, s={self.s.flatten()}, si={self.si.flatten()}, T={self.T})'
+
     def check_valid(self, dimension):
         """
         Checks if self is valid, returns the correct dimension

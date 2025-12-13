@@ -4,7 +4,7 @@ Visualize cut loci of the 2-d surfaces of polyhedra
 
 Tested with [Python 3.8.10](https://www.python.org/downloads/release/python-3810/) on Ubuntu (versions 20.04, 22.04, and 24.04) and on Windows 11
 
-[//]: <> (python cut_locus.py -s tetra --legend --font 14 --display-dims 7.5 5.5)
+[//]: <> (python cut_locus.py -s tetrahedron --legend --font 14 --display-dims 7.5 5.5)
 [//]: <> (python unfolding.py -s cube --legend --font 11 --display-dims 6.5 5.5)
 [//]: <> (python unfolding.py -s octa --voronoi --legend --font 11)
 * **Interactive Cut Locus Visualization:**
@@ -114,8 +114,8 @@ python3 unfolding.py --shape octahedron --voronoi-star
     python3 cut_locus.py --shape tetrahedron
     python3 unfolding.py --shape tetrahedron --voronoi-star
     ```
-    [\\]: <> (python cut_locus.py -s tetra --source 3 --point -.5 -0.86602540378 --save images/tetrahedron/tetra_locus_three.png --display-dims 9 6 --legend --no-show --font 14)
-    [\\]: <> (python unfolding.py -s tetra --source 0 --point .5 0.86602540378 --label-unwrapping --save images/tetrahedron/initial_voronoi_star.png --display-dims 6.5 5.5 --font 20 --voronoi-star --ignore-points --no-show)
+    [\\]: <> (python cut_locus.py -s tetrahedron --source 3 --point -.5 -0.86602540378 --save images/tetrahedron/tetra_locus_three.png --display-dims 9 6 --legend --no-show --font 14)
+    [\\]: <> (python unfolding.py -s tetrahedron --source 0 --point .5 0.86602540378 --label-unwrapping --save images/tetrahedron/initial_voronoi_star.png --display-dims 6.5 5.5 --font 20 --voronoi-star --ignore-points --no-show)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/tetrahedron/tetra_locus_three.png" width=420 />
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/tetrahedron/initial_voronoi_star.png" width=420 />
 
@@ -130,7 +130,7 @@ python3 unfolding.py --shape octahedron --voronoi-star
     ```bash
     python3 cut_locus.py --shape octahedron
     ```
-    [\\]: <> (python cut_locus.py -s octa --source 6  --point 0.45 .5  --display-dims 12 6 --font 14 --save images\octahedron\unlabeled_locus_tau1.png --legend --no-show)
+    [\\]: <> (python cut_locus.py -s octahedron --source 6  --point 0.45 .5  --display-dims 12 6 --font 14 --save images\octahedron\unlabeled_locus_tau1.png --legend --no-show)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/octahedron/unlabeled_locus_tau1.png" width=690 />
     
   * **Dodecahedron**:
@@ -138,8 +138,8 @@ python3 unfolding.py --shape octahedron --voronoi-star
     python3 cut_locus.py --shape dodecahedron --click
     python3 unfolding.py --shape dodecahedron --click --voronoi-star
     ```
-    [\\]: <> (python cut_locus.py -s dodeca --source 11 --point 0 0 --display-dims 12 10 --font 17 --save images/dodecahedron/dodeca_locus_zero.png --no-show)
-    [\\]: <> (python unfolding.py -s dodeca --source 0 --point 0 0 --display-dims 11 10 --font 17 --voronoi-star --save images/dodecahedron/dodeca_star_zero.png --ignore-points --no-show)
+    [\\]: <> (python cut_locus.py -s dodecahedron --source 11 --point 0 0 --display-dims 12 10 --font 17 --save images/dodecahedron/dodeca_locus_zero.png --no-show)
+    [\\]: <> (python unfolding.py -s dodecahedron --source 0 --point 0 0 --display-dims 11 10 --font 17 --voronoi-star --save images/dodecahedron/dodeca_star_zero.png --ignore-points --no-show)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/dodecahedron/dodeca_locus_zero.png" width=420 />
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/dodecahedron/dodeca_star_zero.png" width=420 />
     
@@ -148,10 +148,20 @@ python3 unfolding.py --shape octahedron --voronoi-star
     python3 cut_locus.py --shape icosahedron --click
     python3 unfolding.py --shape icosahedron --click --voronoi-star
     ```
-    [\\]: <> (python cut_locus.py -s icosa --source 17 --point 0 0 --display-dims 15 10 --font 17 --save images/icosahedron/icosa_locus_zero.png --no-show)
-    [\\]: <> (python unfolding.py -s icosa --source 0 --point 0 0 --display-dims 12 10 --font 17 --voronoi-star  --save images/icosahedron/icosa_star_zero.png --no-show)
+    [\\]: <> (python cut_locus.py -s icosahedron --source 17 --point 0 0 --display-dims 15 10 --font 17 --save images/icosahedron/icosa_locus_zero.png --no-show)
+    [\\]: <> (python unfolding.py -s icosahedron --source 0 --point 0 0 --display-dims 12 10 --font 17 --voronoi-star  --save images/icosahedron/icosa_star_zero.png --no-show)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/icosahedron/icosa_locus_zero.png" width=420 />
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/icosahedron/icosa_star_zero.png" width=420 />
+    
+  * **Truncated Tetrahedron**:
+    ```bash
+    python3 cut_locus.py --shape icosahedron --click
+    python3 unfolding.py --shape icosahedron --click --voronoi-star
+    ```
+    [\\]: <> (python cut_locus.py --shape trunc-tetrahedron --legend --source 0 --point 0 0 --display-dims 6 8 --save images/display_images/truncated_tetrahedron.png --no-show)
+    <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/icosahedron/icosa_locus_zero.png" width=420 />
+    <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/icosahedron/icosa_star_zero.png" width=420 />
+    
     
   * **Prism**:
     
