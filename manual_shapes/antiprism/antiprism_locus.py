@@ -20,7 +20,7 @@ for n in range(3, 10):
         cube.add_point_to_face(p1, fn, {'color': 'purple', 's': 40})
         name = 'p_' + str(tuple(p1.flatten())) + '_face_' + str(fn) + '.png'
         cube.plot_faces(save_image=os.path.join(folder, name), show=False, figsize=((n)*2.5, 8), legend=lambda i, j: i == 1 or i == 2,
-                        voronoi=(p1, fn, 5))
+                        voronoi=(p1, fn, 5),greedy_computation=False)
 
         for mult2 in (np.arange(c))*.25/(c - 1):
             cube = Antiprism(n)
@@ -29,4 +29,4 @@ for n in range(3, 10):
             cube.add_point_to_face(p2, fn, {'color': 'purple', 's': 40})
             name = 'p_' + str(tuple(p2.flatten())) + '_face_' + str(fn) + '.png'
             cube.plot_faces(save_image=os.path.join(folder, name), show=False, figsize=((n)*2.5, 8), legend=lambda i, j: i == 1 or i == 2,
-                            voronoi=(p2, fn, 5))
+                            voronoi=(p2, fn, 5),greedy_computation=False)

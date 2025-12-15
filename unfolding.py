@@ -99,4 +99,5 @@ shape.interactive_unfold(track=not args.no_tracking,
                          voronoi_star=args.voronoi_star,
                          ignore_points_on_locus=args.ignore_points,
                          mark_points=marks,
+                         greedy_computation=False,
                          )

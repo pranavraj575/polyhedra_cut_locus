@@ -60,7 +60,7 @@ class Shape:
     def is_polyhedra(self):
         return False
 
-    def add_face(self, face=None,face_name=None):
+    def add_face(self, face=None, face_name=None):
         """
         adds new face to shape
         :param face: Face, if already defined
@@ -68,7 +68,7 @@ class Shape:
         """
         if face is None:
             if face_name is None:
-                face_name=self._pick_new_face_name()
+                face_name = self._pick_new_face_name()
             face = Face(face_name, tolerance=self.tol)
         self.faces[face.name] = face
         self.reset_face(face.name)
@@ -242,7 +242,7 @@ class Shape:
                 bound = inv_bound.get_inverse_bound()
                 if not face.within_bounds(q):
                     # if the end that we check is outside of the face, we fail
-                    # print(p.flatten(), 'invalid with point ', q_orig.flatten())
+                    # print(p.flatten(), 'invalid with point ', q_orig.flatten(), 'because', q.flatten())
                     return False
 
                 # set new q to the point where qp exits the current face
@@ -262,7 +262,7 @@ class Shape:
                 return False
         return True
 
-    def filter_out_points(self, points, bound_paths, source, sink, do_filter=True, ignore_points_on_locus=False):
+    def filter_out_points(self, points, bound_paths, source, sink, do_filter=True, ignore_points_on_locus=False, greedy_computation=False):
         """
         repeatedly makes voronoi complices, looks at relevant points, then filters out points that do not pass through correct faces
         Note: this augments points by placing 4 very distant points that do not affect the relevant section of the complex
@@ -274,16 +274,20 @@ class Shape:
         :param do_filter: whether to filter the points
                     probably only set to false when surface is not polyhedra (i.e. torus or mirror)
         :param ignore_points_on_locus: whether to ignore single points on cut locus
+        :param greedy_computation: whether to do a greedy computation which usually works but is not guaranteed to
         :return: list of points and bound paths that are relevant, augmented by four bounding points that are very far away
         """
+        # TODO: this might have a bug, check dodecahedron center of face with tolerances .01 and .1
 
-        def augment_point_paths(pts, bnd_paths):
+        def augment_point_paths(pts, bnd_paths, sort_result=True):
             """
             adds 4 large points so that the vornoi diagram is always defined
                 puts them in corners of extremely large bounding box
             :param pts: array of column vector points (must be populated)
             :param bnd_paths: array of paths (will add 'None' to this)
-            :return (points, bound_paths), both sorted by angle of point for non-augmented points, and augmented at end
+            :param sort_result: whether to sort final result by angle of point
+                of false, returns in same order as given
+            :return (points, bound_paths), both potentially sorted by angle of point for non-augmented points, and augmented at end
             """
             large = 69*(sum(np.linalg.norm(p) for p in pts) + 1)
             shape = pts[0].shape
@@ -294,12 +298,10 @@ class Shape:
             vs.append(-vs[1])
 
             together = list(zip(pts, bnd_paths))
-            together.sort(key=lambda x: np.arctan2(x[0][1, 0], x[0][0, 0])%(2*np.pi))
-            for i in range(4):
-                large_pt = large*vs[i]
-                # pts.append(large_pt)
-                # bnd_paths.append(None)
-                together.append((large_pt, None))
+            if sort_result:
+                together.sort(key=lambda x: np.arctan2(x[0][1, 0], x[0][0, 0])%(2*np.pi))
+            for v in vs:
+                together.append((large*v, None))
             # together = list(zip(pts, bnd_paths))
             # together.sort(key=lambda x: np.arctan2(x[0][1, 0], x[0][0, 0])%(2*np.pi))
             return [p for (p, _) in together], [pth for (_, pth) in together]
@@ -311,12 +313,12 @@ class Shape:
             if len(points) == 0:
                 # here, we return, as this means we have run out of points to check
                 return None, None, None
-            vp, bound_paths = augment_point_paths(points, bound_paths)
-            points = np.concatenate(vp, axis=1)
-            points = points.T
+            vp, bound_paths = augment_point_paths(points, bound_paths, sort_result=False)
+            aug_points = np.concatenate(vp, axis=1)
+            aug_points = aug_points.T
             # find the cell complex of them
             point_to_segments = dict()
-            for point_pair, (seg_type, (a, b)) in voronoi_diagram_calc(points=points).items():
+            for point_pair, (seg_type, (a, b)) in voronoi_diagram_calc(points=aug_points).items():
                 for pt in point_pair:
                     if pt not in point_to_segments:
                         point_to_segments[pt] = list()
@@ -335,10 +337,11 @@ class Shape:
             relevant_points = []
             relevant_bound_paths = []
             relevant_cells = []
+            relevant_idxs = []
 
             duplicates = []
             for p_idx in point_to_segments:
-                point = points[(p_idx,), :]  # row vector of point that created this
+                point = aug_points[(p_idx,), :]  # row vector of point that created this
                 point_included = False
                 if len(point_to_segments[p_idx]) == 0:
                     # edge case: point does not have a voronoi cell
@@ -361,6 +364,7 @@ class Shape:
                         relevant_points.append(point.T)
                         relevant_bound_paths.append(bound_paths[p_idx])
                         relevant_cells.append(point_to_segments[p_idx])
+                        relevant_idxs.append(p_idx)
                         point_included = True
                         break
                 if not point_included:
@@ -376,32 +380,41 @@ class Shape:
                         relevant_points.append(point.reshape((2, 1)))
                         relevant_bound_paths.append(bound_paths[p_idx])
                         relevant_cells.append(point_to_segments[p_idx])
+                        relevant_idxs.append(p_idx)
+
             if not relevant_points:
                 print("ERROR NO RELEVANT POINTS")
                 # this should not happen as we only fully skip repeats
                 return None, None, None
             if not do_filter:
-                points, bound_paths = augment_point_paths(relevant_points, relevant_bound_paths)
+                points, bound_paths = augment_point_paths(relevant_points, relevant_bound_paths, sort_result=True)
                 return points, bound_paths, relevant_cells
 
             # now iterate through relevant points and see if they actually have the property we want
             # i.e. points on their voronoi cell intersect the sink face are actually in the path of faces we say they are
             # if any fail, we remove it and restart loop
             # if all succeed, we return the relevant points, bound paths, and segments
+            # TODO: we can speed this up a little by putting this check where we calculate relevant points
             for idx, (pt, bound_path, cell_segment) in enumerate(
                     zip(relevant_points, relevant_bound_paths, relevant_cells)):
                 if not self.check_if_valid(pt, source, bound_path, cell_segment):
                     bad_point_found = True
 
                     # remove this point and continue the loop
-                    relevant_points.pop(idx)
-                    relevant_bound_paths.pop(idx)
-
-                    points = relevant_points + [dup_pt for (dup_pt, _, _) in duplicates]
-                    bound_paths = relevant_bound_paths + [dup_pth for (_, dup_pth, _) in duplicates]
+                    if greedy_computation:
+                        # be VERY greedy, only care about points that were part of the relevant points (or a dupe)
+                        # this is not sound in general, but is much faster for small cases
+                        relevant_points.pop(idx)
+                        relevant_bound_paths.pop(idx)
+                        points = relevant_points + [dup_pt for (dup_pt, _, _) in duplicates]
+                        bound_paths = relevant_bound_paths + [dup_pth for (_, dup_pth, _) in duplicates]
+                    else:
+                        bad_pt_idx = relevant_idxs[idx]
+                        bound_paths.pop(bad_pt_idx)
+                        points.pop(bad_pt_idx)
                     break
             if bad_point_found:
                 continue
             # otherwise, no bad point is found, we can just augment and return here
-            points, bound_paths = augment_point_paths(relevant_points, relevant_bound_paths)
+            points, bound_paths = augment_point_paths(relevant_points, relevant_bound_paths, sort_result=True)
             return points, bound_paths, relevant_cells

@@ -144,8 +144,8 @@ Includes all of the [platonic solids](https://en.wikipedia.org/wiki/Platonic_sol
     python3 cut_locus.py --shape dodecahedron --click
     python3 unfolding.py --shape dodecahedron --click --voronoi-star
     ```
-    [\\]: <> (python cut_locus.py -s dodecahedron --source 11 --point 0 0 --display-dims 12 10 --font 17 --save images/dodecahedron/dodeca_locus_zero.png --no-show)
-    [\\]: <> (python unfolding.py -s dodecahedron --source 0 --point 0 0 --display-dims 11 10 --font 17 --voronoi-star --save images/dodecahedron/dodeca_star_zero.png --ignore-points --no-show)
+    [\\]: <> (python cut_locus.py -s dodecahedron --source 11 --point 0 0 --display-dim 12 10 --font 17 --save images/dodecahedron/dodeca_locus_zero.png --no-show --legend --handlelength 1 --leg-font-size 13  --mark 11 0 0 purple --mark 11 0 0 purple --mark 11 0 0 purple --dpi 300 --tolerance .08)
+    [\\]: <> (python .\unfolding.py -s dodecahedron --source 0 --point 0 0 --display-dim 11 10 --font 17 --voronoi-star --save images/dodecahedron/dodeca_star_zero.png --ignore-points --no-show --dpi 300 --tolerance .08)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/dodecahedron/dodeca_locus_zero.png" width=420 />
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/dodecahedron/dodeca_star_zero.png" width=420 />
     
@@ -154,8 +154,8 @@ Includes all of the [platonic solids](https://en.wikipedia.org/wiki/Platonic_sol
     python3 cut_locus.py --shape icosahedron --click
     python3 unfolding.py --shape icosahedron --click --voronoi-star
     ```
-    [\\]: <> (python cut_locus.py -s icosahedron --source 17 --point 0 0 --display-dims 15 10 --font 17 --save images/icosahedron/icosa_locus_zero.png --no-show)
-    [\\]: <> (python unfolding.py -s icosahedron --source 0 --point 0 0 --display-dims 12 10 --font 17 --voronoi-star  --save images/icosahedron/icosa_star_zero.png --no-show)
+    [\\]: <> (python cut_locus.py -s icosahedron --source 17 --point 0 0 --display-dim 13 10 --font 17 --save images/icosahedron/icosa_locus_zero.png --no-show --legend --handlelength 1 --dpi 300)
+    [\\]: <> (python .\unfolding.py -s icosahedron --source 0 --point 0 0 --display-dim 12 10 --font 17 --voronoi-star  --save images/icosahedron/icosa_star_zero.png --no-show --dpi 300)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/icosahedron/icosa_locus_zero.png" width=420 />
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/icosahedron/icosa_star_zero.png" width=420 />
 
@@ -184,7 +184,7 @@ Includes some of the [archimedean solids](https://en.wikipedia.org/wiki/Archimed
     ```bash
     python3 cut_locus.py --shape trunc-cube
     ```
-    [\\]: <> (python cut_locus.py --shape trunc-cube --legend --source 0 --point 0 0 --display-dims 6 11 --save images/display_images/truncated_cube.png --no-show)
+    [\\]: <> (python cut_locus.py --shape trunc-cube --legend --source 0 --point 0 0 --display-dims 7 11 --save images/display_images/truncated_cube.png --no-show)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/display_images/truncated_cube.png" width=420 />
     
 </details>

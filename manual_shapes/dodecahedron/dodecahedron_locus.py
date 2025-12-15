@@ -32,4 +32,4 @@ if __name__ == "__main__":
     if not os.path.exists(folder):
         os.makedirs(folder)
     name = 'p_' + str(tuple(p.flatten())) + '_face_' + str(fn) + '.png'
-    cube.plot_faces(save_image=os.path.join(folder, name), show=False, figsize=(15, 9), voronoi=(p, fn, None))
+    cube.plot_faces(save_image=os.path.join(folder, name), show=False, figsize=(15, 9), voronoi=(p, fn, None),greedy_computation=False)

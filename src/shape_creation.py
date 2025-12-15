@@ -583,6 +583,100 @@ class TruncatedCube(ConvexPolyhderon):
         return face_map, 5, 4
 
 
+class TruncatedOctahedron(ConvexPolyhderon):
+    def __init__(self, tolerance=.001):
+        """
+        makes truncated octahedron (an archimedian solid)
+        distance from center of hexagon to side is 1
+        all side lengths are 2/sqrt(3)
+        distance from center of square to side is 1/sqrt(3)
+        """
+        super().__init__(tolerance=tolerance)
+
+        hex_face_rots = [0, -np.pi/2, np.pi, np.pi/2, 0, -np.pi/2, np.pi, np.pi/2]
+        for i in range(8):
+            self.add_face()
+        for i in range(6):
+            self.add_face()
+
+        for i in range(4):
+            curr = self.faces[i]
+            neigh = self.faces[(i + 1)%4]
+            curr_rot = hex_face_rots[i]
+            neigh_rot = hex_face_rots[(i + 1)%4]
+            curr.add_boundary_paired(neigh,
+                                     rowtation(np.pi/6 + curr_rot), 1, -coltation(np.pi/6 + curr_rot),
+                                     rotation_T(-np.pi/3 - curr_rot + neigh_rot),
+                                     coltation(np.pi*5/6 + neigh_rot))
+
+        for i in range(4):
+            curr = self.faces[4 + i]
+            neigh = self.faces[4 + (i + 1)%4]
+            curr_rot = hex_face_rots[i]
+            neigh_rot = hex_face_rots[4 + (i + 1)%4]
+            curr.add_boundary_paired(neigh,
+                                     rowtation(-np.pi/6 + curr_rot), 1, -coltation(-np.pi/6 + curr_rot),
+                                     rotation_T(np.pi/3 - curr_rot + neigh_rot),
+                                     coltation(-np.pi*5/6 + neigh_rot))
+
+        for i in range(4):
+            top = self.faces[i]
+            bot = self.faces[i + 4]
+            top_rot = hex_face_rots[i]
+            bot_rot = hex_face_rots[i + 4]
+            top.add_boundary_paired(bot,
+                                    rowtation(-np.pi/2 + top_rot), 1, -coltation(-np.pi/2 + top_rot),
+                                    rotation_T(0 - top_rot + bot_rot),
+                                    coltation(np.pi/2 + bot_rot)
+                                    )
+
+        # (face, rotation) in counterclockwise order around the vertex
+        truncations = [
+                          {
+                              'truncations': ((i, -np.pi/6), (i + 4, np.pi/6), ((i + 1)%4 + 4, 5*np.pi/6), ((i + 1)%4, -5*np.pi/6)),
+                              'initial_rot': [0, np.pi/2, np.pi, -np.pi/2][i]
+                          }
+                          for i in range(4)
+                      ] + [
+                          {'truncations': ((0, np.pi/2), (1, np.pi/2), (2, np.pi/2), (3, np.pi/2)), 'initial_rot': np.pi/2},
+                          {'truncations': ((7, - np.pi/2), (6, -np.pi/2), (5, -np.pi/2), (4, - np.pi/2)), 'initial_rot': np.pi}
+                      ]
+        sq_r = 1/np.sqrt(3)
+        sq_faces = [self.faces[i] for i in range(8, 14)]
+        for f_i, dic in enumerate(truncations):
+            truncation = dic['truncations']
+            add_truncation(faces_and_rotations_around_vertex=[(self.faces[hex_f_i], rot + hex_face_rots[hex_f_i]) for (hex_f_i, rot) in truncation],
+                           truncating_face=sq_faces[f_i],
+                           initial_rotation=dic.get('initial_rot', 0),
+                           truncating_face_r=sq_r,
+                           main_face_r=1,
+                           )
+
+    def faces_to_plot_n_m(self):
+        def face_map(i, j):
+            fm = {
+                (0, 3): 0,
+                (1, 3): 4,
+                (2, 3): 13,
+                (3, 3): 6,
+                (4, 3): 2,
+                (2, 0): 12,
+                (2, 1): 3,
+                (2, 2): 7,
+                (2, 4): 5,
+                (2, 5): 1,
+                (1, 1): 11,
+                (1, 5): 8,
+                (3, 1): 10,
+                (3, 5): 9,
+            }
+            if (i, j) in fm:
+                return self.faces[fm[(i, j)]]
+            return None
+
+        return face_map, 5, 6
+
+
 # # # # # # # # #
 # BONUS SHAPES  #
 # # # # # # # # #
@@ -879,7 +973,11 @@ class Large2Torus(LargeNTorus):
 
 
 if __name__ == "__main__":
-    shape = TruncatedTetrahedron()
+    shape = TruncatedOctahedron()
     p = np.array([[0.0], [0.0]])
 
-    shape.interactive_unfold(legend=lambda i, j: True, track=False)
+    shape.interactive_unfold(legend=lambda i, j: True, track=False,
+                             source_fn_p=(0, np.zeros(2).reshape(-1, 1)),
+                             sink_fn=6,
+                             greedy_computation=False,
+                             )

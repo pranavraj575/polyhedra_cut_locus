@@ -30,12 +30,14 @@ class ConvexPolyhderon(Shape):
                             do_filter=True,
                             intersect_with_face=True,
                             ignore_points_on_locus=False,
+                            greedy_computation=False,
                             ):
         """
         implementaiton of algorithm 3
 
         considers a point p and a perticular sink face, finds the cut locus on the sink face
         returns voronoi diagram (set of lines), as well as relevant (points, face bounds, and faces)
+        :param greedy_computation: whether to do a greedy computation which usually works but is not guaranteed to
         """
         # TODO: use this for everything
         vp, bound_paths = self.get_voronoi_points_from_face_paths(p, source_fn, sink_fn, diameter=diameter)
@@ -48,6 +50,7 @@ class ConvexPolyhderon(Shape):
                 self.faces[sink_fn],
                 do_filter=do_filter,
                 ignore_points_on_locus=ignore_points_on_locus,
+                greedy_computation=greedy_computation,
             )
             if relevant_points is None:
                 return None
@@ -69,10 +72,12 @@ class ConvexPolyhderon(Shape):
                                     do_filter=True,
                                     diameter=None,
                                     ignore_points_on_locus=False,
+                                    greedy_computation=False,
                                     ):
         """
         unfold fixing the source face
         must check the voronoi plot on every face to do this
+        :param greedy_computation: whether to do a greedy computation which usually works but is not guaranteed to
 
         """
         if ax is None:
@@ -88,6 +93,7 @@ class ConvexPolyhderon(Shape):
                                                            do_filter=do_filter,
                                                            intersect_with_face=True,
                                                            ignore_points_on_locus=ignore_points_on_locus,
+                                                           greedy_computation=greedy_computation,
                                                            )
                 if voronoi_diagram is not None:
                     point_pair_to_segment, (relevant_points, _, _) = voronoi_diagram
@@ -106,6 +112,7 @@ class ConvexPolyhderon(Shape):
                                                            do_filter=do_filter,
                                                            intersect_with_face=True,
                                                            ignore_points_on_locus=ignore_points_on_locus,
+                                                           greedy_computation=greedy_computation,
                                                            )
                 if voronoi_diagram is not None:
                     (point_pair_to_segment,
@@ -245,6 +252,7 @@ class ConvexPolyhderon(Shape):
                                  line_label_dist=.3,
                                  point_names=None,
                                  ignore_points_on_locus=False,
+                                 greedy_computation=False,
                                  ):
         # TODO: maybe do the same thing as above method, calculate cut locus for all faces, paste them together
         """
@@ -262,7 +270,7 @@ class ConvexPolyhderon(Shape):
         :param label_diagram: whether to label points and lines
         :param p_label_shift: how to shift the point labels if they exist
         :param point_names: names of the points, list or None
-
+        :param greedy_computation: whether to do a greedy computation which usually works but is not guaranteed to
         :return: (all transitions shown (none if no points),
             whether we are done plotting (i.e. i_to_display is None or larger than the number of paths))
         """
@@ -274,6 +282,7 @@ class ConvexPolyhderon(Shape):
                                                    do_filter=do_filter,
                                                    intersect_with_face=False,
                                                    ignore_points_on_locus=ignore_points_on_locus,
+                                                   greedy_computation=greedy_computation,
                                                    )
         if voronoi_diagram is None:
             # cut locus does not exist on this face
@@ -435,6 +444,7 @@ class ConvexPolyhderon(Shape):
                      plot_endpoints=False,
                      zorder=None,
                      ignore_points_on_locus=False,
+                     greedy_computation=False,
                      ):
         """
         creates a voronoi plot for the sink face from p on a souce face
@@ -445,6 +455,7 @@ class ConvexPolyhderon(Shape):
         :param ax: plot to plot on (pyplot, or ax object)
         :param do_filter: Whether to filter voronoi cell points based on correctness of paths
                 should probably always be true, unless we are not looking at polyhedra
+        :param greedy_computation: whether to do a greedy computation which usually works but is not guaranteed to
         :return: whether we were successful
         """
         voronoi_diagram = self.get_voronoi_diagram(p=p,
@@ -454,6 +465,7 @@ class ConvexPolyhderon(Shape):
                                                    do_filter=do_filter,
                                                    intersect_with_face=True,
                                                    ignore_points_on_locus=ignore_points_on_locus,
+                                                   greedy_computation=greedy_computation,
                                                    )
         if voronoi_diagram is not None:
             point_pair_to_seg, _ = voronoi_diagram
@@ -569,6 +581,7 @@ class ConvexPolyhderon(Shape):
                                 ignore_points_on_locus=False,
                                 mark_points=(),
                                 legend_kwargs=None,
+                                greedy_computation=False,
                                 ):
         """
         :param figsize: initial figure size (inches)
@@ -587,6 +600,7 @@ class ConvexPolyhderon(Shape):
                 should probably always be true, unless we are not looking at polyhedra
         :param font_size: font size to use for plot (default if None)
         :param mark_points: points to always mark, list of (face id, (x, y), color, label)
+        :param greedy_computation: whether to do a greedy computation which usually works but is not guaranteed to
         """
         if save_kwargs is None:
             save_kwargs = dict()
@@ -644,6 +658,7 @@ class ConvexPolyhderon(Shape):
                                           plot_endpoints=False,
                                           zorder=10,
                                           ignore_points_on_locus=ignore_points_on_locus,
+                                          greedy_computation=greedy_computation,
                                           )
                         for (mpx, mpy), c, label in mark_dict.get(str(face.name), []):
                             if c is not None:
@@ -715,6 +730,7 @@ class ConvexPolyhderon(Shape):
                            voronoi_star=False,
                            ignore_points_on_locus=False,
                            mark_points=(),
+                           greedy_computation=False,
                            ):
         """
         :param figsize: initial figure size (inches)
@@ -741,6 +757,7 @@ class ConvexPolyhderon(Shape):
                                                                         'label' -> label
                                                                         'shift' -> (shift x, shift y)
                                                                         )
+        :param greedy_computation: whether to do a greedy computation which usually works but is not guaranteed to
         """
         if save_kwargs is None:
             save_kwargs = dict()
@@ -804,6 +821,7 @@ class ConvexPolyhderon(Shape):
                                                      do_filter=do_filter,
                                                      diameter=diameter,
                                                      ignore_points_on_locus=ignore_points_on_locus,
+                                                     greedy_computation=greedy_computation,
                                                      )
 
                     plt.xticks([])
@@ -825,6 +843,7 @@ class ConvexPolyhderon(Shape):
                         line_label_dist=line_label_dist,
                         point_names=point_names,
                         ignore_points_on_locus=ignore_points_on_locus,
+                        greedy_computation=greedy_computation,
                     )
                     print('point locations:')
                     for i, (zero, xvec, yvec, p) in enumerate(all_trans_shown):
@@ -877,6 +896,7 @@ class ConvexPolyhderon(Shape):
                                                   ax=ploot(i, j),
                                                   do_filter=do_filter,
                                                   ignore_points_on_locus=ignore_points_on_locus,
+                                                  greedy_computation=greedy_computation,
                                                   )
                                 ploot(i, j).set_xlim(xlim)
                                 ploot(i, j).set_ylim(ylim)
@@ -937,6 +957,7 @@ class ConvexPolyhderon(Shape):
                                           ax=ploot(i, j),
                                           do_filter=do_filter,
                                           ignore_points_on_locus=ignore_points_on_locus,
+                                          greedy_computation=greedy_computation,
                                           )
                         ploot(i, j).set_xlim(xlim)
                         ploot(i, j).set_ylim(ylim)
@@ -979,6 +1000,7 @@ class ConvexPolyhderon(Shape):
                    voronoi=None,
                    do_filter=True,
                    ignore_points_on_locus=False,
+                   greedy_computation=False,
                    ):
         """
         plots all faces of graph
@@ -989,6 +1011,7 @@ class ConvexPolyhderon(Shape):
         :param voronoi: list of (p, source face, diameter) points to use in the vornoi plot
         :param do_filter: Whether to filter voronoi cell points based on correctness of paths
                 should probably always be true, unless we are not looking at polyhedra
+        :param greedy_computation: whether to do a greedy computation which usually works but is not guaranteed to
         """
         face_map, n, m = self.faces_to_plot_n_m()
 
@@ -1021,6 +1044,7 @@ class ConvexPolyhderon(Shape):
                                                                 ax=ploot(i, j),
                                                                 do_filter=do_filter,
                                                                 ignore_points_on_locus=ignore_points_on_locus,
+                                                                greedy_computation=greedy_computation,
                                                                 )
                         ploot(i, j).set_xlim(xlim)
                         ploot(i, j).set_ylim(ylim)
