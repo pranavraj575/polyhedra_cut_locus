@@ -1,36 +1,31 @@
 import sympy as sym
 import numpy as np
-from itertools import combinations
 
-from utils.symbolic_utils import (sym_rotation_T,
-                                  matrixify,
-                                  latexify,
-                                  line_intersection,
-                                  equality,
-                                  eq_points_equal,
-                                  roots,
-                                  get_all_bisecting_lines,
-                                  get_all_triple_points,
-                                  exp_simplify,
-                                  )
+from utils.symbolic_utils import (
+    sym_rotation_T,
+    latexify,
+    eq_points_equal,
+    get_all_bisecting_lines,
+    exp_simplify,
+)
 
-x = sym.Symbol('p_1')
-y = sym.Symbol('p_2')
+x = sym.Symbol("p_1")
+y = sym.Symbol("p_2")
 
 p = np.array([x, y])
 
 # representing p on face 6 and inspecting face 0
 
-p0 = (3*sym.sqrt(3), 1) + p
-p1 = (2*sym.sqrt(3), 4) + sym_rotation_T(2*sym.pi/3)@p
-p2 = (-2*sym.sqrt(3), 4) + sym_rotation_T(-2*sym.pi/3)@p
-p3 = (-3*sym.sqrt(3), 1) + p
-p4 = (-sym.sqrt(3), -5) + sym_rotation_T(2*sym.pi/3)@p
-p5 = (sym.sqrt(3), -5) + sym_rotation_T(-2*sym.pi/3)@p
+p0 = (3 * sym.sqrt(3), 1) + p
+p1 = (2 * sym.sqrt(3), 4) + sym_rotation_T(2 * sym.pi / 3) @ p
+p2 = (-2 * sym.sqrt(3), 4) + sym_rotation_T(-2 * sym.pi / 3) @ p
+p3 = (-3 * sym.sqrt(3), 1) + p
+p4 = (-sym.sqrt(3), -5) + sym_rotation_T(2 * sym.pi / 3) @ p
+p5 = (sym.sqrt(3), -5) + sym_rotation_T(-2 * sym.pi / 3) @ p
 
-right_face = (0, 2), sym_rotation_T(-sym.pi/3)@(1, 0)
-left_face = (0, 2), sym_rotation_T(-2*sym.pi/3)@(1, 0)
-bottom_face = (0, -1), sym_rotation_T(0)@(1, 0)
+right_face = (0, 2), sym_rotation_T(-sym.pi / 3) @ (1, 0)
+left_face = (0, 2), sym_rotation_T(-2 * sym.pi / 3) @ (1, 0)
+bottom_face = (0, -1), sym_rotation_T(0) @ (1, 0)
 
 points = [p0, p1, p2, p3, p4, p5]
 N = len(points)
@@ -46,9 +41,9 @@ for i in range(6):
         start_point, direction = lij_eq
         start_point = [exp_simplify(t) for t in start_point]
         direction = [exp_simplify(t) for t in direction]
-        print('\\item')
-        print('$\\ell^{\\{',i,',',j,'\\}}(p) := t \\mapsto ',
-              latexify(start_point),'+', latexify(direction),'t$.')
+        print("\\item")
+        print("$\\ell^{\\{", i, ",", j, "\\}}(p) := t \\mapsto ", latexify(start_point), "+", latexify(direction), "t$.")
+"""
 quit()
 X = get_all_triple_points(points)
 print('points')
@@ -204,3 +199,4 @@ print('other points')
 for other in range(6):
     if other not in [subject] + line:
         print(latexify(exp_simplify(np.dot(X[other][line[0]][line[1]] - pt, L[line[0]][line[1]][1]))))
+"""

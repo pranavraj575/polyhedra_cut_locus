@@ -1,53 +1,51 @@
-from src.shape_creation import (Tetrahedron,
-                                Cube,
-                                Octahedron,
-                                Dodecahedron,
-                                Icosahedron,
-
-                                TruncatedTetrahedron,
-                                Cuboctahedron,
-                                TruncatedCube,
-                                TruncatedOctahedron,
-
-                                Prism,
-                                Antiprism,
-                                Pyramid,
-                                ElongatedPyramid,
-                                Bipyramid,
-                                ElongatedBipyramid,
-
-                                Mirror,
-                                Large2Torus
-                                )
-import sys, argparse
+from src.shape_creation import (
+    Tetrahedron,
+    Cube,
+    Octahedron,
+    Dodecahedron,
+    Icosahedron,
+    TruncatedTetrahedron,
+    Cuboctahedron,
+    TruncatedCube,
+    TruncatedOctahedron,
+    Prism,
+    Antiprism,
+    Pyramid,
+    ElongatedPyramid,
+    Bipyramid,
+    ElongatedBipyramid,
+    Mirror,
+    Large2Torus,
+)
+import sys
+import argparse
 import numpy as np
 
-mapping = {'tetrahedron': Tetrahedron,
-           'cube': Cube,
-           'octahedron': Octahedron,
-           'dodecahedron': Dodecahedron,
-           'icosahedron': Icosahedron,
+mapping = {
+    "tetrahedron": Tetrahedron,
+    "cube": Cube,
+    "octahedron": Octahedron,
+    "dodecahedron": Dodecahedron,
+    "icosahedron": Icosahedron,
+    "trunc-tetrahedron": TruncatedTetrahedron,
+    "cuboctahedron": Cuboctahedron,
+    "trunc-cube": TruncatedCube,
+    "trunc-octahedron": TruncatedOctahedron,
+    "pyramid": Pyramid,
+    "bipyramid": Bipyramid,
+    "longpyramid": ElongatedPyramid,
+    "longbipyramid": ElongatedBipyramid,
+    "prism": Prism,
+    "antiprism": Antiprism,
+    "mirror": Mirror,
+    "torus": Large2Torus,
+}
 
-           'trunc-tetrahedron': TruncatedTetrahedron,
-           'cuboctahedron': Cuboctahedron,
-           'trunc-cube': TruncatedCube,
-           'trunc-octahedron': TruncatedOctahedron,
-
-           'pyramid': Pyramid,
-           'bipyramid': Bipyramid,
-           'longpyramid': ElongatedPyramid,
-           'longbipyramid': ElongatedBipyramid,
-           'prism': Prism,
-           'antiprism': Antiprism,
-
-           'mirror': Mirror,
-           'torus': Large2Torus,
-           }
-
-arg_n = ('prism', 'antiprism', 'pyramid', 'longpyramid', 'bipyramid', 'longbipyramid', 'mirror')
+arg_n = ("prism", "antiprism", "pyramid", "longpyramid", "bipyramid", "longbipyramid", "mirror")
 
 
 # shapes that take n as an arg
+
 
 def check_face_name(proposed_name, shape):
     """
@@ -110,8 +108,7 @@ def shape_from_args(args):
     if len(possible) > 1:
         raise Exception("shape '" + args.shape + "' is ambiguous, could be " + str(tuple(possible)))
     if len(possible) == 0:
-        raise Exception(
-            "shape '" + args.shape + "' does not exist, valid arguments are " + str(tuple(s for s in mapping)))
+        raise Exception("shape '" + args.shape + "' does not exist, valid arguments are " + str(tuple(s for s in mapping)))
     name = possible[0]
     SHAPE = mapping[name]
     if name in arg_n:
@@ -130,53 +127,94 @@ def shape_from_args(args):
             return SHAPE(tolerance=args.tolerance)
 
 
-PARSER = argparse.ArgumentParser()
-display_group = PARSER.add_argument_group('display', 'arguments to tweak display output')
+def get_parser_and_display_group():
+    PARSER = argparse.ArgumentParser()
+    display_group = PARSER.add_argument_group("display", "arguments to tweak display output")
 
-PARSER.add_argument("-hv", action='store_true', required=False,
-                    help="show help message with ALL the arguments and exit (display stuff included)")
+    PARSER.add_argument(
+        "-hv",
+        action="store_true",
+        required=False,
+        help="show help message with ALL the arguments and exit (display stuff included)",
+    )
 
-PARSER.add_argument("-s", "--shape", action='store', required=True,
-                    help="Specify which face to display", choices=list(mapping.keys()))
-PARSER.add_argument("-n", "--n", type=int, required=False, default=None,
-                    help="additional argument to specify n, used for " + str(arg_n))
+    PARSER.add_argument(
+        "-s", "--shape", action="store", required=True, help="Specify which face to display", choices=list(mapping.keys())
+    )
+    PARSER.add_argument(
+        "-n", "--n", type=int, required=False, default=None, help="additional argument to specify n, used for " + str(arg_n)
+    )
 
-PARSER.add_argument("--diameter", type=int, required=False, default=-1,
-                    help="Specify diameter of search graph (longest possible sequence of faces on a geodesic)")
-PARSER.add_argument("--no-filter", action='store_true', required=False,
-                    help="Turn off filter on points of voronoi complex. " +
-                         "This should fix tolerance errors, but may result in invalid points (might want to check with --single-display)")
-PARSER.add_argument("--tolerance", type=float, required=False, default=None,
-                    help="tolerance for things like intersection and containment, default differs for each shape")
+    PARSER.add_argument(
+        "--diameter",
+        type=int,
+        required=False,
+        default=-1,
+        help="Specify diameter of search graph (longest possible sequence of faces on a geodesic)",
+    )
+    PARSER.add_argument(
+        "--no-filter",
+        action="store_true",
+        required=False,
+        help="Turn off filter on points of voronoi complex. "
+        + "This should fix tolerance errors, but may result in invalid points (might want to check with --single-display)",
+    )
+    PARSER.add_argument(
+        "--tolerance",
+        type=float,
+        required=False,
+        default=None,
+        help="tolerance for things like intersection and containment, default differs for each shape",
+    )
 
-PARSER.add_argument("--no-show", action='store_true', required=False,
-                    help="don't show the plot")
+    PARSER.add_argument("--no-show", action="store_true", required=False, help="don't show the plot")
 
-PARSER.add_argument("--save-file", action='store', required=False, default=None,
-                    help="save initial image as specified file")
+    PARSER.add_argument("--save-file", action="store", required=False, default=None, help="save initial image as specified file")
 
-display_group.add_argument("--legend", action='store_true', required=False,
-                           help="put legend on plot")
+    display_group.add_argument("--legend", action="store_true", required=False, help="put legend on plot")
 
-display_group.add_argument("--display-dims", type=float, nargs=2, required=False, default=None,
-                           help="dimenisions of display in inches", metavar=('WIDTH', 'HEIGHT'))
-display_group.add_argument("--font-size", type=int, required=False, default=None,
-                           help="font size for plotting")
-display_group.add_argument("--dpi", type=int, required=False, default=None,
-                           help="dpi for plotting")
+    display_group.add_argument(
+        "--display-dims",
+        type=float,
+        nargs=2,
+        required=False,
+        default=None,
+        help="dimenisions of display in inches",
+        metavar=("WIDTH", "HEIGHT"),
+    )
+    display_group.add_argument("--font-size", type=int, required=False, default=None, help="font size for plotting")
+    display_group.add_argument("--dpi", type=int, required=False, default=None, help="dpi for plotting")
 
-PARSER.add_argument("--source-face", action='store', required=False, default=None,
-                    help="Specify the face name if inputting a specific point")
-PARSER.add_argument("--point", type=float, required=False, default=(0., 0.), nargs=2,
-                    help="Specify point if inputting a specific point (defaults to (0,0))", metavar=('x', 'y'))
+    PARSER.add_argument(
+        "--source-face", action="store", required=False, default=None, help="Specify the face name if inputting a specific point"
+    )
+    PARSER.add_argument(
+        "--point",
+        type=float,
+        required=False,
+        default=(0.0, 0.0),
+        nargs=2,
+        help="Specify point if inputting a specific point (defaults to (0,0))",
+        metavar=("x", "y"),
+    )
 
-PARSER.add_argument("--no-tracking", action='store_true', required=False,
-                    help="Click to interact instead of tracking the cut locus as mouse moves")
+    PARSER.add_argument(
+        "--no-tracking",
+        action="store_true",
+        required=False,
+        help="Click to interact instead of tracking the cut locus as mouse moves",
+    )
+    return PARSER, display_group
 
 
-def parse_args(parser):
-    if any(help_string in sys.argv for help_string in ['-h', '--help', "-hv"]):
-        if not any(verboseness in sys.argv for verboseness in ["-hv", ]):
+def parse_args(parser, display_group):
+    if any(help_string in sys.argv for help_string in ["-h", "--help", "-hv"]):
+        if not any(
+            verboseness in sys.argv
+            for verboseness in [
+                "-hv",
+            ]
+        ):
             # we have to remove the display group manually
             parser._action_groups.remove(display_group)
         # do this manually

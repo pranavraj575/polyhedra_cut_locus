@@ -15,7 +15,7 @@ def project_p_onto_line(p, a, v):
     """
     # v_norm=v/np.linalg.norm(v)
     # return a+v_norm*(np.dot(v_norm.T,p-a))
-    return a + v*(np.dot(v.T, p - a))/np.square(np.linalg.norm(v))
+    return a + v * (np.dot(v.T, p - a)) / np.square(np.linalg.norm(v))
 
 
 class Shape:
@@ -109,7 +109,7 @@ class Shape:
         for path in source.face_paths_to(sink_fn, diameter=diameter):
             T, s = np.identity(source.dimension), np.zeros((source.dimension, 1))
             bound_path = []
-            for (bound, F) in path:
+            for bound, F in path:
                 bound: Bound
                 bound_path.append((bound, F))
                 T, s = bound.concatenate_with(T, s)
@@ -127,9 +127,9 @@ class Shape:
         :return: list of (T,s) translation matrix and shift such that each Tp+s translates p to sink face
         """
         if (source_fn, sink_fn, diameter) not in self.memoized_face_translations:
-            self.memoized_face_translations[(source_fn, sink_fn, diameter)] = self._get_voronoi_translations(source_fn,
-                                                                                                             sink_fn,
-                                                                                                             diameter=diameter)
+            self.memoized_face_translations[(source_fn, sink_fn, diameter)] = self._get_voronoi_translations(
+                source_fn, sink_fn, diameter=diameter
+            )
         return self.memoized_face_translations[(source_fn, sink_fn, diameter)]
 
     def get_voronoi_points_from_face_paths(self, p, source_fn, sink_fn, diameter=None):
@@ -144,8 +144,8 @@ class Shape:
         """
         points = []
         bound_paths = []
-        for (T, s, bound_path) in self.get_voronoi_translations(source_fn, sink_fn, diameter=diameter):
-            points.append(T@p + s)
+        for T, s, bound_path in self.get_voronoi_translations(source_fn, sink_fn, diameter=diameter):
+            points.append(T @ p + s)
             bound_paths.append(bound_path)
         return points, bound_paths
 
@@ -162,9 +162,9 @@ class Shape:
             p = np.zeros(2)  # point that is in center of C
             for a, b in segments:
                 p += a + b
-            p = p.reshape((2, 1))/(2*len(segments))
+            p = p.reshape((2, 1)) / (2 * len(segments))
 
-        for (a, b) in segments:
+        for a, b in segments:
             a = a.reshape((len(a), 1))
             b = b.reshape((len(b), 1))
 
@@ -174,7 +174,7 @@ class Shape:
             #   (where p* is p's projection onto line extending (a,b))
             vertex_dir = project_p_onto_line(v, a, b - a) - v
             # this is a vector pointing from vertex v to its projection on line extending (a,b)
-            if np.dot(outside_dir.T, vertex_dir) >= -self.tol*np.linalg.norm(vertex_dir)*np.linalg.norm(outside_dir):
+            if np.dot(outside_dir.T, vertex_dir) >= -self.tol * np.linalg.norm(vertex_dir) * np.linalg.norm(outside_dir):
                 # equivalent to outside_dir*vertex_dir/(|outside_dir||vertex_dir|)>=-tol
                 # we multiply since vertex_dir may be 0 (outside_dir should not be 0)
                 # if this is nonnegative then they point the same direction and v is inside this bound
@@ -211,7 +211,7 @@ class Shape:
 
         # all vertices of C that are in F
         # also all boundary intersections
-        for (a, b) in segments:
+        for a, b in segments:
             a = a.reshape((len(a), 1))
             b = b.reshape((len(b), 1))
 
@@ -224,18 +224,18 @@ class Shape:
                 if q is not None and not any(np.array_equal(q, q1) for q1 in checking_pts):
                     checking_pts.append(q)
         # all vertices of F that are in C
-        for (v, _) in sink.get_vertices():
+        for v, _ in sink.get_vertices():
             # if self.point_within_cell(v, segments, p=p):
             if self.point_within_cell(v, segments, p=None):
                 checking_pts.append(v)
 
         # now go through and check each point
         for q in checking_pts:
-            q_orig = q.copy()
+            # q_orig = q.copy()
             p_temp = p.copy()
             # this is a little annoying since bound path goes from p to q,
             #   but it is much easier to check in the opposite direction
-            for (inv_bound, face) in bound_path[::-1]:
+            for inv_bound, face in bound_path[::-1]:
                 face: Face
                 # since bound goes from p to q, we need to invert it to go the other way
                 inv_bound: Bound
@@ -262,7 +262,9 @@ class Shape:
                 return False
         return True
 
-    def filter_out_points(self, points, bound_paths, source, sink, do_filter=True, ignore_points_on_locus=False, greedy_computation=False):
+    def filter_out_points(
+        self, points, bound_paths, source, sink, do_filter=True, ignore_points_on_locus=False, greedy_computation=False
+    ):
         """
         repeatedly makes voronoi complices, looks at relevant points, then filters out points that do not pass through correct faces
         Note: this augments points by placing 4 very distant points that do not affect the relevant section of the complex
@@ -289,7 +291,7 @@ class Shape:
                 of false, returns in same order as given
             :return (points, bound_paths), both potentially sorted by angle of point for non-augmented points, and augmented at end
             """
-            large = 69*(sum(np.linalg.norm(p) for p in pts) + 1)
+            large = 69 * (sum(np.linalg.norm(p) for p in pts) + 1)
             shape = pts[0].shape
             vs = [np.ones(shape)]
             vs.append(vs[0].copy())
@@ -299,9 +301,9 @@ class Shape:
 
             together = list(zip(pts, bnd_paths))
             if sort_result:
-                together.sort(key=lambda x: np.arctan2(x[0][1, 0], x[0][0, 0])%(2*np.pi))
+                together.sort(key=lambda x: np.arctan2(x[0][1, 0], x[0][0, 0]) % (2 * np.pi))
             for v in vs:
-                together.append((large*v, None))
+                together.append((large * v, None))
             # together = list(zip(pts, bnd_paths))
             # together.sort(key=lambda x: np.arctan2(x[0][1, 0], x[0][0, 0])%(2*np.pi))
             return [p for (p, _) in together], [pth for (_, pth) in together]
@@ -322,9 +324,9 @@ class Shape:
                 for pt in point_pair:
                     if pt not in point_to_segments:
                         point_to_segments[pt] = list()
-                    if seg_type == 'segment':
+                    if seg_type == "segment":
                         point_to_segments[pt].append((a, b))
-                    elif seg_type == 'ray':
+                    elif seg_type == "ray":
                         point_to_segments[pt].append((a, a + b))
                     else:
                         raise NotImplementedError
@@ -357,10 +359,11 @@ class Shape:
                     continue
                 for a, b in point_to_segments[p_idx]:
                     # if any line of the point's voronoi cell is in face F, we call this point relevant and continue
-                    if sink.line_within_bounds(a.reshape((2, 1)),
-                                               b.reshape((2, 1)),
-                                               ignore_points=ignore_points_on_locus,
-                                               ):
+                    if sink.line_within_bounds(
+                        a.reshape((2, 1)),
+                        b.reshape((2, 1)),
+                        ignore_points=ignore_points_on_locus,
+                    ):
                         relevant_points.append(point.T)
                         relevant_bound_paths.append(bound_paths[p_idx])
                         relevant_cells.append(point_to_segments[p_idx])
@@ -395,8 +398,7 @@ class Shape:
             # if any fail, we remove it and restart loop
             # if all succeed, we return the relevant points, bound paths, and segments
             # TODO: we can speed this up a little by putting this check where we calculate relevant points
-            for idx, (pt, bound_path, cell_segment) in enumerate(
-                    zip(relevant_points, relevant_bound_paths, relevant_cells)):
+            for idx, (pt, bound_path, cell_segment) in enumerate(zip(relevant_points, relevant_bound_paths, relevant_cells)):
                 if not self.check_if_valid(pt, source, bound_path, cell_segment):
                     bad_point_found = True
 

@@ -120,8 +120,8 @@ Includes all of the [platonic solids](https://en.wikipedia.org/wiki/Platonic_sol
     python3 cut_locus.py --shape tetrahedron
     python3 unfolding.py --shape tetrahedron --voronoi-star
     ```
-    [\\]: <> (python cut_locus.py -s tetrahedron --source 3 --point -.5 -0.86602540378 --save images/tetrahedron/tetra_locus_three.png --display-dims 9 6 --legend --no-show --font 14)
-    [\\]: <> (python unfolding.py -s tetrahedron --source 0 --point .5 0.86602540378 --label-unwrapping --save images/tetrahedron/initial_voronoi_star.png --display-dims 6.5 5.5 --font 20 --voronoi-star --ignore-points --no-show)
+    [\\]: <> (python cut_locus.py -s tetrahedron --source 3 --point -.5 -0.86602540378 --save images/tetrahedron/tetra_locus_three.png --display-dims 9 6 --legend --no-show --font 14 --explicit-edges --handlelength 1 --dpi 300)
+    [\\]: <> (python unfolding.py -s tetrahedron --source 3 --point -.5 -0.86602540378 --label-unwrapping --save images/tetrahedron/initial_voronoi_star.png --display-dims 6.5 5.5 --font-size 20 --voronoi-star --ignore-points --no-show --dpi 300)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/tetrahedron/tetra_locus_three.png" width=420 />
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/tetrahedron/initial_voronoi_star.png" width=420 />
 

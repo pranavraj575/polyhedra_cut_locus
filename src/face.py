@@ -25,12 +25,12 @@ class Face:
         self.double_face_edge = []
 
         if bounds_faces is not None:
-            for (bound, F) in bounds_faces:
+            for bound, F in bounds_faces:
                 self.add_boundary(bound, F)
         self.basepoint = basepoint  # if None, will update this when the dimension is set by adding a bound
 
     def __str__(self):
-        return '(Face ' + str(self.name) + ': connected to faces ' + str([F.name for (_, F) in self.bounds]) + ')'
+        return "(Face " + str(self.name) + ": connected to faces " + str([F.name for (_, F) in self.bounds]) + ")"
 
     def add_boundary(self, bound: Bound, F, update=True):
         """
@@ -57,8 +57,8 @@ class Face:
         if self.dimension != 2:
             return
         self.vertices.sort(
-            key=lambda v: (2*np.pi + np.arctan2((v[0] - self.basepoint)[1][0], (v[0] - self.basepoint)[0][0]))%(
-                    2*np.pi))
+            key=lambda v: (2 * np.pi + np.arctan2((v[0] - self.basepoint)[1][0], (v[0] - self.basepoint)[0][0])) % (2 * np.pi)
+        )
 
     def get_path_and_faces(self):
         """
@@ -72,7 +72,7 @@ class Face:
         out = []
         for i in range(len(path)):
             v1, rows = path[i]
-            v2, rowsp = path[(i + 1)%len(path)]
+            v2, rowsp = path[(i + 1) % len(path)]
             row = None
             for r in rows:
                 if r in rowsp:
@@ -89,7 +89,7 @@ class Face:
         """
         if self.bound_M is None:
             self._create_bound_arrays()
-        return np.all(self.bound_M@p <= self.bound_b + self.tol)
+        return np.all(self.bound_M @ p <= self.bound_b + self.tol)
 
     def bound_of_face(self, F):
         """
@@ -97,7 +97,7 @@ class Face:
         :param F: Face
         :return: Bound
         """
-        for (bound, Fp) in self.bounds:
+        for bound, Fp in self.bounds:
             if Fp.name == F.name:
                 return bound
         raise Exception("BOUND NOT FOUND WITH THIS FACE")
@@ -127,7 +127,7 @@ class Face:
             sub_M = self.bound_M[rows, :]
             sub_b = self.bound_b[rows, :]
             if abs(np.linalg.det(sub_M)) > self.tol:
-                vertex = np.linalg.inv(sub_M)@sub_b
+                vertex = np.linalg.inv(sub_M) @ sub_b
                 if self.within_bounds(vertex):
                     self.vertices.append((vertex, rows))
         self._order_vertices()
@@ -149,16 +149,16 @@ class Face:
             return p
         q = p.copy()
         small_bound = None  # first bound to p from basepoint
-        for (bound, F) in self.bounds:
+        for bound, F in self.bounds:
             if not bound.within(q, tol=self.tol):
                 # goes from inside bound to outside bound
                 q = bound.grab_intersection(self.basepoint, q)
                 small_bound = bound
         m = small_bound.m
-        mbar = m/np.linalg.norm(m)
-        center = m.T*small_bound.b/np.square(np.linalg.norm(m))
+        mbar = m / np.linalg.norm(m)
+        center = m.T * small_bound.b / np.square(np.linalg.norm(m))
 
-        offset = p - mbar.T*np.dot(mbar, p)
+        offset = p - mbar.T * np.dot(mbar, p)
         proj = offset + center
 
         exiting = self.get_exit_point(center, offset)
@@ -179,7 +179,7 @@ class Face:
         # q represents the point on the line pq that is intersecting the closest boundary
         if self.within_bounds(q):
             return None
-        for (bound, F) in self.bounds:
+        for bound, F in self.bounds:
             if bound.within(p, tol=self.tol) and not bound.within(q, tol=self.tol):
                 # goes from inside bound to outside bound
                 q = bound.grab_intersection(p, v)
@@ -280,8 +280,9 @@ class Face:
         elif diameter is not None and diameter <= 0:
             return
         else:
-            for (bound, f) in self.bounds:
-                if not f.name in visited_names:
-                    for path in f.face_paths_to(fn, visited_names=visited_names.copy(),
-                                                diameter=None if diameter is None else diameter - 1):
+            for bound, f in self.bounds:
+                if f.name not in visited_names:
+                    for path in f.face_paths_to(
+                        fn, visited_names=visited_names.copy(), diameter=None if diameter is None else diameter - 1
+                    ):
                         yield [(bound, f)] + path
