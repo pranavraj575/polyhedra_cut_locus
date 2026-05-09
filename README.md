@@ -53,12 +53,12 @@ Tested with [Python 3.8.10](https://www.python.org/downloads/release/python-3810
   run the following in terminal/command prompt to install Python package:
 
   (replace `<name of folder>` with path of folder you extracted it to)
-  ```bash
+  ```shell
   cd <name of folder>
   pip3 install -e .
   ```
 * **Option 2**: Clone Repository, then install the python package (assumes [Git is installed](https://github.com/git-guides/install-git))
-  ```bash
+  ```shell
   git clone https://github.com/pranavraj575/polyhedra_cut_locus
   pip3 install -e polyhedra_cut_locus
   ```
@@ -70,11 +70,11 @@ Run `cut_locus.py` from terminal/command prompt in the polyhedra_cut_locus folde
   (move to correct folder with ```cd <name of folder>```)
 
 **Example**: 
-```bash
+```shell
 python3 cut_locus.py --shape tetrahedron --center-pt --legend 
 ```
 To see the possible arguments, run the following:
-```bash
+```shell
 python3 cut_locus.py -h
 ```
 **Note**: try replacing `python3` with `python` if you get error "Python was not found"
@@ -86,7 +86,7 @@ Run `cut_locus.py` from terminal/command prompt in the polyhedra_cut_locus folde
   (move to correct folder with ```cd <name of folder>```)
 
 **Example**: 
-```bash
+```shell
 python3 cut_locus.py --shape tetrahedron --center-pt --legend 
 ```
 
@@ -95,7 +95,7 @@ python3 cut_locus.py --shape tetrahedron --center-pt --legend
 Run `unfolding.py` from terminal/command prompt in the polyhedra_cut_locus folder
 
 **Example**: 
-```bash
+```shell
 python3 unfolding.py --shape cube
 ```
 
@@ -104,7 +104,7 @@ python3 unfolding.py --shape cube
 Same as path unfolding, with the additional argument `--voronoi-star`
 
 **Example**: 
-```bash
+```shell
 python3 unfolding.py --shape octahedron --voronoi-star
 ```
 
@@ -116,7 +116,7 @@ python3 unfolding.py --shape octahedron --voronoi-star
 Includes all of the [platonic solids](https://en.wikipedia.org/wiki/Platonic_solid).
 
   * Tetrahedron:
-    ```bash
+    ```shell
     python3 cut_locus.py --shape tetrahedron
     python3 unfolding.py --shape tetrahedron --voronoi-star
     ```
@@ -126,21 +126,21 @@ Includes all of the [platonic solids](https://en.wikipedia.org/wiki/Platonic_sol
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/tetrahedron/initial_voronoi_star.png" width=420 />
 
   * Cube:
-    ```bash
+    ```shell
     python3 cut_locus.py --shape cube
     ```
     [\\]: <> (python cut_locus.py --shape cube --point .8 .2 --source 2 --legend --display-dims 7 5.5 --save images/cube/demo_cut_locus.png --no-show)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/cube/demo_cut_locus.png" width=690 />
     
   * Octahedron:
-    ```bash
+    ```shell
     python3 cut_locus.py --shape octahedron
     ```
     [\\]: <> (python cut_locus.py -s octahedron --source 6  --point 0.45 .5  --display-dims 12 6 --font 14 --save images\octahedron\unlabeled_locus_tau1.png --legend --no-show)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/octahedron/unlabeled_locus_tau1.png" width=690 />
     
   * Dodecahedron:
-    ```bash
+    ```shell
     python3 cut_locus.py --shape dodecahedron --click
     python3 unfolding.py --shape dodecahedron --click --voronoi-star
     ```
@@ -150,7 +150,7 @@ Includes all of the [platonic solids](https://en.wikipedia.org/wiki/Platonic_sol
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/dodecahedron/dodeca_star_zero.png" width=420 />
     
   * Icosahedron:
-    ```bash
+    ```shell
     python3 cut_locus.py --shape icosahedron --click
     python3 unfolding.py --shape icosahedron --click --voronoi-star
     ```
@@ -167,21 +167,21 @@ Includes all of the [platonic solids](https://en.wikipedia.org/wiki/Platonic_sol
 Includes some of the [archimedean solids](https://en.wikipedia.org/wiki/Archimedean_solid).
 
   * Truncated Tetrahedron:
-    ```bash
+    ```shell
     python3 cut_locus.py --shape trunc-tetrahedron
     ```
     [\\]: <> (python cut_locus.py --shape trunc-tetrahedron --legend --source 0 --point 0 0 --display-dims 6 8 --save images/display_images/truncated_tetrahedron.png --no-show)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/display_images/truncated_tetrahedron.png" width=420 />
     
   * Cuboctahedron:
-    ```bash
+    ```shell
     python3 cut_locus.py --shape cuboctahedron
     ```
     [\\]: <> (python cut_locus.py --shape cuboctahedron --legend --source 0 --point 0 0 --display-dims 10 7 --save images/display_images/cuboctahedron.png --no-show)
     <img src="https://github.com/pranavraj575/polyhedra_cut_locus/blob/main/images/display_images/truncated_tetrahedron.png" width=420 />
 
   * Truncated Cube:
-    ```bash
+    ```shell
     python3 cut_locus.py --shape trunc-cube
     ```
     [\\]: <> (python cut_locus.py --shape trunc-cube --legend --source 0 --point 0 0 --display-dims 7 11 --save images/display_images/truncated_cube.png --no-show)
@@ -195,7 +195,7 @@ Includes some of the [archimedean solids](https://en.wikipedia.org/wiki/Archimed
   * Prism:
     
     replace `<n>` with the n-gon you want (`3<=n`)
-    ```bash
+    ```shell
     python3 cut_locus.py --shape prism --n <n>
     ```
     [\\]: <> (python cut_locus.py --shape prism --n 5 --legend --source 5 --point -.2 .69 --display-dims 9 6 --save images/display_images/pentagonal_prism.png --no-show)
@@ -204,7 +204,7 @@ Includes some of the [archimedean solids](https://en.wikipedia.org/wiki/Archimed
   * Antiprism:
     
     replace `<n>` with the n-gon you want (`2<=n`)
-    ```bash
+    ```shell
     python3 cut_locus.py --shape antiprism --n <n>
     ```
     [\\]: <> (python cut_locus.py --shape antiprism --n 5 --legend --source 0 --point -1.3 1.5 --display-dims 10 8 --save images/display_images/pentagonal_antiprism.png --no-show)
@@ -213,7 +213,7 @@ Includes some of the [archimedean solids](https://en.wikipedia.org/wiki/Archimed
   * Pyramid:
     
     replace `<n>` with the n-gon you want (`3<=n<=5`)
-    ```bash
+    ```shell
     python3 cut_locus.py --shape pyramid --n <n>
     ```
     [\\]: <> (python cut_locus.py --shape pyramid --n 5 --legend --source 0 --point -.69 .420 --display-dims 12 5 --save images/display_images/pentagonal_pyramid.png --no-show)
@@ -222,7 +222,7 @@ Includes some of the [archimedean solids](https://en.wikipedia.org/wiki/Archimed
   * Elongated Pyramid:
     
     replace `<n>` with the n-gon you want (`2<=n<=5`)
-    ```bash
+    ```shell
     python3 cut_locus.py --shape longpyramid --n <n>
     ```
     [\\]: <> (python cut_locus.py --shape longpyramid --n 5 --legend --source 0 --point .4 -.1 --display-dims 8 5 --save images/display_images/elongated_pentagonal_pyramid.png --no-show)
@@ -231,7 +231,7 @@ Includes some of the [archimedean solids](https://en.wikipedia.org/wiki/Archimed
   * Bipyramid:
     
     replace `<n>` with the n-gon you want (`2<=n<=5`)
-    ```bash
+    ```shell
     python3 cut_locus.py --shape bipyramid --n <n>
     ```
     [\\]: <> (python cut_locus.py --shape bipyramid --n 5 --legend --source 0 --point .5 -.8 --display-dims 12 5 --save images/display_images/pentagonal_bipyramid.png --no-show)
@@ -240,7 +240,7 @@ Includes some of the [archimedean solids](https://en.wikipedia.org/wiki/Archimed
   * Elongated Bipyramid:
     
     replace `<n>` with the n-gon you want (`3<=n<=5`)
-    ```bash
+    ```shell
     python3 cut_locus.py --shape longbipyramid --n <n>
     ```
     [\\]: <> (python cut_locus.py --shape longbipyramid --n 4 --legend --source 0 --point .5 -.8 --display-dims 7 5 --save images/display_images/elongated_octahedron.png --no-show)
@@ -255,7 +255,7 @@ Includes some of the [archimedean solids](https://en.wikipedia.org/wiki/Archimed
 Includes some non-polyhedra. The cut locus algorithm is not guaranteed to be correct for these implementations (though it seems to still work).
 
   * Torus:
-    ```bash
+    ```shell
     python3 cut_locus.py --shape torus
     ```
     [\\]: <> (python cut_locus.py --shape torus --point .69 .420 --source 00 --display-dims 5.5 5.5 --save images/2torus/sample.png --no-show)
@@ -264,7 +264,7 @@ Includes some non-polyhedra. The cut locus algorithm is not guaranteed to be cor
   * Mirror (two n-gons glued to each other):
 
     replace `<n>` with the n-gon you want (`3<=n`)
-    ```bash
+    ```shell
     python3 cut_locus.py --shape mirror --n <n>
     ```
     [\\]: <> (python cut_locus.py --shape mirror --legend -n 6 --point .5 .5 --source 0 --display-dims 8 4 --save images/display_images/hexagonal_mirror.png --no-show)
