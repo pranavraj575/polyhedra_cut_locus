@@ -184,6 +184,7 @@ def get_parser_and_display_group():
     )
     display_group.add_argument("--font-size", type=int, required=False, default=None, help="font size for plotting")
     display_group.add_argument("--dpi", type=int, required=False, default=None, help="dpi for plotting")
+    display_group.add_argument("--p_color", type=str, required=False, default="purple", help="color of point")
 
     PARSER.add_argument(
         "--source-face", action="store", required=False, default=None, help="Specify the face name if inputting a specific point"

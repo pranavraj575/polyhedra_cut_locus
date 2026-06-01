@@ -132,4 +132,5 @@ shape.interactive_unfold(
     ignore_points_on_locus=args.ignore_points,
     mark_points=marks,
     greedy_computation=False,
+    p_color=args.p_color,
 )

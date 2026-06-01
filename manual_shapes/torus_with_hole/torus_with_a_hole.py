@@ -71,7 +71,7 @@ def geodesic_counts_complicated(points, consider, consider_obs, obs_r, tol=TOL):
     easy_dists = paths_dist(points, consider)
     # n x m
 
-    #shortest_paths = which_shortest_paths(points, consider, tol)
+    # shortest_paths = which_shortest_paths(points, consider, tol)
     # n x m
 
     points = np.expand_dims(points, 1)

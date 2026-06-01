@@ -82,4 +82,5 @@ shape.interactive_vornoi_plot(
         "fontsize": args.leg_font_size,
     },  # TODO maybe make default 1
     greedy_computation=False,
+    p_color=args.p_color,
 )

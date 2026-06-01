@@ -75,6 +75,7 @@ class ConvexPolyhderon(Shape):
         diameter=None,
         ignore_points_on_locus=False,
         greedy_computation=False,
+        p_color="purple",
     ):
         """
         unfold fixing the source face
@@ -129,9 +130,9 @@ class ConvexPolyhderon(Shape):
 
                         # TODO: maybe track all possible faces and check if any points line up?
                         #  if any do, add the thingy
-                        #temp_stuff = [ ({p_p: (a.copy(), b.copy()) for p_p, (a, b) in ppts.items()}, rp.copy()) for (ppts, rp) in all_stuff]
+                        # temp_stuff = [ ({p_p: (a.copy(), b.copy()) for p_p, (a, b) in ppts.items()}, rp.copy()) for (ppts, rp) in all_stuff]
 
-                        #possible_stuff = []
+                        # possible_stuff = []
                         if path is not None:
                             segments = dict()
                             for point_pair in point_pair_to_segment:
@@ -195,7 +196,7 @@ class ConvexPolyhderon(Shape):
         vertices_cycle = [source.vertices[i % num_v][0] for i in range(1 + num_v)]
         vertices_cycle = np.concatenate(vertices_cycle, axis=1)
         ax.plot(vertices_cycle[0], vertices_cycle[1], color="red")
-        ax.scatter(p[0], p[1], color="purple", s=40, zorder=10)  # TODO: mess with zorder
+        ax.scatter(p[0], p[1], color=p_color, s=40, zorder=10)  # TODO: mess with zorder
 
         xlim, ylim = ax.get_xlim(), ax.get_ylim()
 
@@ -203,7 +204,7 @@ class ConvexPolyhderon(Shape):
         # ax.scatter(contributing_points[:, 0],
         #           contributing_points[:, 1],
         #           s=10,
-        #           color='purple',
+        #           color=p_color,
         #           )
 
         ax.set_xlim(xlim)
@@ -254,6 +255,7 @@ class ConvexPolyhderon(Shape):
         point_names=None,
         ignore_points_on_locus=False,
         greedy_computation=False,
+        p_color="purple",
     ):
         # TODO: maybe do the same thing as above method, calculate cut locus for all faces, paste them together
         """
@@ -352,11 +354,10 @@ class ConvexPolyhderon(Shape):
                 if not labeled:
                     label = "$p$ copies"
                     labeled = True
-                pt_color = "purple"
                 ax.scatter(
                     pt[0],
                     pt[1],
-                    color=pt_color,
+                    color=p_color,
                     label=label,
                     alpha=1,
                     s=40,
@@ -369,7 +370,7 @@ class ConvexPolyhderon(Shape):
                         "$p^{(" + str(pname) + ")}$",
                         (label_pt[0] + p_label_shift[0], label_pt[1] + p_label_shift[1]),
                         rotation=0,
-                        color=pt_color,
+                        color=p_color,
                         zorder=11,
                     )
         (face, name, center, rot_v) = special_face
@@ -527,6 +528,7 @@ class ConvexPolyhderon(Shape):
         if "face_name_to_label" in legend_kwargs:
             face_name_to_label = legend_kwargs.pop("face_name_to_label")
         else:
+
             def face_name_to_label(x):
                 return x
 
@@ -598,6 +600,7 @@ class ConvexPolyhderon(Shape):
         mark_points=(),
         legend_kwargs=None,
         greedy_computation=False,
+        p_color="purple",
     ):
         """
         :param figsize: initial figure size (inches)
@@ -656,7 +659,7 @@ class ConvexPolyhderon(Shape):
             if fc is None:
                 return
             self.plot_face_boundaries(axs, legend=legend, legend_kwargs=legend_kwargs)
-            ax.scatter(p[0, 0], p[1, 0], color="purple")
+            ax.scatter(p[0, 0], p[1, 0], color=p_color)
 
             source_fn = fc.name
 
@@ -749,6 +752,7 @@ class ConvexPolyhderon(Shape):
         ignore_points_on_locus=False,
         mark_points=(),
         greedy_computation=False,
+        p_color="purple",
     ):
         """
         :param figsize: initial figure size (inches)
@@ -842,6 +846,7 @@ class ConvexPolyhderon(Shape):
                         diameter=diameter,
                         ignore_points_on_locus=ignore_points_on_locus,
                         greedy_computation=greedy_computation,
+                        p_color=p_color,
                     )
 
                     plt.xticks([])
@@ -864,6 +869,7 @@ class ConvexPolyhderon(Shape):
                         point_names=point_names,
                         ignore_points_on_locus=ignore_points_on_locus,
                         greedy_computation=greedy_computation,
+                        p_color=p_color,
                     )
                     print("point locations:")
                     for i, (zero, xvec, yvec, p) in enumerate(all_trans_shown):
@@ -929,7 +935,7 @@ class ConvexPolyhderon(Shape):
                                 ploot(i, j).set_xlim(xlim)
                                 ploot(i, j).set_ylim(ylim)
                                 if self.extra_data["unwrap_source_fn"] == face.name:
-                                    ploot(i, j).scatter(self.extra_data["p"][0, 0], self.extra_data["p"][1, 0], color="purple")
+                                    ploot(i, j).scatter(self.extra_data["p"][0, 0], self.extra_data["p"][1, 0], color=p_color)
                     self.extra_data["unwrap_source_plotted"] = True
                 if not self.extra_data["unwrap_source_plotted"]:
                     plt.suptitle("Click $p$")
@@ -972,7 +978,7 @@ class ConvexPolyhderon(Shape):
                 for j in range(m):
                     ploot(i, j).cla()
             self.plot_face_boundaries(axs, legend=legend)
-            ax.scatter(p[0, 0], p[1, 0], color="purple", alpha=0.5)
+            ax.scatter(p[0, 0], p[1, 0], color=p_color, alpha=0.5)
 
             source_fn = fc.name
 

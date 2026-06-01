@@ -3,6 +3,7 @@ from scipy.spatial import Voronoi
 from src.face import Face
 from src.utils import within_bounds, get_correct_end_points
 
+
 def _adjust_bounds(ax, points):
     margin = 0.1 * points.ptp(axis=0)
     xy_min = points.min(axis=0) - margin
@@ -56,9 +57,6 @@ def voronoi_diagram_calc(points, face: Face = None):
                 out[point_pair] = ("segment", new_seg)
         return out
     return point_pair_to_type_and_line
-
-
-
 
 
 def voronoi_plot_2d(points, ax=None, **kw):
