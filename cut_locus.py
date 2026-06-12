@@ -14,7 +14,7 @@ display_group.add_argument(
     "--mark", action="append", nargs="*", required=False, help="mark point on cut locus faces", metavar="FACE_ID X Y <COLOR>"
 )
 
-display_group.add_argument("--handlelength", type=int, required=False, default=None, help="length of lines shown in legend")
+display_group.add_argument("--handlelength", type=float, required=False, default=None, help="length of lines shown in legend")
 display_group.add_argument(
     "--explicit-edges", action="store_true", required=False, help="say 'face <face number>' on legend for edges"
 )
