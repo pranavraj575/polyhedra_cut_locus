@@ -8,7 +8,7 @@ from src.utils import coltation, get_correct_end_points
 from src.shapes import Shape
 from src.face import Face
 from src.bound import Bound
-from src.my_vornoi import voronoi_diagram_calc
+from src.my_vornoi import voronoi_diagram_calc, intersect_voronoi_dict_with_face
 
 
 class ConvexPolyhderon(Shape):
@@ -255,6 +255,7 @@ class ConvexPolyhderon(Shape):
         point_names=None,
         ignore_points_on_locus=False,
         greedy_computation=False,
+        dotted_line_outside_face=False,
         p_color="purple",
     ):
         # TODO: maybe do the same thing as above method, calculate cut locus for all faces, paste them together
@@ -393,55 +394,69 @@ class ConvexPolyhderon(Shape):
 
         line_alpha = 0.69 if label_diagram else 1
         existing_labels = []
-        for point_pair in point_pair_to_segment:
-            segtype, (a, b) = point_pair_to_segment[point_pair]
-            if segtype == "segment":
-                ax.plot(
-                    (a[0], b[0]),
-                    (a[1], b[1]),
-                    color="black",
-                    lw=2,
-                    alpha=line_alpha,
-                    zorder=10,
-                )
-                names = [point_names[pt_idx] for pt_idx in point_pair]
-                names.sort()
-                a, b = get_correct_end_points(a, b, xlim, ylim)
-                if label_diagram and a is not None:
-                    midpoint = (a + b) / 2
-                    tangent = np.array([(b - a)[1], -(b - a)[0]])
-                    tangent = tangent / np.linalg.norm(tangent) * line_label_dist
-                    if np.dot(tangent, np.array((3, 1))) < 0:  # favor the up right direction (strong right)
-                        tangent = -tangent
-                    if existing_labels:
-                        temp_tan = tangent.copy()
-                        for mult in [1] + sum([[i, -i] for i in range(3, 5)], []):
-                            tangent = mult * temp_tan
-                            dist = min([np.linalg.norm(lb - (midpoint + tangent)) for lb in existing_labels])
-                            if dist >= 2 * line_label_dist:
-                                break
 
-                    text_pt = midpoint + tangent
-                    ax.annotate(
-                        "$\\mathbf{\\ell}^{" + "\\{" + names[0] + "," + names[1] + "\\}" + "}$",
-                        text_pt,
-                        rotation=0,
-                        color="black",
-                        zorder=11,
-                    )
-                    ax.arrow(
-                        text_pt[0],  # x
-                        text_pt[1],  # y
-                        -tangent[0],  # dx
-                        -tangent[1],  # dy
-                        width=0.03,
-                        color="black",
-                        alpha=line_alpha,
-                        length_includes_head=True,
-                        zorder=11,
-                    )
-                    existing_labels.append(text_pt)
-                    # TODO: label lines here
+        default_style = {"color": "black", "lw": 2, "alpha": line_alpha, "cancel_label": False}
+        if dotted_line_outside_face:
+            point_pair_to_face_segment = intersect_voronoi_dict_with_face(
+                point_pair_to_segment=point_pair_to_segment, face=self.faces[sink_fn]
+            )
+            dashed_style = default_style.copy()
+            dashed_style.update({"linestyle": "--", "lw": 1.5, "alpha": default_style["alpha"] * 0.69})
+            default_style["cancel_label"] = True
+            lines_to_plot = [(dashed_style, item) for item in point_pair_to_segment.items()] + [
+                (default_style, item) for item in point_pair_to_face_segment.items()
+            ]
+        else:
+            lines_to_plot = [(default_style, item) for item in point_pair_to_segment.items()]
+        for line_dict, (point_pair, (segtype, (a, b))) in lines_to_plot:
+            line_dict = line_dict.copy()
+            cancel_label = line_dict.pop("cancel_label")
+            if segtype != "segment":
+                continue
+            ax.plot(
+                (a[0], b[0]),
+                (a[1], b[1]),
+                zorder=10,
+                **line_dict,
+            )
+            names = [point_names[pt_idx] for pt_idx in point_pair]
+            names.sort()
+            a, b = get_correct_end_points(a, b, xlim, ylim)
+            if label_diagram and a is not None and not cancel_label:
+                midpoint = (a + b) / 2
+                tangent = np.array([(b - a)[1], -(b - a)[0]])
+                tangent = tangent / np.linalg.norm(tangent) * line_label_dist
+                if np.dot(tangent, np.array((3, 1))) < 0:  # favor the up right direction (strong right)
+                    tangent = -tangent
+                if existing_labels:
+                    temp_tan = tangent.copy()
+                    for mult in [1] + sum([[i, -i] for i in range(3, 5)], []):
+                        tangent = mult * temp_tan
+                        dist = min([np.linalg.norm(lb - (midpoint + tangent)) for lb in existing_labels])
+                        if dist >= 2 * line_label_dist:
+                            break
+
+                text_pt = midpoint + tangent
+                ax.annotate(
+                    "$\\mathbf{\\ell}^{" + "\\{" + names[0] + "," + names[1] + "\\}" + "}$",
+                    text_pt,
+                    rotation=0,
+                    color="black",
+                    zorder=11,
+                )
+                ax.arrow(
+                    text_pt[0],  # x
+                    text_pt[1],  # y
+                    -tangent[0],  # dx
+                    -tangent[1],  # dy
+                    width=0.03,
+                    color="black",
+                    alpha=line_alpha,
+                    length_includes_head=True,
+                    zorder=11,
+                )
+                existing_labels.append(text_pt)
+                # TODO: label lines here
         ax.set_xlim(xlim)
         ax.set_ylim(ylim)
         ax.legend()

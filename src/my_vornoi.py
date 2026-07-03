@@ -12,6 +12,21 @@ def _adjust_bounds(ax, points):
     ax.set_ylim(xy_min[1], xy_max[1])
 
 
+def intersect_voronoi_dict_with_face(point_pair_to_segment, face: Face):
+    out = dict()
+    for point_pair in point_pair_to_segment:
+        segtype, (a, b) = point_pair_to_segment[point_pair]
+        if segtype == "segment":
+            new_seg = face.get_segment_within_bounds(a, b)
+        elif segtype == "ray":
+            new_seg = face.get_ray_within_bounds(a, b)
+        else:
+            raise Exception(segtype)
+        if new_seg is not None:
+            out[point_pair] = ("segment", new_seg)
+    return out
+
+
 def voronoi_diagram_calc(points, face: Face = None):
     vor = Voronoi(points)
     if vor.points.shape[1] != 2:
@@ -19,7 +34,7 @@ def voronoi_diagram_calc(points, face: Face = None):
 
     center = vor.points.mean(axis=0)
 
-    point_pair_to_type_and_line = dict()
+    point_pair_to_segment = dict()
 
     for pointidx, simplex in zip(vor.ridge_points, vor.ridge_vertices):  # iterates through all lines
         # pointidx: two indices of points that create this line
@@ -28,7 +43,7 @@ def voronoi_diagram_calc(points, face: Face = None):
         simplex = np.asarray(simplex)
 
         if np.all(simplex >= 0):
-            point_pair_to_type_and_line[tuple(pointidx)] = ("segment", (vor.vertices[simplex[0]], vor.vertices[simplex[1]]))
+            point_pair_to_segment[tuple(pointidx)] = ("segment", (vor.vertices[simplex[0]], vor.vertices[simplex[1]]))
 
         else:
             i = simplex[simplex >= 0][0]  # finite end Voronoi vertex
@@ -42,21 +57,10 @@ def voronoi_diagram_calc(points, face: Face = None):
 
             if vor.furthest_site:
                 direction = -direction
-            point_pair_to_type_and_line[tuple(pointidx)] = ("ray", (vor.vertices[i], direction))
+            point_pair_to_segment[tuple(pointidx)] = ("ray", (vor.vertices[i], direction))
     if face is not None:
-        out = dict()
-        for point_pair in point_pair_to_type_and_line:
-            segtype, (a, b) = point_pair_to_type_and_line[point_pair]
-            if segtype == "segment":
-                new_seg = face.get_segment_within_bounds(a, b)
-            elif segtype == "ray":
-                new_seg = face.get_ray_within_bounds(a, b)
-            else:
-                raise Exception(segtype)
-            if new_seg is not None:
-                out[point_pair] = ("segment", new_seg)
-        return out
-    return point_pair_to_type_and_line
+        return intersect_voronoi_dict_with_face(point_pair_to_segment=point_pair_to_segment, face=face)
+    return point_pair_to_segment
 
 
 def voronoi_plot_2d(points, ax=None, **kw):
